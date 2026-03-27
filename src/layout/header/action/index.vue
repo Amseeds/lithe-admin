@@ -25,7 +25,7 @@ const { navigationMode } = toRefsPreferencesStore()
 </script>
 <template>
   <div class="flex items-center">
-    <ButtonAnimation
+    <!-- <ButtonAnimation
       :animation="false"
       tag="a"
       href="https://github.com/tenianon/lithe-admin"
@@ -33,7 +33,7 @@ const { navigationMode } = toRefsPreferencesStore()
       rel="noopener noreferrer"
     >
       <span class="icon-[mdi--github]" />
-    </ButtonAnimation>
+    </ButtonAnimation> -->
     <FullScreen />
     <ThemeModePopover />
     <PreferencesDrawer />

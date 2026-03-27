@@ -59,12 +59,12 @@ const textureStyle = computed(() => {
 const signInFormRef = useTemplateRef<InstanceType<typeof NForm>>('signInFormRef')
 
 const signInForm = reactive({
-  account: 'admin',
+  username: 'doctor1',
   password: '123456',
 })
 
 const signInFormRules: Record<string, FormItemRule[]> = {
-  account: [{ required: true, message: '请输入账号', trigger: ['input'] }],
+  username: [{ required: true, message: '请输入账号', trigger: ['input'] }],
   password: [{ required: true, message: '请输入密码', trigger: ['input'] }],
 }
 
@@ -93,21 +93,21 @@ function toLayout() {
 const handleSubmitClick = () => {
   signInFormRef.value?.validate((errors) => {
     if (!errors) {
-      signInMutation({ account: signInForm.account, password: signInForm.password })
+      signInMutation({ username: signInForm.username, password: signInForm.password })
     }
   })
 }
 
-const handleQuickLogin = (account: 'admin' | 'user' | 'guest') => {
-  switch (account) {
+const handleQuickLogin = (username: 'admin' | 'user' | 'guest') => {
+  switch (username) {
     case 'admin':
-      signInMutation({ account: 'admin', password: '123456' })
+      signInMutation({ username: 'admin', password: '123456' })
       break
     case 'user':
-      signInMutation({ account: 'user', password: '123456' })
+      signInMutation({ username: 'user', password: '123456' })
       break
     case 'guest':
-      signInMutation({ account: 'guest', password: '123456' })
+      signInMutation({ username: 'guest', password: '123456' })
       break
     default:
       break
@@ -203,11 +203,11 @@ onUnmounted(() => {
               :rules="signInFormRules"
             >
               <NFormItem
-                path="account"
+                path="username"
                 label="账号"
               >
                 <NInput
-                  v-model:value="signInForm.account"
+                  v-model:value="signInForm.username"
                   placeholder="请输入账号"
                   clearable
                   :theme-overrides="

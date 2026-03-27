@@ -95,7 +95,7 @@ watch(
       }"
     >
       <SidebarMenu />
-      <SidebarUserPanel />
+      <!-- <SidebarUserPanel /> -->
     </aside>
     <div class="relative flex h-full justify-center">
       <div

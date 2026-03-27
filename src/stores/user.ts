@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import { signIn } from '@/api'
 import router from '@/router'
 import { resolveMenu, resolveRoute } from '@/router/helper'
+import { fixedMenu } from '@/api/user'
 
 import { pinia } from '.'
 
@@ -28,7 +29,18 @@ export const useUserStore = defineStore('userStore', () => {
     const res = await signIn(data)
 
     token.value = res.data.token
-    user.value = res.data
+    console.log('token', token.value)
+
+    // 【修改】使用前端固定菜单,忽略后端返回的菜单
+    // 原代码: user.value = res.data
+    user.value = {
+      // ...res.data,
+      menu: fixedMenu, // 覆盖为前端固定菜单
+    }
+
+    // 【恢复后端菜单配置时,使用以下代码替换上面的代码】:
+    // user.value = res.data
+    // 不需要任何额外处理,后端返回的 menu 会自动使用
   }
 
   function cleanup(redirectPath?: string) {
