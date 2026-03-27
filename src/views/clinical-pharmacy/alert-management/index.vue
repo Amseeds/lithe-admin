@@ -261,7 +261,7 @@ const handledPagination = reactive({
           <NDataTable
             :columns="pendingColumns"
             :data="pendingData"
-            :bordered="false"
+            :bordered="true"
             :scroll-x="1000"
             :pagination="pendingPagination"
           />
@@ -273,7 +273,7 @@ const handledPagination = reactive({
           <NDataTable
             :columns="handledColumns"
             :data="handledData"
-            :bordered="false"
+            :bordered="true"
             :scroll-x="1100"
             :pagination="handledPagination"
           />

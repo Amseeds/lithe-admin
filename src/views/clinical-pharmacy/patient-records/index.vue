@@ -266,7 +266,7 @@ onMounted(() => {
           :columns="columns"
           :data="tableData"
           :loading="loading"
-          :bordered="false"
+          :bordered="true"
           :scroll-x="800"
           :remote="true"
         />

@@ -282,7 +282,7 @@ const handlePageSizeChange = (size: number) => {
           onChange: handlePageChange,
           onUpdatePageSize: handlePageSizeChange,
         }"
-        :bordered="false"
+        :bordered="true"
       />
     </NCard>
   </ScrollContainer>
