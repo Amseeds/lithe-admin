@@ -231,7 +231,7 @@ const executeFollowUp = (row: FollowUpPlan) => {
     :scrollable="isMaxLg"
   >
     <NCard
-      title="随访计划"
+      title=""
       :size="isMaxMd ? 'small' : undefined"
       class="flex-1"
       content-class="flex flex-col"
