@@ -24,6 +24,7 @@
     "@vueuse/core": "^14.2.1",
     "axios": "^1.13.6",
     "chroma-js": "^3.2.0",
+    "dayjs": "^1.11.20",
     "echarts": "^6.0.0",
     "es-toolkit": "^1.45.1",
     "pinia": "^3.0.4",
