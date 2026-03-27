@@ -425,7 +425,7 @@ export const fixedMenu: MenuMixedOptions[] = [
 
 export async function signIn(data: { account: string; password: string }) {
   return request<UserInfo>({
-    url: '/v1/user/login',
+    url: '/api/v1/user/login',
     method: 'post',
     data,
   })

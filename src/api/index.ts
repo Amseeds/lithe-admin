@@ -1,5 +1,6 @@
 export * from './dataForm'
 export * from './dataTable'
 export * from './followup'
+export * from './followupPlan'
 export * from './patientRecords'
 export * from './user'
