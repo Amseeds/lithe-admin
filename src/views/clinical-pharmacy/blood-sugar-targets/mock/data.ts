@@ -78,7 +78,7 @@ export interface PatientDetail {
 export const menuCategories: MenuCategory[] = [
   {
     key: 'overview',
-    name: '模块总览',
+    name: '总览',
   },
   {
     key: 't2dm',
@@ -90,16 +90,51 @@ export const menuCategories: MenuCategory[] = [
       { key: 't2dm-elderly-frail', name: '老年衰弱型' },
       { key: 't2dm-children', name: '儿童青少年' },
       { key: 't2dm-cardiorenal', name: '合并心肾并发症' },
-      // { key: 't2dm-microvascular', name: '合并微血管并发症' },
-      // { key: 't2dm-obesity', name: '肥胖/代谢综合征' },
     ],
   },
-  // TODO: 后续添加其他分类
-  // {
-  //   key: 't1dm',
-  //   name: '1型糖尿病（T1DM）',
-  //   children: [...]
-  // },
+  {
+    key: 't1dm',
+    name: '1型糖尿病（T1DM）',
+    children: [
+      { key: 't1dm-children', name: '儿童青少年' },
+      { key: 't1dm-adult', name: '成人' },
+      { key: 't1dm-elderly', name: '老年人' },
+      { key: 't1dm-brittle', name: '脆性糖尿病' },
+    ],
+  },
+  {
+    key: 'gdm',
+    name: '妊娠相关糖尿病',
+    children: [
+      { key: 'gdm-pgdm', name: '孕前糖尿病合并妊娠' },
+      { key: 'gdm-odm', name: '妊娠期显性糖尿病' },
+      { key: 'gdm', name: '妊娠期糖尿病' },
+    ],
+  },
+  {
+    key: 'st',
+    name: '特殊类型糖尿病',
+    children: [
+      { key: 'st-monogenic', name: '单基因糖尿病' },
+      { key: 'st-mitochondrial', name: '线粒体糖尿病' },
+      { key: 'st-pancreatic', name: '胰源性糖尿病' },
+      { key: 'st-other', name: '其他特殊类型' },
+    ],
+  },
+  {
+    key: 'ss',
+    name: '特殊场景临时目标',
+    children: [
+      { key: 'ss-perioperative', name: '围手术期' },
+      { key: 'ss-critical', name: '住院/危重症' },
+      { key: 'ss-infection', name: '急性感染/应激状态' },
+      { key: 'ss-hypoglycemia', name: '低血糖恢复期' },
+    ],
+  },
+  {
+    key: 'prediabetes',
+    name: '糖尿病前期',
+  },
 ]
 
 // ==================== 叶子节点分类定义 ====================
@@ -181,6 +216,211 @@ export const categoryDefinitions: Record<string, CategoryDefinition> = {
       { name: '优先规避', value: '低血糖风险' },
     ],
   },
+
+  // ==================== 1型糖尿病分类 ====================
+  't1dm-children': {
+    key: 't1dm-children',
+    name: '儿童青少年T1DM',
+    parentPath: ['1型糖尿病（T1DM）'],
+    definition: '年龄<18岁，诊断1型糖尿病的儿童和青少年患者，需终身依赖胰岛素治疗，血糖波动大',
+    targets: [
+      { name: 'HbA1c', value: '<6.5%~7.0%' },
+      { name: '空腹血糖', value: '4.0~7.0 mmol/L' },
+      { name: '餐后2小时血糖', value: '5.0~10.0 mmol/L' },
+      { name: '睡前血糖', value: '6.0~8.0 mmol/L' },
+      { name: '特别注意', value: '避免低血糖，尊重成长发育需求' },
+    ],
+  },
+  't1dm-adult': {
+    key: 't1dm-adult',
+    name: '成人T1DM',
+    parentPath: ['1型糖尿病（T1DM）'],
+    definition:
+      '年龄18-65岁，诊断1型糖尿病的成年患者，病程较长，胰岛功能完全丧失，需强化胰岛素治疗',
+    targets: [
+      { name: 'HbA1c', value: '<7.0%' },
+      { name: '空腹血糖', value: '4.0~7.0 mmol/L' },
+      { name: '餐后2小时血糖', value: '5.0~10.0 mmol/L' },
+      { name: '睡前血糖', value: '6.0~8.0 mmol/L' },
+    ],
+  },
+  't1dm-elderly': {
+    key: 't1dm-elderly',
+    name: '老年T1DM',
+    parentPath: ['1型糖尿病（T1DM）'],
+    definition: '年龄≥65岁，诊断1型糖尿病的老年患者，病程通常>40年，合并多种并发症，低血糖风险高',
+    targets: [
+      { name: 'HbA1c', value: '<7.5%~8.0%' },
+      { name: '空腹血糖', value: '5.0~8.0 mmol/L' },
+      { name: '睡前血糖', value: '7.0~10.0 mmol/L' },
+      { name: '优先目标', value: '避免严重低血糖' },
+    ],
+  },
+  't1dm-brittle': {
+    key: 't1dm-brittle',
+    name: '脆性糖尿病',
+    parentPath: ['1型糖尿病（T1DM）'],
+    definition: '血糖波动剧烈，反复发生低血糖或糖尿病酮症酸中毒（DKD），常规治疗难以稳定控制',
+    targets: [
+      { name: 'HbA1c', value: '<8.5%' },
+      { name: '空腹血糖波动', value: '<5.0 mmol/L日内波动' },
+      { name: '重点目标', value: '减少急性并发症，稳定血糖' },
+      { name: '血糖控制策略', value: '个体化，宁高勿低' },
+    ],
+  },
+
+  // ==================== 妊娠相关糖尿病分类 ====================
+  'gdm-pgdm': {
+    key: 'gdm-pgdm',
+    name: '孕前糖尿病合并妊娠',
+    parentPath: ['妊娠相关糖尿病'],
+    definition: '孕前已诊断1型或2型糖尿病，在计划妊娠或妊娠期间血糖控制不佳的患者',
+    targets: [
+      { name: 'HbA1c', value: '<6.0%~6.5%' },
+      { name: '空腹血糖', value: '3.3~5.4 mmol/L' },
+      { name: '餐后1小时血糖', value: '<7.8 mmol/L' },
+      { name: '餐后2小时血糖', value: '<6.7~7.1 mmol/L' },
+      { name: '特别注意', value: '孕前3个月开始补充叶酸' },
+    ],
+  },
+  'gdm-odm': {
+    key: 'gdm-odm',
+    name: '妊娠期显性糖尿病',
+    parentPath: ['妊娠相关糖尿病'],
+    definition: '妊娠期间首次发现血糖达到非孕期糖尿病诊断标准的患者',
+    targets: [
+      { name: 'HbA1c', value: '<6.0%~6.5%' },
+      { name: '空腹血糖', value: '3.3~5.4 mmol/L' },
+      { name: '餐后2小时血糖', value: '<6.7 mmol/L' },
+      { name: '控糖策略', value: '饮食+运动，必要时胰岛素' },
+    ],
+  },
+  gdm: {
+    key: 'gdm',
+    name: '妊娠期糖尿病',
+    parentPath: ['妊娠相关糖尿病'],
+    definition: '妊娠前糖代谢正常，妊娠期首次发现血糖升高的患者，是最常见的妊娠期糖尿病类型',
+    targets: [
+      { name: '空腹血糖', value: '<5.3 mmol/L' },
+      { name: '餐后1小时血糖', value: '<7.8 mmol/L' },
+      { name: '餐后2小时血糖', value: '<6.7 mmol/L' },
+      { name: 'HbA1c', value: '<5.5%~6.0%' },
+    ],
+  },
+
+  // ==================== 特殊类型糖尿病分类 ====================
+  'st-monogenic': {
+    key: 'st-monogenic',
+    name: '单基因糖尿病',
+    parentPath: ['特殊类型糖尿病'],
+    definition: '由单基因突变引起的糖尿病，包括MODY（青年发病的成年型糖尿病）、新生儿糖尿病等',
+    targets: [
+      { name: 'HbA1c', value: '<6.5%~7.0%' },
+      { name: '空腹血糖', value: '4.0~7.0 mmol/L' },
+      { name: '餐后2小时血糖', value: '<8.0~10.0 mmol/L' },
+      { name: '治疗特点', value: '部分可用磺脲类药物替代胰岛素' },
+    ],
+  },
+  'st-mitochondrial': {
+    key: 'st-mitochondrial',
+    name: '线粒体糖尿病',
+    parentPath: ['特殊类型糖尿病'],
+    definition: '线粒体基因突变导致的糖尿病，常伴有耳聋、母系遗传等特点',
+    targets: [
+      { name: 'HbA1c', value: '<7.0%' },
+      { name: '空腹血糖', value: '5.0~7.0 mmol/L' },
+      { name: '餐后2小时血糖', value: '<10.0 mmol/L' },
+      { name: '注意事项', value: '避免使用双胍类，优选胰岛素' },
+    ],
+  },
+  'st-pancreatic': {
+    key: 'st-pancreatic',
+    name: '胰源性糖尿病',
+    parentPath: ['特殊类型糖尿病'],
+    definition: '胰腺外分泌疾病导致胰岛β细胞功能受损引起的糖尿病（3c型糖尿病）',
+    targets: [
+      { name: 'HbA1c', value: '<7.0%~7.5%' },
+      { name: '空腹血糖', value: '5.0~8.0 mmol/L' },
+      { name: '餐后2小时血糖', value: '<10.0~12.0 mmol/L' },
+      { name: '胰酶替代', value: '同时补充胰酶改善营养吸收' },
+    ],
+  },
+  'st-other': {
+    key: 'st-other',
+    name: '其他特殊类型',
+    parentPath: ['特殊类型糖尿病'],
+    definition: '包括药物相关性糖尿病、内分泌疾病相关性糖尿病等其他特殊原因导致的糖尿病',
+    targets: [
+      { name: 'HbA1c', value: '<7.0%~8.0%' },
+      { name: '空腹血糖', value: '5.0~7.5 mmol/L' },
+      { name: '餐后2小时血糖', value: '<10.0 mmol/L' },
+      { name: '核心原则', value: '治疗原发病，控制血糖' },
+    ],
+  },
+
+  // ==================== 特殊场景临时目标 ====================
+  'ss-perioperative': {
+    key: 'ss-perioperative',
+    name: '围手术期',
+    parentPath: ['特殊场景临时目标'],
+    definition: '接受外科手术的糖尿病患者，术前、术中、术后血糖管理需特别关注',
+    targets: [
+      { name: '术前目标', value: '空腹血糖5.0~8.0 mmol/L' },
+      { name: '术中目标', value: '7.0~10.0 mmol/L' },
+      { name: '术后目标', value: '空腹<7.8，餐后<10.0 mmol/L' },
+      { name: '注意事项', value: '大型手术需调整为胰岛素治疗' },
+    ],
+  },
+  'ss-critical': {
+    key: 'ss-critical',
+    name: '住院/危重症',
+    parentPath: ['特殊场景临时目标'],
+    definition: '住院期间或危重症监护患者，血糖管理目标需个体化制定',
+    targets: [
+      { name: '一般住院目标', value: '7.8~10.0 mmol/L' },
+      { name: '危重症目标', value: '7.8~10.0 mmol/L' },
+      { name: '严格控制', value: '重症患者：6.0~8.0 mmol/L' },
+      { name: '宽松目标', value: '低血糖风险高：<12.0 mmol/L' },
+    ],
+  },
+  'ss-infection': {
+    key: 'ss-infection',
+    name: '急性感染/应激状态',
+    parentPath: ['特殊场景临时目标'],
+    definition: '急性感染、创伤、应激事件期间的糖尿病患者，血糖应激性升高',
+    targets: [
+      { name: '急性感染期目标', value: '空腹5.0~10.0，餐后<13.0 mmol/L' },
+      { name: '应激状态', value: '可放宽至<14.0 mmol/L' },
+      { name: '感染控制后', value: '逐步收紧目标至常规标准' },
+      { name: '重点监测', value: '酮体，预防DKA' },
+    ],
+  },
+  'ss-hypoglycemia': {
+    key: 'ss-hypoglycemia',
+    name: '低血糖恢复期',
+    parentPath: ['特殊场景临时目标'],
+    definition: '发生严重低血糖后或低血糖高风险期的短期血糖管理',
+    targets: [
+      { name: '恢复期目标', value: '空腹5.0~8.0 mmol/L' },
+      { name: '睡前血糖', value: '6.0~10.0 mmol/L' },
+      { name: '短期策略', value: '宁高勿低，避免再次低血糖' },
+      { name: '持续时间', value: '通常1-2周后调整回常规目标' },
+    ],
+  },
+
+  // ==================== 糖尿病前期 ====================
+  prediabetes: {
+    key: 'prediabetes',
+    name: '糖尿病前期',
+    parentPath: [],
+    definition: '空腹血糖受损（IFG）或糖耐量减低（IGT）状态，是糖尿病的高危人群',
+    targets: [
+      { name: '空腹血糖', value: '3.9~6.1 mmol/L' },
+      { name: '餐后2小时血糖', value: '<7.8 mmol/L' },
+      { name: 'HbA1c', value: '5.7%~6.4%' },
+      { name: '干预目标', value: '体重下降3%~5%，每周运动150分钟' },
+    ],
+  },
 }
 
 // ==================== 分类统计数据 ====================
@@ -232,6 +472,144 @@ export const categoryStatistics: Record<string, CategoryStatistics> = {
     hypoglycemiaRisk: 10,
     rate: '58%',
     proportion: '19.0%',
+  },
+
+  // 1型糖尿病统计
+  't1dm-children': {
+    total: 8,
+    controlled: 5,
+    uncontrolled: 3,
+    hypoglycemiaRisk: 3,
+    rate: '63%',
+    proportion: '4.0%',
+  },
+  't1dm-adult': {
+    total: 15,
+    controlled: 9,
+    uncontrolled: 6,
+    hypoglycemiaRisk: 4,
+    rate: '60%',
+    proportion: '7.5%',
+  },
+  't1dm-elderly': {
+    total: 6,
+    controlled: 3,
+    uncontrolled: 3,
+    hypoglycemiaRisk: 4,
+    rate: '50%',
+    proportion: '3.0%',
+  },
+  't1dm-brittle': {
+    total: 4,
+    controlled: 1,
+    uncontrolled: 3,
+    hypoglycemiaRisk: 4,
+    rate: '25%',
+    proportion: '2.0%',
+  },
+
+  // 妊娠相关糖尿病统计
+  'gdm-pgdm': {
+    total: 5,
+    controlled: 4,
+    uncontrolled: 1,
+    hypoglycemiaRisk: 1,
+    rate: '80%',
+    proportion: '2.5%',
+  },
+  'gdm-odm': {
+    total: 3,
+    controlled: 2,
+    uncontrolled: 1,
+    hypoglycemiaRisk: 0,
+    rate: '67%',
+    proportion: '1.5%',
+  },
+  gdm: {
+    total: 12,
+    controlled: 10,
+    uncontrolled: 2,
+    hypoglycemiaRisk: 2,
+    rate: '83%',
+    proportion: '6.0%',
+  },
+
+  // 特殊类型糖尿病统计
+  'st-monogenic': {
+    total: 4,
+    controlled: 3,
+    uncontrolled: 1,
+    hypoglycemiaRisk: 0,
+    rate: '75%',
+    proportion: '2.0%',
+  },
+  'st-mitochondrial': {
+    total: 2,
+    controlled: 1,
+    uncontrolled: 1,
+    hypoglycemiaRisk: 1,
+    rate: '50%',
+    proportion: '1.0%',
+  },
+  'st-pancreatic': {
+    total: 3,
+    controlled: 2,
+    uncontrolled: 1,
+    hypoglycemiaRisk: 1,
+    rate: '67%',
+    proportion: '1.5%',
+  },
+  'st-other': {
+    total: 2,
+    controlled: 1,
+    uncontrolled: 1,
+    hypoglycemiaRisk: 0,
+    rate: '50%',
+    proportion: '1.0%',
+  },
+
+  // 特殊场景临时目标统计
+  'ss-perioperative': {
+    total: 8,
+    controlled: 5,
+    uncontrolled: 3,
+    hypoglycemiaRisk: 2,
+    rate: '63%',
+    proportion: '4.0%',
+  },
+  'ss-critical': {
+    total: 6,
+    controlled: 4,
+    uncontrolled: 2,
+    hypoglycemiaRisk: 3,
+    rate: '67%',
+    proportion: '3.0%',
+  },
+  'ss-infection': {
+    total: 5,
+    controlled: 2,
+    uncontrolled: 3,
+    hypoglycemiaRisk: 1,
+    rate: '40%',
+    proportion: '2.5%',
+  },
+  'ss-hypoglycemia': {
+    total: 4,
+    controlled: 2,
+    uncontrolled: 2,
+    hypoglycemiaRisk: 3,
+    rate: '50%',
+    proportion: '2.0%',
+  },
+
+  // 糖尿病前期统计
+  prediabetes: {
+    total: 20,
+    controlled: 12,
+    uncontrolled: 8,
+    hypoglycemiaRisk: 1,
+    rate: '60%',
+    proportion: '10.0%',
   },
 }
 
@@ -564,6 +942,404 @@ export const patientList: PatientData[] = [
     fastingStatus: '达标',
     targetStatus: '生效中',
   },
+
+  // T1DM 儿童青少年
+  {
+    id: 21,
+    name: '小雨',
+    medicalRecordNo: '2026001301',
+    age: 10,
+    gender: '女',
+    category: 't1dm-children',
+    categoryName: '儿童青少年T1DM',
+    diabetesType: '1型糖尿病',
+    diseaseCourse: '2年',
+    hba1c: '6.5%',
+    fastingStatus: '达标',
+    targetStatus: '生效中',
+  },
+  {
+    id: 22,
+    name: '乐乐',
+    medicalRecordNo: '2026001302',
+    age: 15,
+    gender: '男',
+    category: 't1dm-children',
+    categoryName: '儿童青少年T1DM',
+    diabetesType: '1型糖尿病',
+    diseaseCourse: '3年',
+    hba1c: '7.0%',
+    fastingStatus: '达标',
+    targetStatus: '生效中',
+  },
+  {
+    id: 23,
+    name: '小美',
+    medicalRecordNo: '2026001303',
+    age: 8,
+    gender: '女',
+    category: 't1dm-children',
+    categoryName: '儿童青少年T1DM',
+    diabetesType: '1型糖尿病',
+    diseaseCourse: '1年',
+    hba1c: '6.8%',
+    fastingStatus: '未达标',
+    targetStatus: '生效中',
+  },
+
+  // T1DM 成人
+  {
+    id: 24,
+    name: '李婷',
+    medicalRecordNo: '2026001311',
+    age: 28,
+    gender: '女',
+    category: 't1dm-adult',
+    categoryName: '成人T1DM',
+    diabetesType: '1型糖尿病',
+    diseaseCourse: '10年',
+    hba1c: '6.8%',
+    fastingStatus: '达标',
+    targetStatus: '生效中',
+  },
+  {
+    id: 25,
+    name: '张强',
+    medicalRecordNo: '2026001312',
+    age: 35,
+    gender: '男',
+    category: 't1dm-adult',
+    categoryName: '成人T1DM',
+    diabetesType: '1型糖尿病',
+    diseaseCourse: '15年',
+    hba1c: '7.2%',
+    fastingStatus: '未达标',
+    targetStatus: '生效中',
+  },
+  {
+    id: 26,
+    name: '王雪',
+    medicalRecordNo: '2026001313',
+    age: 30,
+    gender: '女',
+    category: 't1dm-adult',
+    categoryName: '成人T1DM',
+    diabetesType: '1型糖尿病',
+    diseaseCourse: '8年',
+    hba1c: '6.5%',
+    fastingStatus: '达标',
+    targetStatus: '生效中',
+  },
+
+  // T1DM 老年人
+  {
+    id: 27,
+    name: '马大爷',
+    medicalRecordNo: '2026001321',
+    age: 70,
+    gender: '男',
+    category: 't1dm-elderly',
+    categoryName: '老年T1DM',
+    diabetesType: '1型糖尿病',
+    diseaseCourse: '45年',
+    hba1c: '7.8%',
+    fastingStatus: '未达标',
+    targetStatus: '生效中',
+  },
+  {
+    id: 28,
+    name: '赵奶奶',
+    medicalRecordNo: '2026001322',
+    age: 68,
+    gender: '女',
+    category: 't1dm-elderly',
+    categoryName: '老年T1DM',
+    diabetesType: '1型糖尿病',
+    diseaseCourse: '40年',
+    hba1c: '7.5%',
+    fastingStatus: '达标',
+    targetStatus: '生效中',
+  },
+
+  // T1DM 脆性糖尿病
+  {
+    id: 29,
+    name: '杨先生',
+    medicalRecordNo: '2026001331',
+    age: 42,
+    gender: '男',
+    category: 't1dm-brittle',
+    categoryName: '脆性糖尿病',
+    diabetesType: '1型糖尿病',
+    diseaseCourse: '25年',
+    hba1c: '9.0%',
+    fastingStatus: '未达标',
+    targetStatus: '生效中',
+  },
+  {
+    id: 30,
+    name: '刘女士',
+    medicalRecordNo: '2026001332',
+    age: 38,
+    gender: '女',
+    category: 't1dm-brittle',
+    categoryName: '脆性糖尿病',
+    diabetesType: '1型糖尿病',
+    diseaseCourse: '20年',
+    hba1c: '8.5%',
+    fastingStatus: '未达标',
+    targetStatus: '已过期',
+  },
+
+  // GDM 孕前糖尿病合并妊娠
+  {
+    id: 31,
+    name: '吴女士',
+    medicalRecordNo: '2026001401',
+    age: 30,
+    gender: '女',
+    category: 'gdm-pgdm',
+    categoryName: '孕前糖尿病合并妊娠',
+    diabetesType: '2型糖尿病合并妊娠',
+    diseaseCourse: '5年',
+    hba1c: '6.2%',
+    fastingStatus: '达标',
+    targetStatus: '生效中',
+  },
+  {
+    id: 32,
+    name: '郑女士',
+    medicalRecordNo: '2026001402',
+    age: 28,
+    gender: '女',
+    category: 'gdm-pgdm',
+    categoryName: '孕前糖尿病合并妊娠',
+    diabetesType: '1型糖尿病合并妊娠',
+    diseaseCourse: '8年',
+    hba1c: '6.5%',
+    fastingStatus: '达标',
+    targetStatus: '生效中',
+  },
+
+  // GDM 妊娠期显性糖尿病
+  {
+    id: 33,
+    name: '孙女士',
+    medicalRecordNo: '2026001411',
+    age: 32,
+    gender: '女',
+    category: 'gdm-odm',
+    categoryName: '妊娠期显性糖尿病',
+    diabetesType: '妊娠期显性糖尿病',
+    diseaseCourse: '妊娠期发现',
+    hba1c: '6.8%',
+    fastingStatus: '未达标',
+    targetStatus: '生效中',
+  },
+
+  // GDM 妊娠期糖尿病
+  {
+    id: 34,
+    name: '周女士',
+    medicalRecordNo: '2026001421',
+    age: 26,
+    gender: '女',
+    category: 'gdm',
+    categoryName: '妊娠期糖尿病',
+    diabetesType: '妊娠期糖尿病',
+    diseaseCourse: '妊娠24周诊断',
+    hba1c: '5.5%',
+    fastingStatus: '达标',
+    targetStatus: '生效中',
+  },
+  {
+    id: 35,
+    name: '钱女士',
+    medicalRecordNo: '2026001422',
+    age: 29,
+    gender: '女',
+    category: 'gdm',
+    categoryName: '妊娠期糖尿病',
+    diabetesType: '妊娠期糖尿病',
+    diseaseCourse: '妊娠26周诊断',
+    hba1c: '5.8%',
+    fastingStatus: '达标',
+    targetStatus: '生效中',
+  },
+  {
+    id: 36,
+    name: '吴孕妇',
+    medicalRecordNo: '2026001423',
+    age: 31,
+    gender: '女',
+    category: 'gdm',
+    categoryName: '妊娠期糖尿病',
+    diabetesType: '妊娠期糖尿病',
+    diseaseCourse: '妊娠28周诊断',
+    hba1c: '6.2%',
+    fastingStatus: '未达标',
+    targetStatus: '生效中',
+  },
+
+  // 特殊类型糖尿病
+  {
+    id: 37,
+    name: '小杰',
+    medicalRecordNo: '2026001501',
+    age: 16,
+    gender: '男',
+    category: 'st-monogenic',
+    categoryName: '单基因糖尿病',
+    diabetesType: 'MODY3型',
+    diseaseCourse: '3年',
+    hba1c: '6.3%',
+    fastingStatus: '达标',
+    targetStatus: '生效中',
+  },
+  {
+    id: 38,
+    name: '阿华',
+    medicalRecordNo: '2026001502',
+    age: 22,
+    gender: '男',
+    category: 'st-mitochondrial',
+    categoryName: '线粒体糖尿病',
+    diabetesType: '线粒体糖尿病',
+    diseaseCourse: '4年',
+    hba1c: '7.0%',
+    fastingStatus: '未达标',
+    targetStatus: '生效中',
+  },
+  {
+    id: 39,
+    name: '老陈',
+    medicalRecordNo: '2026001503',
+    age: 55,
+    gender: '男',
+    category: 'st-pancreatic',
+    categoryName: '胰源性糖尿病',
+    diabetesType: '胰源性糖尿病（3c型）',
+    diseaseCourse: '慢性胰腺炎后2年',
+    hba1c: '7.2%',
+    fastingStatus: '达标',
+    targetStatus: '生效中',
+  },
+  {
+    id: 40,
+    name: '阿德',
+    medicalRecordNo: '2026001504',
+    age: 45,
+    gender: '男',
+    category: 'st-other',
+    categoryName: '其他特殊类型',
+    diabetesType: '药物相关性糖尿病',
+    diseaseCourse: '长期使用激素后1年',
+    hba1c: '7.5%',
+    fastingStatus: '未达标',
+    targetStatus: '生效中',
+  },
+
+  // 特殊场景临时目标
+  {
+    id: 41,
+    name: '林先生',
+    medicalRecordNo: '2026001601',
+    age: 58,
+    gender: '男',
+    category: 'ss-perioperative',
+    categoryName: '围手术期',
+    diabetesType: '2型糖尿病',
+    diseaseCourse: '10年',
+    hba1c: '7.5%',
+    fastingStatus: '达标',
+    targetStatus: '生效中',
+  },
+  {
+    id: 42,
+    name: '张女士',
+    medicalRecordNo: '2026001602',
+    age: 62,
+    gender: '女',
+    category: 'ss-critical',
+    categoryName: '住院/危重症',
+    diabetesType: '2型糖尿病',
+    diseaseCourse: '15年',
+    hba1c: '8.0%',
+    fastingStatus: '未达标',
+    targetStatus: '生效中',
+  },
+  {
+    id: 43,
+    name: '李先生',
+    medicalRecordNo: '2026001603',
+    age: 50,
+    gender: '男',
+    category: 'ss-infection',
+    categoryName: '急性感染/应激状态',
+    diabetesType: '2型糖尿病',
+    diseaseCourse: '8年',
+    hba1c: '9.5%',
+    fastingStatus: '未达标',
+    targetStatus: '生效中',
+  },
+  {
+    id: 44,
+    name: '王大爷',
+    medicalRecordNo: '2026001604',
+    age: 70,
+    gender: '男',
+    category: 'ss-hypoglycemia',
+    categoryName: '低血糖恢复期',
+    diabetesType: '2型糖尿病',
+    diseaseCourse: '12年',
+    hba1c: '7.0%',
+    fastingStatus: '达标',
+    targetStatus: '生效中',
+  },
+
+  // 糖尿病前期
+  {
+    id: 45,
+    name: '赵先生',
+    medicalRecordNo: '2026001701',
+    age: 48,
+    gender: '男',
+    category: 'prediabetes',
+    categoryName: '糖尿病前期',
+    diabetesType: '糖尿病前期',
+    diseaseCourse: '初诊',
+    hba1c: '6.0%',
+    fastingStatus: '达标',
+    targetStatus: '生效中',
+  },
+  {
+    id: 46,
+    name: '刘女士',
+    medicalRecordNo: '2026001702',
+    age: 45,
+    gender: '女',
+    category: 'prediabetes',
+    categoryName: '糖尿病前期',
+    diabetesType: '糖尿病前期',
+    diseaseCourse: '初诊',
+    hba1c: '5.8%',
+    fastingStatus: '达标',
+    targetStatus: '生效中',
+  },
+  {
+    id: 47,
+    name: '陈先生',
+    medicalRecordNo: '2026001703',
+    age: 52,
+    gender: '男',
+    category: 'prediabetes',
+    categoryName: '糖尿病前期',
+    diabetesType: '糖尿病前期',
+    diseaseCourse: '初诊',
+    hba1c: '6.3%',
+    fastingStatus: '未达标',
+    targetStatus: '生效中',
+  },
 ]
 
 // ==================== 患者详情数据 ====================
@@ -777,16 +1553,32 @@ export const isLeafNode = (key: string, categories: MenuCategory[]): boolean => 
   return node !== null && (!node.children || node.children.length === 0)
 }
 
-// 生成患者分类饼图数据
+// 生成患者分类饼图数据（按一级分类汇总）
 export const getPatientCategoryPieData = () => {
-  const leafKeys = getLeafKeys(menuCategories)
-  return leafKeys
-    .map((key) => {
-      const stats = categoryStatistics[key]
-      const def = categoryDefinitions[key]
+  // 按一级分类汇总
+  const level1Categories = menuCategories.filter((c) => c.key !== 'overview')
+
+  return level1Categories
+    .map((cat) => {
+      let total = 0
+      if (cat.children && cat.children.length > 0) {
+        // 有子分类，汇总所有子分类的患者数
+        cat.children.forEach((child) => {
+          const stats = categoryStatistics[child.key]
+          if (stats) {
+            total += stats.total
+          }
+        })
+      } else {
+        // 没有子分类，直接取统计数据
+        const stats = categoryStatistics[cat.key]
+        if (stats) {
+          total = stats.total
+        }
+      }
       return {
-        name: def?.name || key,
-        value: stats?.total || 0,
+        name: cat.name,
+        value: total,
       }
     })
     .filter((item) => item.value > 0)
