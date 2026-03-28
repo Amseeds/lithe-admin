@@ -140,29 +140,34 @@ const CHART_CONFIG = {
 
 const getBusinessLinesConfig = (): readonly BusinessLineConfig[] => [
   {
-    name: '主要收入',
+    name: '年轻低危',
     color: themeColor.value,
     dataRange: { min: 30000, max: 85000 },
   },
   {
-    name: '核心业务',
+    name: '老年衰弱',
     color: twColor('cyan', 500),
     dataRange: { min: 25000, max: 75000 },
   },
   {
-    name: '辅助收入',
+    name: '肾功能不全',
     color: twColor('lime', 500),
     dataRange: { min: 15000, max: 50000 },
   },
   {
-    name: '订阅收入',
+    name: '妊娠期',
     color: twColor('orange', 500),
     dataRange: { min: 10000, max: 35000 },
   },
   {
-    name: '广告收入',
+    name: '手术期',
     color: twColor('pink', 500),
     dataRange: { min: 8000, max: 25000 },
+  },
+  {
+    name: '心血管高危',
+    color: twColor('red', 500),
+    dataRange: { min: 12000, max: 40000 },
   },
 ]
 
@@ -178,17 +183,17 @@ function generateCardData(): DashboardCardData[] {
   const now = new Date()
   const currentMonth = now.getMonth() + 1
 
-  const baseUserCount = 10000 + Math.floor(Math.random() * 5000)
+  const basePatientCount = 10000 + Math.floor(Math.random() * 5000)
   const todayVisits = Math.floor(
     5000 + Math.random() * 8000 + Math.sin((now.getHours() / 24) * Math.PI) * 2000,
   )
-  const monthlySales = Math.floor(1500000 + Math.random() * 1000000 + (currentMonth / 12) * 500000)
-  const pendingOrders = Math.floor(150 + Math.random() * 200)
+  const monthlyFollowUps = Math.floor(1500 + Math.random() * 1000 + (currentMonth / 12) * 500)
+  const pendingAlerts = Math.floor(150 + Math.random() * 200)
 
   return [
     {
-      title: '用户总数',
-      value: baseUserCount,
+      title: '糖尿病患者总数',
+      value: basePatientCount,
       percentage: parseFloat((3.2 + Math.random() * 4).toFixed(2)),
       iconClass: 'iconify ph--users-bold text-indigo-50 dark:text-indigo-150',
       iconBgClass:
@@ -197,7 +202,7 @@ function generateCardData(): DashboardCardData[] {
       description: `${currentMonth}月新增 ${Math.floor(100 + Math.random() * 200)} 人`,
     },
     {
-      title: '今日访问',
+      title: '今日复诊人数',
       value: todayVisits,
       percentage: parseFloat((-2 + Math.random() * 20).toFixed(2)),
       iconClass: 'iconify ph--eye-bold text-blue-50 dark:text-blue-150',
@@ -207,20 +212,20 @@ function generateCardData(): DashboardCardData[] {
       description: '较昨日变化',
     },
     {
-      title: `${currentMonth}月销售额`,
-      value: monthlySales,
+      title: `${currentMonth}月随访人数`,
+      value: monthlyFollowUps,
       percentage: parseFloat((5 + Math.random() * 10).toFixed(2)),
-      iconClass: 'iconify ph--currency-dollar-bold text-emerald-50 dark:text-emerald-150',
+      iconClass: 'iconify ph--clipboard-text-bold text-emerald-50 dark:text-emerald-150',
       iconBgClass:
         'text-emerald-500/5 bg-emerald-400 ring-4 ring-emerald-200 dark:bg-emerald-650 dark:ring-emerald-500/30 transition-all',
-      precision: 2,
-      description: '本月累计收入',
+      precision: 0,
+      description: '本月累计随访',
     },
     {
-      title: '待处理订单',
-      value: pendingOrders,
+      title: '待处理预警',
+      value: pendingAlerts,
       percentage: parseFloat((-8 + Math.random() * 6).toFixed(2)),
-      iconClass: 'iconify ph--shopping-cart-bold text-orange-50 dark:text-orange-150',
+      iconClass: 'iconify ph--warning-bold text-orange-50 dark:text-orange-150',
       iconBgClass:
         'text-orange-500/5 bg-orange-400 ring-4 ring-orange-200 dark:bg-orange-650 dark:ring-orange-500/30 transition-all',
       precision: 0,
@@ -412,7 +417,7 @@ function initRevenueChart() {
   const option = {
     title: [
       {
-        text: '收入概览',
+        text: '患者概览',
         left: 0,
         top: 0,
         textStyle: {
@@ -422,7 +427,7 @@ function initRevenueChart() {
         },
       },
       {
-        text: '总收入趋势与增长分析',
+        text: '患者随访趋势与增长分析',
         left: 0,
         top: 28,
         textStyle: {
@@ -784,7 +789,7 @@ function initMonthlyRadarChart() {
   const option = {
     title: [
       {
-        text: '当月各业务收入',
+        text: '当月各类型患者分布',
         left: 0,
         top: 0,
         textStyle: {
@@ -829,8 +834,8 @@ function initMonthlyRadarChart() {
     grid: {
       left: 10,
       right: 5,
-      top: 100,
-      bottom: -10,
+      top: 80,
+      bottom: 0,
       containLabel: true,
     },
     xAxis: {
@@ -953,7 +958,7 @@ function initHighestRevenueChart() {
   const option = {
     title: [
       {
-        text: '年度最高业务收入',
+        text: '年度随访人群对比',
         left: 0,
         top: 0,
         textStyle: {
@@ -1061,7 +1066,7 @@ function initHighestRevenueChart() {
     const updateOption = {
       title: [
         {
-          text: isHighest ? '年度最高收入业务' : '年度最低收入业务',
+          text: isHighest ? '年度随访最多人群' : '年度随访最少人群',
         },
         {
           text: `{a|${chartItem.businessName}}`,
@@ -1264,7 +1269,7 @@ watch([isDark, themeColor], () => {
     </div>
 
     <div class="grid grid-cols-1 gap-4 overflow-hidden max-sm:gap-2 lg:grid-cols-12">
-      <div class="col-span-1 lg:col-span-8">
+      <div class="col-span-1 lg:col-span-7">
         <div
           class="rounded border border-naive-border bg-naive-card px-5 pt-5 pb-4.5 transition-[background-color,border-color]"
           style="height: 400px"
@@ -1275,7 +1280,7 @@ watch([isDark, themeColor], () => {
           />
         </div>
       </div>
-      <div class="col-span-1 lg:col-span-4">
+      <div class="col-span-1 lg:col-span-5">
         <div
           class="flex flex-col rounded border border-naive-border bg-naive-card px-5 pt-5 pb-4.5 transition-[background-color,border-color]"
           style="height: 400px"

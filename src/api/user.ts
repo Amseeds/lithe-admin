@@ -39,39 +39,39 @@ export const fixedMenu: MenuMixedOptions[] = [
     },
     component: 'dashboard/index',
   },
-  {
-    path: 'data-show',
-    name: 'dataShow',
-    label: '数据展示',
-    icon: 'icon-[fluent--data-area-32-regular]',
-    redirect: 'data-show/data-table',
-    children: [
-      {
-        path: 'data-table',
-        name: 'dataTable',
-        icon: 'iconify ph--table',
-        label: '数据表格',
-        meta: {
-          componentName: 'DataTable',
-          title: '数据表格',
-          showTab: true,
-        },
-        component: 'data-show/data-table/index',
-      },
-      {
-        path: 'data-form',
-        name: 'dataForm',
-        icon: 'iconify ph--article',
-        label: '数据表单',
-        meta: {
-          componentName: 'DataForm',
-          title: '数据表单',
-          showTab: true,
-        },
-        component: 'data-show/data-form/index',
-      },
-    ],
-  },
+  // {
+  //   path: 'data-show',
+  //   name: 'dataShow',
+  //   label: '数据展示',
+  //   icon: 'icon-[fluent--data-area-32-regular]',
+  //   redirect: 'data-show/data-table',
+  //   children: [
+  //     {
+  //       path: 'data-table',
+  //       name: 'dataTable',
+  //       icon: 'iconify ph--table',
+  //       label: '数据表格',
+  //       meta: {
+  //         componentName: 'DataTable',
+  //         title: '数据表格',
+  //         showTab: true,
+  //       },
+  //       component: 'data-show/data-table/index',
+  //     },
+  //     {
+  //       path: 'data-form',
+  //       name: 'dataForm',
+  //       icon: 'iconify ph--article',
+  //       label: '数据表单',
+  //       meta: {
+  //         componentName: 'DataForm',
+  //         title: '数据表单',
+  //         showTab: true,
+  //       },
+  //       component: 'data-show/data-form/index',
+  //     },
+  //   ],
+  // },
   {
     path: 'clinical-pharmacy',
     redirect: 'clinical-pharmacy/drug-information',
@@ -421,9 +421,29 @@ export const fixedMenu: MenuMixedOptions[] = [
       },
     ],
   },
+  {
+    path: 'data-cleaning',
+    redirect: 'data-cleaning/cleaning',
+    name: 'dataCleaning',
+    icon: 'iconify ph--broom',
+    label: '数据清洗',
+    children: [
+      {
+        path: 'cleaning',
+        name: 'cleaning',
+        icon: 'iconify ph--broom',
+        label: '数据清洗',
+        component: 'data-cleaning/index',
+        meta: {
+          componentName: 'DataCleaning',
+          showTab: true,
+        },
+      },
+    ],
+  },
 ]
 
-export async function signIn(data: { account: string; password: string }) {
+export async function signIn(data: { username: string; password: string }) {
   return request<UserInfo>({
     url: '/api/v1/user/login',
     method: 'post',

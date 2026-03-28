@@ -65,12 +65,12 @@ watch(
         },
       ]"
     >
-      <div class="size-10">
+      <!-- <div class="size-10">
         <Logo />
-      </div>
+      </div> -->
       <div
         class="flex flex-1 overflow-hidden transition-[margin-left,max-width]"
-        :class="sidebarMenu.collapsed ? 'ml-0 max-w-0' : 'ml-4 max-w-44'"
+        :class="sidebarMenu.collapsed ? 'ml-0 max-w-0' : 'ml-4 max-w-54'"
       >
         <h1 class="truncate text-xl">
           {{ APP_NAME }}
