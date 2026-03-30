@@ -628,29 +628,32 @@ onMounted(() => {
   <NModal
     v-model:show="showDetailModal"
     preset="card"
-    style="width: 800px; max-width: 90vw"
+    style="width: 960px; max-width: 95vw"
     title="患者详情"
     :bordered="false"
+    :segmented="{ content: true, footer: true }"
   >
     <template v-if="selectedPatient">
       <!-- 患者基本信息 -->
       <NDescriptions
         label-placement="left"
-        :column="4"
+        :column="2"
         bordered
         class="mb-4"
+        :label-style="{ width: '120px',  fontWeight: 500 }"
+        :content-style="{ whiteSpace: 'nowrap' }"
       >
         <NDescriptionsItem label="姓名">
           {{ selectedPatient.name }}
+        </NDescriptionsItem>
+        <NDescriptionsItem label="病历号">
+          {{ selectedPatient.medicalRecordNo }}
         </NDescriptionsItem>
         <NDescriptionsItem label="性别">
           {{ selectedPatient.gender }}
         </NDescriptionsItem>
         <NDescriptionsItem label="年龄">
           {{ selectedPatient.age }}岁
-        </NDescriptionsItem>
-        <NDescriptionsItem label="病历号">
-          {{ selectedPatient.medicalRecordNo }}
         </NDescriptionsItem>
         <NDescriptionsItem label="糖尿病类型">
           {{ selectedPatient.diabetesType }}
@@ -666,22 +669,22 @@ onMounted(() => {
         </NDescriptionsItem>
       </NDescriptions>
 
-      <!-- 患者专属控糖目标 -->
+      <!-- 患者专属控糖目标 - 横向滚动 -->
       <NCard
         title="专属控糖目标"
         size="small"
         class="mb-4"
       >
-        <div class="flex gap-4">
+        <div class="flex gap-3 overflow-x-auto pb-2">
           <div
             v-for="target in categoryDefinitions[selectedPatient.category]?.targets"
             :key="target.name"
-            class="flex-1 p-2 bg-gray-50 dark:bg-gray-700 rounded text-center"
+            class="flex-shrink-0 px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-lg text-center min-w-[110px] border border-slate-200 dark:border-slate-700"
           >
-            <div class="text-xs text-gray-500">
+            <div class="text-xs text-slate-500 mb-1">
               {{ target.name }}
             </div>
-            <div class="text-sm font-semibold text-blue-500">
+            <div class="text-sm font-semibold text-blue-600 dark:text-blue-400 whitespace-nowrap">
               {{ target.value || '-' }}
             </div>
           </div>
@@ -728,8 +731,8 @@ onMounted(() => {
         <NDataTable
           :columns="[
             { title: '调整时间', key: 'date', width: 120 },
-            { title: '调整前目标', key: 'beforeTarget', width: 140 },
-            { title: '调整后目标', key: 'afterTarget', width: 140 },
+            { title: '调整前目标', key: 'beforeTarget', width: 160 },
+            { title: '调整后目标', key: 'afterTarget', width: 160 },
             { title: '调整原因', key: 'reason' },
             { title: '调整医生', key: 'doctor', width: 100 },
           ]"

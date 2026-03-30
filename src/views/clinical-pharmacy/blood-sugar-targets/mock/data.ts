@@ -108,7 +108,7 @@ export const menuCategories: MenuCategory[] = [
     children: [
       { key: 'gdm-pgdm', name: '孕前糖尿病合并妊娠' },
       { key: 'gdm-odm', name: '妊娠期显性糖尿病' },
-      { key: 'gdm', name: '妊娠期糖尿病' },
+      { key: 'gdm-only', name: '妊娠期糖尿病' },
     ],
   },
   {
@@ -295,8 +295,8 @@ export const categoryDefinitions: Record<string, CategoryDefinition> = {
       { name: '控糖策略', value: '饮食+运动，必要时胰岛素' },
     ],
   },
-  gdm: {
-    key: 'gdm',
+  'gdm-only': {
+    key: 'gdm-only',
     name: '妊娠期糖尿病',
     parentPath: ['妊娠相关糖尿病'],
     definition: '妊娠前糖代谢正常，妊娠期首次发现血糖升高的患者，是最常见的妊娠期糖尿病类型',
@@ -525,7 +525,7 @@ export const categoryStatistics: Record<string, CategoryStatistics> = {
     rate: '67%',
     proportion: '1.5%',
   },
-  gdm: {
+  'gdm-only': {
     total: 12,
     controlled: 10,
     uncontrolled: 2,
@@ -1144,7 +1144,7 @@ export const patientList: PatientData[] = [
     medicalRecordNo: '2026001421',
     age: 26,
     gender: '女',
-    category: 'gdm',
+    category: 'gdm-only',
     categoryName: '妊娠期糖尿病',
     diabetesType: '妊娠期糖尿病',
     diseaseCourse: '妊娠24周诊断',
@@ -1158,7 +1158,7 @@ export const patientList: PatientData[] = [
     medicalRecordNo: '2026001422',
     age: 29,
     gender: '女',
-    category: 'gdm',
+    category: 'gdm-only',
     categoryName: '妊娠期糖尿病',
     diabetesType: '妊娠期糖尿病',
     diseaseCourse: '妊娠26周诊断',
@@ -1172,7 +1172,7 @@ export const patientList: PatientData[] = [
     medicalRecordNo: '2026001423',
     age: 31,
     gender: '女',
-    category: 'gdm',
+    category: 'gdm-only',
     categoryName: '妊娠期糖尿病',
     diabetesType: '妊娠期糖尿病',
     diseaseCourse: '妊娠28周诊断',
@@ -1485,10 +1485,10 @@ const generateDefaultPatientDetail = (patient: PatientData): PatientDetail => {
       ],
       fasting: Array(14)
         .fill(0)
-        .map(() => targetMin + Math.random() * (targetMax - targetMin)),
+        .map(() => Number((targetMin + Math.random() * (targetMax - targetMin)).toFixed(1))),
       postprandial: Array(14)
         .fill(0)
-        .map(() => targetMax + Math.random() * 2),
+        .map(() => Number((targetMax + Math.random() * 2).toFixed(1))),
       targetMin,
       targetMax,
     },
