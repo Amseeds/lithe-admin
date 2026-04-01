@@ -14,6 +14,7 @@ import {
   NDescriptionsItem,
   NTag,
   NEmpty,
+  NScrollbar,
 } from 'naive-ui'
 import * as echarts from 'echarts'
 import type { MenuOption, DataTableColumns } from 'naive-ui'
@@ -130,7 +131,11 @@ const tableColumns: DataTableColumns<PatientData> = [
     width: 140,
     render: (row) => {
       const isControlled = row.fastingStatus === '达标'
-      return h(NTag, { type: isControlled ? 'success' : 'warning', size: 'small' }, { default: () => row.fastingStatus })
+      return h(
+        NTag,
+        { type: isControlled ? 'success' : 'warning', size: 'small' },
+        { default: () => row.fastingStatus },
+      )
     },
   },
   {
@@ -139,7 +144,11 @@ const tableColumns: DataTableColumns<PatientData> = [
     width: 120,
     render: (row) => {
       const isActive = row.targetStatus === '生效中'
-      return h(NTag, { type: isActive ? 'success' : 'default', size: 'small' }, { default: () => row.targetStatus })
+      return h(
+        NTag,
+        { type: isActive ? 'success' : 'default', size: 'small' },
+        { default: () => row.targetStatus },
+      )
     },
   },
   {
@@ -147,7 +156,11 @@ const tableColumns: DataTableColumns<PatientData> = [
     key: 'actions',
     width: 100,
     render: (row) => {
-      return h(NButton, { text: true, type: 'primary', onClick: () => handleViewDetail(row.id) }, { default: () => '查看详情' })
+      return h(
+        NButton,
+        { text: true, type: 'primary', onClick: () => handleViewDetail(row.id) },
+        { default: () => '查看详情' },
+      )
     },
   },
 ]
@@ -275,7 +288,8 @@ const initBloodGlucoseChart = () => {
   const chartDom = document.getElementById('blood-glucose-chart')
   if (chartDom && selectedPatient.value) {
     bloodGlucoseChart = echarts.init(chartDom)
-    const { dates, fasting, postprandial, targetMin, targetMax } = selectedPatient.value.bloodGlucoseData
+    const { dates, fasting, postprandial, targetMin, targetMax } =
+      selectedPatient.value.bloodGlucoseData
 
     bloodGlucoseChart.setOption({
       tooltip: {
@@ -379,14 +393,20 @@ onMounted(() => {
 <template>
   <div class="flex h-full">
     <!-- 左侧菜单 -->
-    <div class="w-[240px] border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 overflow-y-auto">
-      <NMenu
-        :options="menuOptions"
-        :value="currentCategory"
-        :expanded-keys="expandedKeys"
-        :on-update:expanded-keys="(keys: string[]) => { expandedKeys = keys }"
-        :on-update:value="handleMenuUpdate"
-      />
+    <div class="h-full w-[240px] flex-shrink-0 border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+      <NScrollbar h-full trigger="hover">
+        <NMenu
+          :options="menuOptions"
+          :value="currentCategory"
+          :expanded-keys="expandedKeys"
+          :on-update:expanded-keys="
+            (keys: string[]) => {
+              expandedKeys = keys
+            }
+          "
+          :on-update:value="handleMenuUpdate"
+        />
+      </NScrollbar>
     </div>
 
     <!-- 右侧主内容区 -->
@@ -445,24 +465,22 @@ onMounted(() => {
             :key="card.title"
           >
             <NCard size="small">
-              <div class="text-sm text-gray-500 mb-2">
+              <div class="mb-2 text-sm text-gray-500">
                 {{ card.title }}
               </div>
               <div
                 v-if="card.target"
-                class="text-xs text-gray-400 mb-1"
+                class="mb-1 text-xs text-gray-400"
               >
                 通用目标：{{ card.target }}
               </div>
               <div class="text-lg font-semibold">
                 {{ card.average }}
               </div>
-              <div class="text-xs text-gray-400 mt-1">
-                达标率：{{ card.rate }}
-              </div>
+              <div class="mt-1 text-xs text-gray-400">达标率：{{ card.rate }}</div>
               <div
                 v-if="card.change"
-                class="text-xs text-green-500 mt-1"
+                class="mt-1 text-xs text-green-500"
               >
                 较上月：{{ card.change }}
               </div>
@@ -500,7 +518,7 @@ onMounted(() => {
         <NCard class="mb-4">
           <div class="flex items-center justify-between">
             <div>
-              <div class="text-lg font-semibold mb-2">
+              <div class="mb-2 text-lg font-semibold">
                 {{ currentCategoryDefinition?.name }}
               </div>
               <div class="text-sm text-gray-500">
@@ -508,9 +526,10 @@ onMounted(() => {
               </div>
               <div
                 v-if="currentCategoryDefinition?.parentPath.length"
-                class="text-xs text-gray-400 mt-1"
+                class="mt-1 text-xs text-gray-400"
               >
-                分类路径：{{ currentCategoryDefinition?.parentPath.join(' > ') }} > {{ currentCategoryDefinition?.name }}
+                分类路径：{{ currentCategoryDefinition?.parentPath.join(' > ') }} >
+                {{ currentCategoryDefinition?.name }}
               </div>
             </div>
             <div class="flex gap-8 text-center">
@@ -518,25 +537,19 @@ onMounted(() => {
                 <div class="text-2xl font-bold text-blue-500">
                   {{ currentCategoryStats?.total }}
                 </div>
-                <div class="text-xs text-gray-400">
-                  患者总人数
-                </div>
+                <div class="text-xs text-gray-400">患者总人数</div>
               </div>
               <div>
                 <div class="text-2xl font-bold text-green-500">
                   {{ currentCategoryStats?.proportion }}
                 </div>
-                <div class="text-xs text-gray-400">
-                  占全院比例
-                </div>
+                <div class="text-xs text-gray-400">占全院比例</div>
               </div>
               <div>
                 <div class="text-2xl font-bold text-orange-500">
                   {{ currentCategoryStats?.rate }}
                 </div>
-                <div class="text-xs text-gray-400">
-                  整体达标率
-                </div>
+                <div class="text-xs text-gray-400">整体达标率</div>
               </div>
             </div>
           </div>
@@ -551,7 +564,7 @@ onMounted(() => {
             <div
               v-for="target in currentCategoryDefinition?.targets"
               :key="target.name"
-              class="flex-1 p-3 bg-gray-50 dark:bg-gray-700 rounded"
+              class="flex-1 rounded bg-gray-50 p-3 dark:bg-gray-700"
             >
               <div class="text-sm text-gray-500">
                 {{ target.name }}
@@ -571,9 +584,7 @@ onMounted(() => {
         >
           <NGi>
             <NCard size="small">
-              <div class="text-sm text-gray-500">
-                该分类总人数
-              </div>
+              <div class="text-sm text-gray-500">该分类总人数</div>
               <div class="text-2xl font-bold">
                 {{ currentCategoryStats?.total }}
               </div>
@@ -581,9 +592,7 @@ onMounted(() => {
           </NGi>
           <NGi>
             <NCard size="small">
-              <div class="text-sm text-gray-500">
-                达标人数
-              </div>
+              <div class="text-sm text-gray-500">达标人数</div>
               <div class="text-2xl font-bold text-green-500">
                 {{ currentCategoryStats?.controlled }}
               </div>
@@ -591,9 +600,7 @@ onMounted(() => {
           </NGi>
           <NGi>
             <NCard size="small">
-              <div class="text-sm text-gray-500">
-                未达标人数
-              </div>
+              <div class="text-sm text-gray-500">未达标人数</div>
               <div class="text-2xl font-bold text-orange-500">
                 {{ currentCategoryStats?.uncontrolled }}
               </div>
@@ -601,9 +608,7 @@ onMounted(() => {
           </NGi>
           <NGi>
             <NCard size="small">
-              <div class="text-sm text-gray-500">
-                低血糖风险人数
-              </div>
+              <div class="text-sm text-gray-500">低血糖风险人数</div>
               <div class="text-2xl font-bold text-red-500">
                 {{ currentCategoryStats?.hypoglycemiaRisk }}
               </div>
@@ -640,7 +645,7 @@ onMounted(() => {
         :column="2"
         bordered
         class="mb-4"
-        :label-style="{ width: '120px',  fontWeight: 500 }"
+        :label-style="{ width: '120px', fontWeight: 500 }"
         :content-style="{ whiteSpace: 'nowrap' }"
       >
         <NDescriptionsItem label="姓名">
@@ -652,9 +657,7 @@ onMounted(() => {
         <NDescriptionsItem label="性别">
           {{ selectedPatient.gender }}
         </NDescriptionsItem>
-        <NDescriptionsItem label="年龄">
-          {{ selectedPatient.age }}岁
-        </NDescriptionsItem>
+        <NDescriptionsItem label="年龄"> {{ selectedPatient.age }}岁 </NDescriptionsItem>
         <NDescriptionsItem label="糖尿病类型">
           {{ selectedPatient.diabetesType }}
         </NDescriptionsItem>
@@ -679,12 +682,12 @@ onMounted(() => {
           <div
             v-for="target in categoryDefinitions[selectedPatient.category]?.targets"
             :key="target.name"
-            class="flex-shrink-0 px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-lg text-center min-w-[110px] border border-slate-200 dark:border-slate-700"
+            class="min-w-[110px] flex-shrink-0 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-center dark:border-slate-700 dark:bg-slate-800"
           >
-            <div class="text-xs text-slate-500 mb-1">
+            <div class="mb-1 text-xs text-slate-500">
               {{ target.name }}
             </div>
-            <div class="text-sm font-semibold text-blue-600 dark:text-blue-400 whitespace-nowrap">
+            <div class="text-sm font-semibold whitespace-nowrap text-blue-600 dark:text-blue-400">
               {{ target.value || '-' }}
             </div>
           </div>
@@ -719,7 +722,7 @@ onMounted(() => {
           :data="selectedPatient.hba1cHistory"
           :bordered="false"
           :max-height="200"
-          :row-key="(row: typeof selectedPatient.hba1cHistory[0]) => row.date"
+          :row-key="(row: (typeof selectedPatient.hba1cHistory)[0]) => row.date"
         />
       </NCard>
 
@@ -739,7 +742,7 @@ onMounted(() => {
           :data="selectedPatient.targetAdjustHistory"
           :bordered="false"
           :max-height="150"
-          :row-key="(row: typeof selectedPatient.targetAdjustHistory[0]) => row.date"
+          :row-key="(row: (typeof selectedPatient.targetAdjustHistory)[0]) => row.date"
         />
       </NCard>
     </template>

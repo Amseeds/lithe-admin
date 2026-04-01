@@ -255,11 +255,11 @@ onUnmounted(() => {
               </NFormItem>
               <div class="flex justify-between">
                 <NCheckbox v-model:checked="isRememberMed">记住我</NCheckbox>
-                <NButton
+                <!-- <NButton
                   text
                   size="small"
                   >忘记密码</NButton
-                >
+                > -->
               </div>
               <div class="mt-4">
                 <NButton
@@ -273,38 +273,6 @@ onUnmounted(() => {
                   @click="handleSubmitClick"
                 >
                   登&nbsp;录
-                </NButton>
-              </div>
-              <div class="mt-6 flex items-center justify-center">
-                <NButton
-                  text
-                  :disabled="mergedLoading"
-                  size="tiny"
-                  @click="handleQuickLogin('admin')"
-                >
-                  管理员登录
-                </NButton>
-                <span
-                  class="mx-2 h-3 border-r border-neutral-300 transition-[border-color] dark:border-neutral-650"
-                ></span>
-                <NButton
-                  text
-                  :disabled="mergedLoading"
-                  size="tiny"
-                  @click="handleQuickLogin('user')"
-                >
-                  普通用户登录
-                </NButton>
-                <span
-                  class="mx-2 h-3 border-r border-neutral-300 transition-[border-color] dark:border-neutral-650"
-                ></span>
-                <NButton
-                  text
-                  :disabled="mergedLoading"
-                  size="tiny"
-                  @click="handleQuickLogin('guest')"
-                >
-                  访客登录
                 </NButton>
               </div>
             </NForm>
