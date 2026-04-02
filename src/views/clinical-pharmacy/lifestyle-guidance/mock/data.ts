@@ -15,7 +15,14 @@ import type {
 // 公共基础数据
 // ============================================================
 
-export const stratificationList = ['年轻低危', '老年衰弱', '肾功能不全', '妊娠期', '手术期', '心血管高危'] as const
+export const stratificationList = [
+  '年轻低危',
+  '老年衰弱',
+  '肾功能不全',
+  '妊娠期',
+  '手术期',
+  '心血管高危',
+] as const
 
 export const planStatusMap: Record<string, string> = {
   not_created: '未制定',
@@ -65,47 +72,277 @@ export const pieChartData: PieChartData[] = [
 // Tab1: 未制定方案患者列表（15人）
 // ============================================================
 export const unplannedPatients: UnplannedPatient[] = [
-  { patientName: '周建华', medicalRecordNo: 'P20240035', stratification: '年轻低危', age: 38, gender: '男' },
-  { patientName: '刘美玲', medicalRecordNo: 'P20240052', stratification: '老年衰弱', age: 72, gender: '女' },
-  { patientName: '赵志刚', medicalRecordNo: 'P20240068', stratification: '肾功能不全', age: 55, gender: '男' },
-  { patientName: '孙晓燕', medicalRecordNo: 'P20240073', stratification: '心血管高危', age: 61, gender: '女' },
-  { patientName: '吴国庆', medicalRecordNo: 'P20240081', stratification: '老年衰弱', age: 78, gender: '男' },
-  { patientName: '陈丽萍', medicalRecordNo: 'P20240089', stratification: '年轻低危', age: 42, gender: '女' },
-  { patientName: '张明辉', medicalRecordNo: 'P20240093', stratification: '手术期', age: 58, gender: '男' },
-  { patientName: '李秀芳', medicalRecordNo: 'P20240097', stratification: '肾功能不全', age: 63, gender: '女' },
-  { patientName: '王德才', medicalRecordNo: 'P20240102', stratification: '心血管高危', age: 66, gender: '男' },
-  { patientName: '杨秋月', medicalRecordNo: 'P20240108', stratification: '老年衰弱', age: 75, gender: '女' },
-  { patientName: '黄伟杰', medicalRecordNo: 'P20240115', stratification: '年轻低危', age: 35, gender: '男' },
-  { patientName: '郑淑华', medicalRecordNo: 'P20240121', stratification: '妊娠期', age: 31, gender: '女' },
-  { patientName: '马长顺', medicalRecordNo: 'P20240128', stratification: '肾功能不全', age: 59, gender: '男' },
-  { patientName: '林小燕', medicalRecordNo: 'P20240133', stratification: '心血管高危', age: 64, gender: '女' },
-  { patientName: '何永强', medicalRecordNo: 'P20240139', stratification: '老年衰弱', age: 80, gender: '男' },
+  {
+    patientName: '周建华',
+    medicalRecordNo: 'P20240035',
+    stratification: '年轻低危',
+    age: 38,
+    gender: '男',
+  },
+  {
+    patientName: '刘美玲',
+    medicalRecordNo: 'P20240052',
+    stratification: '老年衰弱',
+    age: 72,
+    gender: '女',
+  },
+  {
+    patientName: '赵志刚',
+    medicalRecordNo: 'P20240068',
+    stratification: '肾功能不全',
+    age: 55,
+    gender: '男',
+  },
+  {
+    patientName: '孙晓燕',
+    medicalRecordNo: 'P20240073',
+    stratification: '心血管高危',
+    age: 61,
+    gender: '女',
+  },
+  {
+    patientName: '吴国庆',
+    medicalRecordNo: 'P20240081',
+    stratification: '老年衰弱',
+    age: 78,
+    gender: '男',
+  },
+  {
+    patientName: '陈丽萍',
+    medicalRecordNo: 'P20240089',
+    stratification: '年轻低危',
+    age: 42,
+    gender: '女',
+  },
+  {
+    patientName: '张明辉',
+    medicalRecordNo: 'P20240093',
+    stratification: '手术期',
+    age: 58,
+    gender: '男',
+  },
+  {
+    patientName: '李秀芳',
+    medicalRecordNo: 'P20240097',
+    stratification: '肾功能不全',
+    age: 63,
+    gender: '女',
+  },
+  {
+    patientName: '王德才',
+    medicalRecordNo: 'P20240102',
+    stratification: '心血管高危',
+    age: 66,
+    gender: '男',
+  },
+  {
+    patientName: '杨秋月',
+    medicalRecordNo: 'P20240108',
+    stratification: '老年衰弱',
+    age: 75,
+    gender: '女',
+  },
+  {
+    patientName: '黄伟杰',
+    medicalRecordNo: 'P20240115',
+    stratification: '年轻低危',
+    age: 35,
+    gender: '男',
+  },
+  {
+    patientName: '郑淑华',
+    medicalRecordNo: 'P20240121',
+    stratification: '妊娠期',
+    age: 31,
+    gender: '女',
+  },
+  {
+    patientName: '马长顺',
+    medicalRecordNo: 'P20240128',
+    stratification: '肾功能不全',
+    age: 59,
+    gender: '男',
+  },
+  {
+    patientName: '林小燕',
+    medicalRecordNo: 'P20240133',
+    stratification: '心血管高危',
+    age: 64,
+    gender: '女',
+  },
+  {
+    patientName: '何永强',
+    medicalRecordNo: 'P20240139',
+    stratification: '老年衰弱',
+    age: 80,
+    gender: '男',
+  },
 ]
 
 // ============================================================
 // Tab1: 低执行率TOP20
 // ============================================================
 export const lowExecutionPatients: LowExecutionPatient[] = [
-  { rank: 1, patientName: '钱国强', medicalRecordNo: 'P20240012', executionRate: 18, planNo: 'SHFA-2026010012', mainProblem: '饮食控制不达标' },
-  { rank: 2, patientName: '孟祥云', medicalRecordNo: 'P20240018', executionRate: 22, planNo: 'SHFA-2026010018', mainProblem: '运动依从性差' },
-  { rank: 3, patientName: '冯桂英', medicalRecordNo: 'P20240025', executionRate: 28, planNo: 'SHFA-2026010025', mainProblem: '作息紊乱' },
-  { rank: 4, patientName: '蒋志远', medicalRecordNo: 'P20240031', executionRate: 31, planNo: 'SHFA-2026010031', mainProblem: '饮食+运动均不达标' },
-  { rank: 5, patientName: '沈丽华', medicalRecordNo: 'P20240037', executionRate: 34, planNo: 'SHFA-2026010037', mainProblem: '体重管理失败' },
-  { rank: 6, patientName: '韩文斌', medicalRecordNo: 'P20240042', executionRate: 38, planNo: 'SHFA-2026010042', mainProblem: '未戒烟限酒' },
-  { rank: 7, patientName: '唐玉珍', medicalRecordNo: 'P20240047', executionRate: 41, planNo: 'SHFA-2026010047', mainProblem: '睡眠质量差' },
-  { rank: 8, patientName: '董建华', medicalRecordNo: 'P20240053', executionRate: 43, planNo: 'SHFA-2026010053', mainProblem: '饮食控制不达标' },
-  { rank: 9, patientName: '彭明远', medicalRecordNo: 'P20240058', executionRate: 45, planNo: 'SHFA-2026010058', mainProblem: '运动量不足' },
-  { rank: 10, patientName: '萧雅琴', medicalRecordNo: 'P20240062', executionRate: 47, planNo: 'SHFA-2026010062', mainProblem: '心理压力大' },
-  { rank: 11, patientName: '曹国栋', medicalRecordNo: 'P20240066', executionRate: 48, planNo: 'SHFA-2026010066', mainProblem: '饮食控制不达标' },
-  { rank: 12, patientName: '袁秀兰', medicalRecordNo: 'P20240071', executionRate: 49, planNo: 'SHFA-2026010071', mainProblem: '运动依从性差' },
-  { rank: 13, patientName: '邓志刚', medicalRecordNo: 'P20240076', executionRate: 50, planNo: 'SHFA-2026010076', mainProblem: '作息紊乱' },
-  { rank: 14, patientName: '许国平', medicalRecordNo: 'P20240079', executionRate: 51, planNo: 'SHFA-2026010079', mainProblem: '体重管理失败' },
-  { rank: 15, patientName: '傅晓红', medicalRecordNo: 'P20240083', executionRate: 52, planNo: 'SHFA-2026010083', mainProblem: '未戒烟' },
-  { rank: 16, patientName: '苏德明', medicalRecordNo: 'P20240086', executionRate: 53, planNo: 'SHFA-2026010086', mainProblem: '饮食控制不达标' },
-  { rank: 17, patientName: '卢美英', medicalRecordNo: 'P20240090', executionRate: 55, planNo: 'SHFA-2026010090', mainProblem: '运动量不足' },
-  { rank: 18, patientName: '蒋文明', medicalRecordNo: 'P20240094', executionRate: 56, planNo: 'SHFA-2026010094', mainProblem: '睡眠质量差' },
-  { rank: 19, patientName: '蔡秋华', medicalRecordNo: 'P20240098', executionRate: 57, planNo: 'SHFA-2026010098', mainProblem: '心理压力大' },
-  { rank: 20, patientName: '贾志强', medicalRecordNo: 'P20240101', executionRate: 58, planNo: 'SHFA-2026010101', mainProblem: '饮食+运动均不达标' },
+  {
+    rank: 1,
+    patientName: '钱国强',
+    medicalRecordNo: 'P20240012',
+    executionRate: 18,
+    planNo: 'SHFA-2026010012',
+    mainProblem: '饮食控制不达标',
+  },
+  {
+    rank: 2,
+    patientName: '孟祥云',
+    medicalRecordNo: 'P20240018',
+    executionRate: 22,
+    planNo: 'SHFA-2026010018',
+    mainProblem: '运动依从性差',
+  },
+  {
+    rank: 3,
+    patientName: '冯桂英',
+    medicalRecordNo: 'P20240025',
+    executionRate: 28,
+    planNo: 'SHFA-2026010025',
+    mainProblem: '作息紊乱',
+  },
+  {
+    rank: 4,
+    patientName: '蒋志远',
+    medicalRecordNo: 'P20240031',
+    executionRate: 31,
+    planNo: 'SHFA-2026010031',
+    mainProblem: '饮食+运动均不达标',
+  },
+  {
+    rank: 5,
+    patientName: '沈丽华',
+    medicalRecordNo: 'P20240037',
+    executionRate: 34,
+    planNo: 'SHFA-2026010037',
+    mainProblem: '体重管理失败',
+  },
+  {
+    rank: 6,
+    patientName: '韩文斌',
+    medicalRecordNo: 'P20240042',
+    executionRate: 38,
+    planNo: 'SHFA-2026010042',
+    mainProblem: '未戒烟限酒',
+  },
+  {
+    rank: 7,
+    patientName: '唐玉珍',
+    medicalRecordNo: 'P20240047',
+    executionRate: 41,
+    planNo: 'SHFA-2026010047',
+    mainProblem: '睡眠质量差',
+  },
+  {
+    rank: 8,
+    patientName: '董建华',
+    medicalRecordNo: 'P20240053',
+    executionRate: 43,
+    planNo: 'SHFA-2026010053',
+    mainProblem: '饮食控制不达标',
+  },
+  {
+    rank: 9,
+    patientName: '彭明远',
+    medicalRecordNo: 'P20240058',
+    executionRate: 45,
+    planNo: 'SHFA-2026010058',
+    mainProblem: '运动量不足',
+  },
+  {
+    rank: 10,
+    patientName: '萧雅琴',
+    medicalRecordNo: 'P20240062',
+    executionRate: 47,
+    planNo: 'SHFA-2026010062',
+    mainProblem: '心理压力大',
+  },
+  {
+    rank: 11,
+    patientName: '曹国栋',
+    medicalRecordNo: 'P20240066',
+    executionRate: 48,
+    planNo: 'SHFA-2026010066',
+    mainProblem: '饮食控制不达标',
+  },
+  {
+    rank: 12,
+    patientName: '袁秀兰',
+    medicalRecordNo: 'P20240071',
+    executionRate: 49,
+    planNo: 'SHFA-2026010071',
+    mainProblem: '运动依从性差',
+  },
+  {
+    rank: 13,
+    patientName: '邓志刚',
+    medicalRecordNo: 'P20240076',
+    executionRate: 50,
+    planNo: 'SHFA-2026010076',
+    mainProblem: '作息紊乱',
+  },
+  {
+    rank: 14,
+    patientName: '许国平',
+    medicalRecordNo: 'P20240079',
+    executionRate: 51,
+    planNo: 'SHFA-2026010079',
+    mainProblem: '体重管理失败',
+  },
+  {
+    rank: 15,
+    patientName: '傅晓红',
+    medicalRecordNo: 'P20240083',
+    executionRate: 52,
+    planNo: 'SHFA-2026010083',
+    mainProblem: '未戒烟',
+  },
+  {
+    rank: 16,
+    patientName: '苏德明',
+    medicalRecordNo: 'P20240086',
+    executionRate: 53,
+    planNo: 'SHFA-2026010086',
+    mainProblem: '饮食控制不达标',
+  },
+  {
+    rank: 17,
+    patientName: '卢美英',
+    medicalRecordNo: 'P20240090',
+    executionRate: 55,
+    planNo: 'SHFA-2026010090',
+    mainProblem: '运动量不足',
+  },
+  {
+    rank: 18,
+    patientName: '蒋文明',
+    medicalRecordNo: 'P20240094',
+    executionRate: 56,
+    planNo: 'SHFA-2026010094',
+    mainProblem: '睡眠质量差',
+  },
+  {
+    rank: 19,
+    patientName: '蔡秋华',
+    medicalRecordNo: 'P20240098',
+    executionRate: 57,
+    planNo: 'SHFA-2026010098',
+    mainProblem: '心理压力大',
+  },
+  {
+    rank: 20,
+    patientName: '贾志强',
+    medicalRecordNo: 'P20240101',
+    executionRate: 58,
+    planNo: 'SHFA-2026010101',
+    mainProblem: '饮食+运动均不达标',
+  },
 ]
 
 // ============================================================
@@ -158,8 +395,15 @@ export const planList: LifestylePlan[] = Array.from({ length: 50 }, (_, i) => {
   const startMonth = month === '12' ? '12' : month === '13' ? '01' : month === '14' ? '02' : '03'
   const startYear = startMonth === '12' ? '2025' : '2026'
   const endYear = Number(startMonth) + 3 > 12 ? '2026' : startYear
-  const endMonth = String((Number(startMonth) + 2) > 12 ? (Number(startMonth) + 2 - 12) : Number(startMonth) + 2).padStart(2, '0')
-  const rate = status === 'created' ? 60 + Math.floor(Math.random() * 35) : status === 'archived' ? 70 + Math.floor(Math.random() * 28) : 20 + Math.floor(Math.random() * 40)
+  const endMonth = String(
+    Number(startMonth) + 2 > 12 ? Number(startMonth) + 2 - 12 : Number(startMonth) + 2,
+  ).padStart(2, '0')
+  const rate =
+    status === 'created'
+      ? 60 + Math.floor(Math.random() * 35)
+      : status === 'archived'
+        ? 70 + Math.floor(Math.random() * 28)
+        : 20 + Math.floor(Math.random() * 40)
 
   return {
     id: `plan-${i + 1}`,
@@ -180,21 +424,64 @@ export const planList: LifestylePlan[] = Array.from({ length: 50 }, (_, i) => {
 // ============================================================
 
 const dietPlans = [
-  { dailyCalorie: '1600~1800 kcal', carbohydrate: '50%~55%', protein: '15%~20%', fat: '25%~30%', mealDistribution: '早餐1/5、午餐2/5、晚餐2/5', dietNotes: '限制精制糖摄入，选择低GI食物，每日蔬菜不少于500g' },
-  { dailyCalorie: '1400~1600 kcal', carbohydrate: '45%~50%', protein: '20%', fat: '30%', mealDistribution: '早餐1/3、午餐1/3、晚餐1/3', dietNotes: '严格控制碳水总量，增加膳食纤维，每日全谷物占主食50%以上' },
-  { dailyCalorie: '1800~2000 kcal', carbohydrate: '55%~60%', protein: '15%', fat: '25%~30%', mealDistribution: '早餐30%、午餐40%、晚餐30%', dietNotes: '均衡膳食，适量优质蛋白，限制油炸食品摄入' },
+  {
+    dailyCalorie: '1600~1800 kcal',
+    carbohydrate: '50%~55%',
+    protein: '15%~20%',
+    fat: '25%~30%',
+    mealDistribution: '早餐1/5、午餐2/5、晚餐2/5',
+    dietNotes: '限制精制糖摄入，选择低GI食物，每日蔬菜不少于500g',
+  },
+  {
+    dailyCalorie: '1400~1600 kcal',
+    carbohydrate: '45%~50%',
+    protein: '20%',
+    fat: '30%',
+    mealDistribution: '早餐1/3、午餐1/3、晚餐1/3',
+    dietNotes: '严格控制碳水总量，增加膳食纤维，每日全谷物占主食50%以上',
+  },
+  {
+    dailyCalorie: '1800~2000 kcal',
+    carbohydrate: '55%~60%',
+    protein: '15%',
+    fat: '25%~30%',
+    mealDistribution: '早餐30%、午餐40%、晚餐30%',
+    dietNotes: '均衡膳食，适量优质蛋白，限制油炸食品摄入',
+  },
 ]
 
 const exercisePlans = [
-  { exerciseType: '有氧运动（快走、慢跑）', frequency: '每周5~7天', duration: '每次30~45分钟', intensity: '中等强度（心率达到最大心率的50%~70%）', exerciseNotes: '餐后1小时开始运动，避免空腹运动，运动前后监测血糖' },
-  { exerciseType: '有氧运动（游泳、骑行）', frequency: '每周3~5天', duration: '每次20~30分钟', intensity: '低至中等强度', exerciseNotes: '从低强度开始逐步增加，避免剧烈运动，运动时随身携带糖果' },
-  { exerciseType: '抗阻训练+有氧运动', frequency: '每周3天有氧+2天抗阻', duration: '有氧30分钟，抗阻20分钟', intensity: '中等强度', exerciseNotes: '抗阻训练在非连续日进行，注意运动后拉伸放松' },
+  {
+    exerciseType: '有氧运动（快走、慢跑）',
+    frequency: '每周5~7天',
+    duration: '每次30~45分钟',
+    intensity: '中等强度（心率达到最大心率的50%~70%）',
+    exerciseNotes: '餐后1小时开始运动，避免空腹运动，运动前后监测血糖',
+  },
+  {
+    exerciseType: '有氧运动（游泳、骑行）',
+    frequency: '每周3~5天',
+    duration: '每次20~30分钟',
+    intensity: '低至中等强度',
+    exerciseNotes: '从低强度开始逐步增加，避免剧烈运动，运动时随身携带糖果',
+  },
+  {
+    exerciseType: '抗阻训练+有氧运动',
+    frequency: '每周3天有氧+2天抗阻',
+    duration: '有氧30分钟，抗阻20分钟',
+    intensity: '中等强度',
+    exerciseNotes: '抗阻训练在非连续日进行，注意运动后拉伸放松',
+  },
 ]
 
 export function generatePlanDetail(plan: LifestylePlan): PlanDetail {
-  const p = patientPool.find(item => item.no === plan.medicalRecordNo)
-  const diet = dietPlans[plan.id.charCodeAt(5) % 3]
-  const exercise = exercisePlans[plan.id.charCodeAt(6) % 3]
+  const p = patientPool.find((item) => item.no === plan.medicalRecordNo)
+  // 修复：使用 plan.id 的最后一个字符来计算索引，确保始终有效
+  const idLastChar = plan.id.charAt(plan.id.length - 1)
+  const dietIndex = parseInt(idLastChar) % 3
+  const exerciseIndex = (parseInt(idLastChar) + 1) % 3
+  const diet = dietPlans[dietIndex]
+  const exercise = exercisePlans[exerciseIndex]
   const bmi = (20 + Math.random() * 8).toFixed(1)
   const targetWeight = (55 + Math.random() * 15).toFixed(0)
   const currentWeight = (Number(targetWeight) + Math.random() * 10 - 3).toFixed(1)
@@ -225,7 +512,7 @@ export function generatePlanDetail(plan: LifestylePlan): PlanDetail {
       sleepNotes: '保持规律作息，睡前避免使用电子设备，营造安静睡眠环境',
     },
     habitManagement: {
-      smokingStatus: '已戒烟' ,
+      smokingStatus: '已戒烟',
       drinkingStatus: '已限酒',
       habitAdvice: '继续保持戒烟状态，每日饮酒量不超过25g（男性）/15g（女性），建议完全戒酒',
     },
@@ -269,7 +556,8 @@ export const executionRecords: ExecutionRecord[] = Array.from({ length: 30 }, (_
     weightStatus: Math.random() > 0.5 ? '达标' : '未达标',
     sleepStatus: Math.random() > 0.4 ? '良好' : '需改善',
     selfManagementScore: 50 + Math.floor(Math.random() * 45),
-    overallRating: overallRate >= 80 ? '优秀' : overallRate >= 60 ? '良好' : overallRate >= 40 ? '一般' : '较差',
+    overallRating:
+      overallRate >= 80 ? '优秀' : overallRate >= 60 ? '良好' : overallRate >= 40 ? '一般' : '较差',
   }
 })
 
@@ -384,11 +672,17 @@ export const guidanceLibrary: GuidanceItem[] = [
 // ============================================================
 // 新建方案（生成并生效后插入列表）
 // ============================================================
-export function createNewPlan(patientName: string, medicalRecordNo: string, stratification: string, doctor: string): LifestylePlan {
+export function createNewPlan(
+  patientName: string,
+  medicalRecordNo: string,
+  stratification: string,
+  doctor: string,
+): LifestylePlan {
   const now = new Date()
   const end = new Date(now)
   end.setMonth(end.getMonth() + 3)
-  const formatDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  const formatDate = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
   return {
     id: `plan-new-${Date.now()}`,
@@ -405,7 +699,7 @@ export function createNewPlan(patientName: string, medicalRecordNo: string, stra
 }
 
 // Mock患者池（用于新建方案选择）
-export const mockPatientsForSelect = patientPool.map(p => ({
+export const mockPatientsForSelect = patientPool.map((p) => ({
   label: `${p.name}（${p.no}）`,
   value: p.no,
   name: p.name,

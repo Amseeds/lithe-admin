@@ -37,7 +37,10 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
       message.error('登录已过期，请重新登录')
-      // 可以在这里添加跳转登录页逻辑
+      // 添加自动跳转到登录页逻辑
+      setTimeout(() => {
+        window.location.href = '/sign-in'
+      }, 1000)
     }
 
     return Promise.reject(error)

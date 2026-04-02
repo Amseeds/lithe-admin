@@ -774,6 +774,16 @@ onUnmounted(() => {
           <div class="modal-title">{{ currentPlanDetail?.planNo }} 方案详情</div>
         </div>
       </template>
+      <template #footer>
+        <div class="detail-footer">
+          <NButton @click="message.info('打印（仅样式）')">打印</NButton>
+          <NButton
+            type="primary"
+            @click="detailModalVisible = false"
+            >关闭弹窗</NButton
+          >
+        </div>
+      </template>
       <div
         v-if="currentPlanDetail"
         class="plan-detail"
@@ -938,16 +948,6 @@ onUnmounted(() => {
           <h3 class="section-title">个性化建议</h3>
           <p class="advice-text">{{ currentPlanDetail.personalizedAdvice }}</p>
         </div>
-
-        <!-- 底部按钮 -->
-        <div class="detail-footer">
-          <NButton @click="message.info('打印（仅样式）')">打印</NButton>
-          <NButton
-            type="primary"
-            @click="detailModalVisible = false"
-            >关闭弹窗</NButton
-          >
-        </div>
       </div>
       <NEmpty v-else />
     </NModal>
@@ -1108,7 +1108,7 @@ onUnmounted(() => {
   --color-border: #e2e8f0;
   --color-border-light: #f1f5f9;
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.09), 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.10), 0 3px 6px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.1), 0 3px 6px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.13), 0 6px 12px rgba(0, 0, 0, 0.08);
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -1412,8 +1412,6 @@ onUnmounted(() => {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 24px;
-  padding-top: 20px;
   border-top: 1px solid var(--color-border);
 }
 
