@@ -311,7 +311,7 @@ function initTab3Charts() {
         data: adverseReactionChart.xAxis,
         axisLabel: {
           interval: 0,
-        //   rotate: 30,
+          //   rotate: 30,
         },
       },
       yAxis: { type: 'value', name: '发生率(%)' },
@@ -538,50 +538,69 @@ function getTrendChartData(index: any) {
 <template>
   <div class="treatment-effects">
     <!-- 顶部全局筛选栏 -->
-    <div class="filter-bar">
-      <div class="filter-item">
-        <span class="filter-label">时间范围</span>
-        <NSelect
-          v-model:value="timeRange"
-          :options="timeRangeOptions"
-          placeholder="请选择"
-          clearable
-          style="width: 140px"
-        />
+    <NCard
+      class="filter-bar"
+      size="small"
+    >
+      <div class="filter-bar-inner">
+        <div class="filter-controls">
+          <div class="filter-item">
+            <span class="filter-label">时间范围</span>
+            <NSelect
+              v-model:value="timeRange"
+              :options="timeRangeOptions"
+              placeholder="请选择"
+              clearable
+              style="width: 140px"
+              size="small"
+            />
+          </div>
+          <div class="filter-item">
+            <span class="filter-label">患者分层</span>
+            <NSelect
+              v-model:value="patientStratification"
+              :options="patientStratificationOptions"
+              placeholder="请选择"
+              multiple
+              clearable
+              style="width: 180px"
+              size="small"
+            />
+          </div>
+          <div class="filter-item">
+            <span class="filter-label">疗效分级</span>
+            <NSelect
+              v-model:value="efficacyGrade"
+              :options="efficacyGradeOptions"
+              placeholder="请选择"
+              multiple
+              clearable
+              style="width: 180px"
+              size="small"
+            />
+          </div>
+          <div class="filter-item">
+            <span class="filter-label">患者姓名/病历号</span>
+            <NInput
+              v-model:value="searchText"
+              placeholder="请输入"
+              clearable
+              style="width: 160px"
+              size="small"
+            />
+          </div>
+          <div class="filter-buttons">
+            <NButton
+              size="small"
+              type="primary"
+            >查询</NButton>
+            <NButton
+              size="small"
+            >重置</NButton>
+          </div>
+        </div>
       </div>
-      <div class="filter-item">
-        <span class="filter-label">患者分层</span>
-        <NSelect
-          v-model:value="patientStratification"
-          :options="patientStratificationOptions"
-          placeholder="请选择"
-          multiple
-          clearable
-          style="width: 180px"
-        />
-      </div>
-      <div class="filter-item">
-        <span class="filter-label">疗效分级</span>
-        <NSelect
-          v-model:value="efficacyGrade"
-          :options="efficacyGradeOptions"
-          placeholder="请选择"
-          multiple
-          clearable
-          style="width: 180px"
-        />
-      </div>
-      <div class="filter-item">
-        <span class="filter-label">患者姓名/病历号</span>
-        <NInput
-          v-model:value="searchText"
-          placeholder="请输入"
-          clearable
-          style="width: 160px"
-        />
-      </div>
-      <NButton type="primary">查询</NButton>
-    </div>
+    </NCard>
 
     <!-- 核心主导航Tab -->
     <NCard class="main-content">
@@ -1083,39 +1102,102 @@ export default {}
 </script>
 
 <style scoped>
+/* ================================================================
+   CSS变量 - 医疗级色系（支持 Dark Mode）
+   ================================================================ */
+.treatment-effects {
+  --color-bg: #ffffff;
+  --color-bg-secondary: #f8fafc;
+  --color-bg-tertiary: #f1f5f9;
+  --color-border: #ebeef5;
+  --color-border-light: rgba(64, 158, 255, 0.08);
+
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #334155;
+  --color-text-muted: #64748b;
+  --color-text-light: #94a3b8;
+
+  --color-primary: #0ea5e9;
+  --color-primary-light: #38bdf8;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+
+  --color-card-shadow: rgba(64, 158, 255, 0.06);
+  --color-card-shadow-hover: rgba(64, 158, 255, 0.12);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .treatment-effects {
+    --color-bg: #1e293b;
+    --color-bg-secondary: #0f172a;
+    --color-bg-tertiary: #1e293b;
+    --color-border: #334155;
+    --color-border-light: rgba(255, 255, 255, 0.06);
+
+    --color-text-primary: #f1f5f9;
+    --color-text-secondary: #cbd5e1;
+    --color-text-muted: #94a3b8;
+    --color-text-light: #64748b;
+
+    --color-card-shadow: rgba(0, 0, 0, 0.2);
+    --color-card-shadow-hover: rgba(0, 0, 0, 0.35);
+  }
+}
 .treatment-effects {
   padding: 16px;
-  background: #f5f5f5;
+  /* background: #f5f5f5; */
   min-height: calc(100vh - 60px);
   max-height: 100%;
   overflow-y: auto;
 }
 
 .filter-bar {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  padding: 16px;
-  background: #fff;
-  border-radius: 8px;
   margin-bottom: 16px;
+}
+
+.filter-bar :deep(.n-card__content) {
+  padding: 12px 16px;
+}
+
+.filter-bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.filter-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
 .filter-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .filter-label {
-  font-size: 14px;
-  color: #666;
+  font-size: 13px;
+  color: var(--color-text-secondary);
   white-space: nowrap;
+  font-weight: 500;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 8px;
 }
 
 .main-content {
-  background: #fff;
+  /* background: #fff; */
   border-radius: 8px;
   overflow: visible;
 }
@@ -1138,8 +1220,8 @@ export default {}
   transition: all 0.25s ease;
   border-radius: 12px;
   overflow: hidden;
-  background: #fff;
-  border: 1px solid #ebeef5;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
 }
 
 .efficacy-card::before {
@@ -1184,13 +1266,13 @@ export default {}
 .card-title {
   font-size: 15px;
   font-weight: 600;
-  color: #303133;
+  color: var(--color-text-primary);
 }
 
 .card-count {
   font-size: 28px;
   font-weight: 700;
-  color: #303133;
+  color: var(--color-text-primary);
 }
 
 .card-content {
@@ -1202,7 +1284,7 @@ export default {}
 
 .card-proportion {
   font-size: 13px;
-  color: #909399;
+  color: var(--color-text-muted);
 }
 
 .card-change {
@@ -1215,13 +1297,13 @@ export default {}
 }
 
 .card-change.positive {
-  color: #67c23a;
-  background: rgba(103, 194, 58, 0.1);
+  color: var(--color-success);
+  background: rgba(16, 185, 129, 0.1);
 }
 
 .card-change.negative {
-  color: #f56c6c;
-  background: rgba(245, 108, 108, 0.1);
+  color: var(--color-danger);
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .charts-row {
@@ -1242,9 +1324,9 @@ export default {}
   cursor: pointer;
   transition: all 0.25s ease;
   margin-bottom: 16px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-  border: 1px solid #ebeef5;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-secondary) 100%);
+  border: 1px solid var(--color-border);
   overflow: hidden;
 }
 
@@ -1255,22 +1337,22 @@ export default {}
   bottom: 0;
   left: 0;
   width: 4px;
-  background: linear-gradient(180deg, #909399, #c0c4cc);
+  background: linear-gradient(180deg, var(--color-text-muted), var(--color-text-light));
   transition: all 0.2s;
 }
 
 .index-card.active::before {
-  background: linear-gradient(180deg, #409eff, #79bbff);
+  background: linear-gradient(180deg, var(--color-primary), var(--color-primary-light));
 }
 
 .index-card.active {
-  border: 1px solid #409eff;
-  background: linear-gradient(135deg, #ffffff 0%, #ecf5ff 100%);
+  border: 1px solid var(--color-primary);
+  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-tertiary) 100%);
 }
 
 .index-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 20px var(--color-card-shadow-hover);
 }
 
 .index-name {
@@ -1278,9 +1360,9 @@ export default {}
   font-weight: 600;
   margin-bottom: 12px;
   text-align: left;
-  color: #303133;
+  color: var(--color-text-primary);
   padding-bottom: 8px;
-  border-bottom: 1px dashed #ebeef5;
+  border-bottom: 1px dashed var(--color-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1297,8 +1379,8 @@ export default {}
 .index-unit {
   font-size: 11px;
   font-weight: 400;
-  color: #606266;
-  background: #f4f4f5;
+  color: var(--color-text-muted);
+  background: var(--color-bg-tertiary);
   padding: 2px 6px;
   border-radius: 4px;
 }
@@ -1311,14 +1393,14 @@ export default {}
 
 .stat-label {
   font-size: 12px;
-  color: #909399;
+  color: var(--color-text-muted);
   margin-bottom: 4px;
 }
 
 .stat-value {
   font-size: 20px;
   font-weight: 700;
-  color: #303133;
+  color: var(--color-text-primary);
   line-height: 1.2;
 }
 
@@ -1332,11 +1414,11 @@ export default {}
 .stat-rate {
   font-size: 13px;
   font-weight: 500;
-  color: #67c23a;
+  color: var(--color-success);
 }
 
 .stat-rate.danger {
-  color: #f56c6c;
+  color: var(--color-danger);
 }
 
 .stat-change {
@@ -1347,13 +1429,13 @@ export default {}
 }
 
 .stat-change.positive {
-  color: #67c23a;
-  background: rgba(103, 194, 58, 0.1);
+  color: var(--color-success);
+  background: rgba(16, 185, 129, 0.1);
 }
 
 .stat-change.negative {
-  color: #f56c6c;
-  background: rgba(245, 108, 108, 0.1);
+  color: var(--color-danger);
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .safety-cards {
@@ -1363,9 +1445,9 @@ export default {}
 .safety-card {
   position: relative;
   text-align: left;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-  border: 1px solid #ebeef5;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-secondary) 100%);
+  border: 1px solid var(--color-border);
   transition: all 0.25s ease;
   overflow: hidden;
 }
@@ -1377,32 +1459,32 @@ export default {}
   top: 0;
   bottom: 0;
   width: 4px;
-  border-radius: 12px 0 0 12px;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
 }
 
 .safety-card.type-adverse::before {
-  background: linear-gradient(180deg, #e6a23c, #f3b740);
+  background: linear-gradient(180deg, var(--color-warning), #fbbf24);
 }
 .safety-card.type-liver::before {
-  background: linear-gradient(180deg, #909399, #a6a9ad);
+  background: linear-gradient(180deg, var(--color-text-muted), var(--color-text-light));
 }
 .safety-card.type-compliance::before {
-  background: linear-gradient(180deg, #67c23a, #95d475);
+  background: linear-gradient(180deg, var(--color-success), #34d399);
 }
 .safety-card.type-risk::before {
-  background: linear-gradient(180deg, #f56c6c, #f89898);
+  background: linear-gradient(180deg, var(--color-danger), #f87171);
 }
 
 .safety-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 20px var(--color-card-shadow-hover);
 }
 
 .safety-title {
   font-size: 14px;
   font-weight: 600;
   margin-bottom: 16px;
-  color: #303133;
+  color: var(--color-text-primary);
   padding-left: 8px;
 }
 
@@ -1416,19 +1498,19 @@ export default {}
 .safety-value {
   font-size: 36px;
   font-weight: 700;
-  color: #303133;
+  color: var(--color-text-primary);
   line-height: 1;
 }
 
 .safety-unit {
   font-size: 14px;
-  color: #606266;
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
 .safety-rate {
   font-size: 14px;
-  color: #909399;
+  color: var(--color-text-light);
   margin-left: 4px;
 }
 
@@ -1444,18 +1526,18 @@ export default {}
 }
 
 .safety-change.positive {
-  color: #67c23a;
-  background: rgba(103, 194, 58, 0.1);
+  color: var(--color-success);
+  background: rgba(16, 185, 129, 0.1);
 }
 
 .safety-change.negative {
-  color: #f56c6c;
-  background: rgba(245, 108, 108, 0.1);
+  color: var(--color-danger);
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .safety-subtitle {
   font-size: 12px;
-  color: #c0c4cc;
+  color: var(--color-text-muted);
   margin-top: 4px;
 }
 

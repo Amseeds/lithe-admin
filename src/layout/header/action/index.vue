@@ -14,6 +14,8 @@ defineOptions({
   name: 'Actions',
 })
 
+const isDev = import.meta.env.DEV
+
 const AsyncAvatarDropdown = defineAsyncComponent({
   loader: () => import('./AvatarDropdown.vue'),
   loadingComponent: () => h('div', { style: { width: '34px', marginLeft: '4px' } }),
@@ -35,7 +37,7 @@ const { navigationMode } = toRefsPreferencesStore()
       <span class="icon-[mdi--github]" />
     </ButtonAnimation> -->
     <FullScreen />
-    <ThemeModePopover />
+    <ThemeModePopover v-if="isDev" />
     <PreferencesDrawer />
     <SignOut />
     <AsyncAvatarDropdown v-if="!isMaxSm && navigationMode === 'horizontal'" />

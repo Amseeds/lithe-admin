@@ -445,7 +445,6 @@ const tableData = computed(() => filteredReports.value)
         :data="tableData"
         :pagination="{ pageSize: 10 }"
         :scroll-x="1200"
-        striped
       />
     </NCard>
 
@@ -725,8 +724,9 @@ const tableData = computed(() => filteredReports.value)
 
 .filter-label {
   font-size: 13px;
-  color: #666;
+  color: #334155;
   white-space: nowrap;
+  font-weight: 500;
 }
 
 .filter-buttons {
@@ -748,12 +748,14 @@ const tableData = computed(() => filteredReports.value)
 
 .stat-card {
   cursor: default;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
-  border-radius: 8px;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  border-radius: 14px;
+  box-shadow: 0 1px 6px rgba(64, 158, 255, 0.06);
+  border: 1px solid rgba(64, 158, 255, 0.06);
 }
 
 .stat-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 20px rgba(64, 158, 255, 0.12);
   transform: translateY(-2px);
 }
 
@@ -763,19 +765,21 @@ const tableData = computed(() => filteredReports.value)
 
 .stat-card :deep(.n-statistic .n-statistic-value) {
   font-size: 28px;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
 }
 
 .stat-card :deep(.n-statistic .n-statistic-label) {
   font-size: 13px;
-  color: #666;
+  color: #334155;
   margin-top: 4px;
+  font-weight: 500;
 }
 
 .stat-card :deep(.n-statistic .n-statistic-suffix) {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   margin-left: 8px;
 }
 
@@ -812,7 +816,7 @@ const tableData = computed(() => filteredReports.value)
 
 .detail-section {
   padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid rgba(64, 158, 255, 0.06);
 }
 
 .detail-section:last-child {
@@ -862,9 +866,12 @@ const tableData = computed(() => filteredReports.value)
 
 .section-title {
   font-size: 15px;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 8px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 16px 0 12px;
+  padding-left: 12px;
+  border-left: 4px solid #0ea5e9;
+  letter-spacing: 0.01em;
 }
 
 .section-desc {
@@ -954,5 +961,114 @@ const tableData = computed(() => filteredReports.value)
   display: flex;
   gap: 10px;
   justify-content: flex-end;
+}
+
+/* ================================================================
+   表格 - 医疗级样式
+   ================================================================ */
+::deep(.n-data-table) {
+  font-size: 13px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+::deep(.n-data-table-th) {
+  background: #f8fafc !important;
+  font-weight: 600;
+  color: #334155;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+::deep(.n-data-table-td) {
+  font-size: 13px;
+  color: #475569;
+}
+
+::deep(.n-data-table-tr:hover td) {
+  background: #f0f9ff !important;
+}
+
+/* ================================================================
+   弹窗 & 抽屉圆角
+   ================================================================ */
+::deep(.n-modal),
+::deep(.n-card) {
+  border-radius: 14px;
+}
+
+::deep(.n-drawer) {
+  border-radius: 14px 0 0 14px;
+}
+
+/* ================================================================
+   详情弹窗 - 滚动条美化
+   ================================================================ */
+.report-detail {
+  max-height: 65vh;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.report-detail::-webkit-scrollbar {
+  width: 5px;
+}
+
+.report-detail::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.report-detail::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.report-detail::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ================================================================
+   section-note & advice-text
+   ================================================================ */
+.section-note {
+  margin: 10px 0;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-left: 3px solid #0ea5e9;
+  border-radius: 6px;
+  color: #1e40af;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.advice-text {
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-left: 4px solid #10b981;
+  border-radius: 0 8px 8px 0;
+  color: #14532d;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+/* ================================================================
+   全局滚动条
+   ================================================================ */
+.efficacy-report-page::-webkit-scrollbar {
+  width: 6px;
+}
+
+.efficacy-report-page::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.efficacy-report-page::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.efficacy-report-page::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 </style>

@@ -298,71 +298,73 @@ onMounted(() => {
         class="case-detail"
       >
         <!-- 头部信息 -->
-        <div class="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
-          <div class="flex gap-4">
+        <div class="case-header">
+          <div class="case-header-info">
             <span>姓名: {{ currentDetail.name }}</span>
             <span>性别: {{ currentDetail.sex }}</span>
             <span>年龄: {{ currentDetail.age }}</span>
             <span>住院号: {{ currentDetail.zyh }}</span>
           </div>
-          <div>入院时间: {{ currentDetail.admissionDate }}</div>
+          <div class="case-header-date">入院时间: {{ currentDetail.admissionDate }}</div>
         </div>
 
         <!-- 基本信息 -->
-        <div class="mt-4">
-          <div class="text-lg font-semibold mb-3">基本信息</div>
-          <NGrid
-            :cols="3"
-            :x-gap="16"
-            :y-gap="8"
-          >
-            <NGi>
-              <span class="font-medium">姓名：</span>{{ currentDetail.name }}
-            </NGi>
-            <NGi>
-              <span class="font-medium">性别：</span>{{ currentDetail.sex }}
-            </NGi>
-            <NGi>
-              <span class="font-medium">年龄：</span>{{ currentDetail.age }}
-            </NGi>
-            <NGi>
-              <span class="font-medium">民族：</span>{{ currentDetail.nation || '-' }}
-            </NGi>
-            <NGi>
-              <span class="font-medium">婚姻状况：</span>{{ currentDetail.marriage || '-' }}
-            </NGi>
-            <NGi>
-              <span class="font-medium">报告人：</span>{{ currentDetail.informant || '-' }}
-            </NGi>
-            <NGi>
-              <span class="font-medium">职业：</span>{{ currentDetail.job || '-' }}
-            </NGi>
-            <NGi>
-              <span class="font-medium">工作单位：</span>{{ currentDetail.workUnit || '-' }}
-            </NGi>
-            <NGi>
-              <span class="font-medium">可靠性：</span>{{ currentDetail.reliability || '-' }}
-            </NGi>
-            <NGi :span="3">
-              <span class="font-medium">籍贯：</span>{{ currentDetail.address || '-' }}
-            </NGi>
-            <NGi :span="3">
-              <span class="font-medium">家庭住址：</span>{{ currentDetail.address || '-' }}
-            </NGi>
-          </NGrid>
+        <div class="basic-info">
+          <div class="section-title">基本信息</div>
+          <div class="basic-info-grid">
+            <NGrid
+              :cols="3"
+              :x-gap="16"
+              :y-gap="8"
+            >
+              <NGi>
+                <div class="basic-info-item"><span class="label">姓名：</span>{{ currentDetail.name }}</div>
+              </NGi>
+              <NGi>
+                <div class="basic-info-item"><span class="label">性别：</span>{{ currentDetail.sex }}</div>
+              </NGi>
+              <NGi>
+                <div class="basic-info-item"><span class="label">年龄：</span>{{ currentDetail.age }}</div>
+              </NGi>
+              <NGi>
+                <div class="basic-info-item"><span class="label">民族：</span>{{ currentDetail.nation || '-' }}</div>
+              </NGi>
+              <NGi>
+                <div class="basic-info-item"><span class="label">婚姻状况：</span>{{ currentDetail.marriage || '-' }}</div>
+              </NGi>
+              <NGi>
+                <div class="basic-info-item"><span class="label">报告人：</span>{{ currentDetail.informant || '-' }}</div>
+              </NGi>
+              <NGi>
+                <div class="basic-info-item"><span class="label">职业：</span>{{ currentDetail.job || '-' }}</div>
+              </NGi>
+              <NGi>
+                <div class="basic-info-item"><span class="label">工作单位：</span>{{ currentDetail.workUnit || '-' }}</div>
+              </NGi>
+              <NGi>
+                <div class="basic-info-item"><span class="label">可靠性：</span>{{ currentDetail.reliability || '-' }}</div>
+              </NGi>
+              <NGi :span="3">
+                <div class="basic-info-item"><span class="label">籍贯：</span>{{ currentDetail.address || '-' }}</div>
+              </NGi>
+              <NGi :span="3">
+                <div class="basic-info-item"><span class="label">家庭住址：</span>{{ currentDetail.address || '-' }}</div>
+              </NGi>
+            </NGrid>
+          </div>
         </div>
 
         <!-- 病历内容 -->
         <template v-if="currentDetail.lasDtoList?.length">
-          <NDivider />
-          <div
-            v-for="(item, index) in currentDetail.lasDtoList"
-            :key="index"
-            class="mb-4"
-          >
-            <div class="text-lg font-semibold mb-2">{{ item.caseContent }}</div>
-            <div class="text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap">
-              {{ item.medicalCaseContent }}
+          <NDivider class="case-divider" />
+          <div class="case-content">
+            <div
+              v-for="(item, index) in currentDetail.lasDtoList"
+              :key="index"
+              class="case-content-item"
+            >
+              <div class="case-content-title">{{ item.caseContent }}</div>
+              <div class="case-content-text">{{ item.medicalCaseContent }}</div>
             </div>
           </div>
         </template>
@@ -379,8 +381,146 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* ================================================================
+   弹窗圆角
+   ================================================================ */
+::deep(.n-modal),
+::deep(.n-card) {
+  border-radius: 14px;
+}
+
+/* ================================================================
+   详情内容区
+   ================================================================ */
 .case-detail {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #475569;
+}
+
+/* 头部信息区 */
+.case-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(64, 158, 255, 0.1);
+  margin-bottom: 16px;
+}
+
+.case-header-info {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
   font-size: 14px;
-  line-height: 1.6;
+  color: #334155;
+}
+
+.case-header-info span {
+  font-weight: 500;
+}
+
+.case-header-date {
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* ================================================================
+   区块标题
+   ================================================================ */
+.section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 16px 0 12px;
+  padding-left: 12px;
+  border-left: 4px solid #0ea5e9;
+  letter-spacing: 0.01em;
+}
+
+/* 基本信息网格 */
+.basic-info-grid {
+  background: #f8fafc;
+  border: 1px solid rgba(64, 158, 255, 0.08);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.basic-info-item {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.8;
+}
+
+.basic-info-item .label {
+  font-weight: 600;
+  color: #334155;
+}
+
+/* ================================================================
+   病历内容
+   ================================================================ */
+.case-content {
+  margin-top: 8px;
+}
+
+.case-content-item {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 10px;
+  border: 1px solid rgba(64, 158, 255, 0.06);
+}
+
+.case-content-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(64, 158, 255, 0.08);
+}
+
+.case-content-text {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+/* ================================================================
+   弹窗滚动条
+   ================================================================ */
+.case-detail::-webkit-scrollbar {
+  width: 5px;
+}
+
+.case-detail::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.case-detail::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.case-detail::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ================================================================
+   NGrid 样式优化
+   ================================================================ */
+::deep(.n-grid) {
+  font-size: 13px;
+}
+
+/* ================================================================
+   NDivider 样式
+   ================================================================ */
+::deep(.n-divider:not(.n-divider--vertical)) {
+  margin: 16px 0;
+  border-color: rgba(64, 158, 255, 0.08);
 }
 </style>

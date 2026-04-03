@@ -26,6 +26,7 @@ import type { FormItemRule } from 'naive-ui'
 defineOptions({
   name: 'SignIn',
 })
+const isDev = import.meta.env.DEV
 
 const { isMaxSm } = useInjection(mediaQueryInjectionKey)
 
@@ -188,7 +189,7 @@ onUnmounted(() => {
       >
         <div class="absolute top-0 left-0 z-50 flex w-full items-center justify-end gap-x-4 p-4">
           <ThemeColorPopover />
-          <ThemeModePopover />
+          <ThemeModePopover v-if="isDev" />
         </div>
         <div>
           <div>

@@ -393,8 +393,13 @@ onMounted(() => {
 <template>
   <div class="flex h-full">
     <!-- 左侧菜单 -->
-    <div class="h-full w-[240px] flex-shrink-0 border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-      <NScrollbar h-full trigger="hover">
+    <div
+      class="h-full w-[240px] flex-shrink-0 border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+    >
+      <NScrollbar
+        h-full
+        trigger="hover"
+      >
         <NMenu
           :options="menuOptions"
           :value="currentCategory"

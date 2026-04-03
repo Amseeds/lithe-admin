@@ -123,13 +123,23 @@ function initTab1Charts() {
           name: '患者总数',
           type: 'bar',
           data: barChartData.map((d) => d.total),
-          itemStyle: { color: '#e0e7ff' },
+          itemStyle: { color: '#818cf8' },
+          emphasis: {
+            itemStyle: {
+              color: '#6366f1',
+            },
+          },
         },
         {
           name: '已制定方案',
           type: 'bar',
           data: barChartData.map((d) => d.planned),
           itemStyle: { color: '#6366f1' },
+          emphasis: {
+            itemStyle: {
+              color: '#4f46e5',
+            },
+          },
         },
       ],
     })
@@ -1064,7 +1074,7 @@ onUnmounted(() => {
       v-model:show="followUpVisible"
       preset="card"
       title="随访记录"
-      style="width: 900px; max-width: 95vw"
+      style="width: 1300px; max-width: 96vw"
       :mask-closable="true"
     >
       <NDataTable
@@ -1072,6 +1082,7 @@ onUnmounted(() => {
         :data="followUpRecords"
         size="small"
         :max-height="400"
+        :scroll-x="1200"
       />
       <div style="margin-top: 12px; text-align: right">
         <NButton
@@ -1089,11 +1100,10 @@ onUnmounted(() => {
    CSS Variables — Refined Clinical Palette
    ================================================================ */
 .lifestyle-page {
-  /* --color-bg: #f0f4f8; */
   --color-surface: #ffffff;
-  --color-primary: #0d9488;
-  --color-primary-light: #ccfbf1;
-  --color-primary-dark: #0f766e;
+  --color-primary: #0ea5e9;
+  --color-primary-light: #e0f2fe;
+  --color-primary-dark: #0284c7;
   --color-accent: #f97316;
   --color-accent-light: #ffedd5;
   --color-success: #10b981;
@@ -1102,16 +1112,16 @@ onUnmounted(() => {
   --color-warning-light: #fef3c7;
   --color-danger: #ef4444;
   --color-danger-light: #fee2e2;
-  --color-text-primary: #1e293b;
-  --color-text-secondary: #64748b;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #334155;
   --color-text-muted: #94a3b8;
   --color-border: #e2e8f0;
   --color-border-light: #f1f5f9;
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.09), 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.1), 0 3px 6px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.13), 0 6px 12px rgba(0, 0, 0, 0.08);
+  --shadow-sm: 0 2px 8px rgba(64, 158, 255, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 6px 20px rgba(64, 158, 255, 0.1), 0 3px 6px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 12px 40px rgba(64, 158, 255, 0.14), 0 6px 12px rgba(0, 0, 0, 0.08);
   --radius-sm: 8px;
-  --radius-md: 12px;
+  --radius-md: 14px;
   --radius-lg: 16px;
 
   padding: 20px 24px;
@@ -1120,7 +1130,7 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 20px;
   overflow-y: auto;
-  background: var(--color-bg);
+  background: linear-gradient(160deg, #f0f4f8 0%, #f5f7fa 100%);
 }
 
 /* ================================================================
@@ -1181,22 +1191,22 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 4px;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
 /* 每个卡片的accent bar颜色各不同 */
 .stat-card:nth-child(1)::before {
-  background: linear-gradient(90deg, var(--color-primary), #5eead4);
+  background: linear-gradient(90deg, #0ea5e9, #38bdf8, #7dd3fc);
 }
 .stat-card:nth-child(2)::before {
-  background: linear-gradient(90deg, var(--color-accent), #fbbf24);
+  background: linear-gradient(90deg, #f97316, #fb923c, #fdba74);
 }
 .stat-card:nth-child(3)::before {
-  background: linear-gradient(90deg, var(--color-success), #6ee7b7);
+  background: linear-gradient(90deg, #10b981, #34d399, #6ee7b7);
 }
 .stat-card:nth-child(4)::before {
-  background: linear-gradient(90deg, var(--color-danger), #fca5a5);
+  background: linear-gradient(90deg, #ef4444, #f87171, #fca5a5);
 }
 
 .stat-card:hover {
@@ -1374,36 +1384,36 @@ onUnmounted(() => {
 }
 
 .detail-section {
-  margin-bottom: 4px;
+  margin-bottom: 14px;
 }
 
 .section-title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
-  color: var(--color-text-primary);
-  margin: 12px 0 14px;
-  padding-left: 10px;
-  border-left: 3px solid var(--color-primary);
-  letter-spacing: 0.5px;
+  color: #0f172a;
+  margin: 16px 0 12px;
+  padding-left: 12px;
+  border-left: 4px solid #0ea5e9;
+  letter-spacing: 0.01em;
 }
 
 .section-note {
   margin-top: 10px;
-  padding: 10px 14px;
-  background: var(--color-primary-light);
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
   border-radius: var(--radius-sm);
-  color: var(--color-primary-dark);
+  color: #1e40af;
   font-size: 13px;
   line-height: 1.7;
-  border-left: 3px solid var(--color-primary);
+  border-left: 3px solid #0ea5e9;
 }
 
 .advice-text {
-  padding: 14px 16px;
-  background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
-  border-left: 4px solid var(--color-primary);
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-left: 4px solid #10b981;
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  color: var(--color-text-primary);
+  color: #14532d;
   font-size: 14px;
   line-height: 1.8;
 }
@@ -1493,17 +1503,25 @@ onUnmounted(() => {
 
 :deep(.n-data-table) {
   font-size: 13px;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
 :deep(.n-data-table th) {
   font-weight: 600 !important;
-  color: var(--color-text-secondary) !important;
-  font-size: 12px !important;
-  letter-spacing: 0.5px;
+  color: #334155 !important;
+  font-size: 13px !important;
+  letter-spacing: 0.02em;
+  background: #f8fafc !important;
 }
 
 :deep(.n-data-table td) {
-  color: var(--color-text-primary);
+  color: #475569;
+  font-size: 13px;
+}
+
+::deep(.n-data-table-tr:hover td) {
+  background: #f0f9ff !important;
 }
 
 /* ================================================================
