@@ -535,564 +535,568 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="lifestyle-page">
-    <!-- ============================================================ -->
-    <!-- 1. 顶部筛选栏 -->
-    <!-- ============================================================ -->
-    <NCard class="filter-card">
-      <NSpace
-        align="center"
-        :size="16"
-        :wrap="false"
-      >
-        <NSelect
-          v-model:value="filters.stratification"
-          :options="stratificationOptions"
-          placeholder="患者分层"
-          multiple
-          :max-tag-count="1"
-          style="width: 200px"
-        />
-        <NSelect
-          v-model:value="filters.planStatus"
-          :options="planStatusOptions"
-          placeholder="方案状态"
-          style="width: 130px"
-        />
-        <NSelect
-          v-model:value="filters.timeRange"
-          :options="timeRangeOptions"
-          style="width: 120px"
-        />
-        <NInput
-          v-model:value="filters.searchKeyword"
-          placeholder="患者姓名/病历号"
-          style="width: 170px"
-          clearable
-        />
-        <NButton
-          type="primary"
-          @click="handleQuery"
-          >查询</NButton
+  <ScrollContainer wrapper-class="flex flex-col gap-y-4 max-sm:gap-y-2">
+    <div class="lifestyle-page">
+      <!-- ============================================================ -->
+      <!-- 1. 顶部筛选栏 -->
+      <!-- ============================================================ -->
+      <NCard class="filter-card">
+        <NSpace
+          align="center"
+          :size="16"
+          :wrap="false"
         >
-        <NButton @click="handleReset">重置</NButton>
-        <div style="flex: 1" />
-        <NButton
-          type="primary"
-          @click="handleOpenNewPlan"
-          >新建指导方案</NButton
-        >
-      </NSpace>
-    </NCard>
-
-    <!-- ============================================================ -->
-    <!-- 2. 核心统计卡片 -->
-    <!-- ============================================================ -->
-    <div class="stat-cards">
-      <NCard
-        v-for="card in statCards"
-        :key="card.title"
-        class="stat-card"
-      >
-        <NStatistic
-          :label="card.title"
-          :value="card.value"
-        >
-          <template #suffix>
-            <span
-              :style="{
-                color: cardChangeStyle(card.changeType).color,
-                fontSize: '13px',
-                marginLeft: '8px',
-                fontWeight: 500,
-              }"
-              >{{ cardChangeStyle(card.changeType).icon }}{{ card.change }}</span
-            >
-          </template>
-        </NStatistic>
-      </NCard>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- 3. Tab导航 + 内容区 -->
-    <!-- ============================================================ -->
-    <NCard>
-      <NTabs
-        v-model:value="activeTab"
-        type="line"
-        @update:value="initCharts"
-      >
-        <!-- Tab1: 指导方案总览 -->
-        <NTabPane
-          name="overview"
-          tab="指导方案总览"
-        >
-          <div class="tab-content">
-            <!-- 图表行 -->
-            <div class="chart-row">
-              <NCard
-                title="不同患者分层方案覆盖情况"
-                class="chart-card"
-              >
-                <div
-                  ref="barChartRef"
-                  class="chart-container"
-                />
-              </NCard>
-              <NCard
-                title="方案执行率分布"
-                class="chart-card"
-              >
-                <div
-                  ref="pieChartRef"
-                  class="chart-container"
-                />
-              </NCard>
-            </div>
-            <!-- 表格行 -->
-            <div class="table-row">
-              <NCard
-                title="未制定方案患者列表"
-                class="table-card"
-              >
-                <NDataTable
-                  :columns="unplannedColumns"
-                  :data="unplannedPatients"
-                  :pagination="{ pageSize: 8 }"
-                  size="small"
-                  :max-height="320"
-                />
-              </NCard>
-              <NCard
-                title="低执行率患者TOP20"
-                class="table-card"
-              >
-                <NDataTable
-                  :columns="lowExecColumns"
-                  :data="lowExecutionPatients"
-                  :pagination="{ pageSize: 8 }"
-                  size="small"
-                  :max-height="320"
-                />
-              </NCard>
-            </div>
-          </div>
-        </NTabPane>
-
-        <!-- Tab2: 个体化方案管理 -->
-        <NTabPane
-          name="plans"
-          tab="个体化方案管理"
-        >
-          <NDataTable
-            :columns="planColumns"
-            :data="planList"
-            :pagination="{ pageSize: 10 }"
-            :scroll-x="1280"
-            size="small"
+          <NSelect
+            v-model:value="filters.stratification"
+            :options="stratificationOptions"
+            placeholder="患者分层"
+            multiple
+            :max-tag-count="1"
+            style="width: 200px"
           />
-        </NTabPane>
-
-        <!-- Tab3: 标准化指导库 -->
-        <NTabPane
-          name="library"
-          tab="标准化指导库"
-        >
-          <NCollapse
-            :default-expanded-names="['0']"
-            accordion
-          >
-            <NCollapseItem
-              v-for="(item, idx) in guidanceLibrary"
-              :key="idx"
-              :title="item.title"
-              :name="String(idx)"
-            >
-              <div class="guidance-content">
-                <p
-                  v-for="(text, i) in item.content"
-                  :key="i"
-                  class="guidance-item"
-                >
-                  {{ text }}
-                </p>
-              </div>
-            </NCollapseItem>
-          </NCollapse>
-        </NTabPane>
-
-        <!-- Tab4: 执行情况跟踪 -->
-        <NTabPane
-          name="tracking"
-          tab="执行跟踪"
-        >
-          <div class="tab-content">
-            <!-- 执行统计卡片 -->
-            <div
-              class="stat-cards"
-              style="margin-bottom: 16px"
-            >
-              <NCard
-                v-for="card in executionStatCards"
-                :key="card.title"
-                class="stat-card"
-              >
-                <NStatistic
-                  :label="card.title"
-                  :value="card.value"
-                >
-                  <template #suffix>
-                    <span
-                      :style="{
-                        color: cardChangeStyle(card.changeType).color,
-                        fontSize: '13px',
-                        marginLeft: '8px',
-                        fontWeight: 500,
-                      }"
-                      >{{ cardChangeStyle(card.changeType).icon }}{{ card.change }}</span
-                    >
-                  </template>
-                </NStatistic>
-              </NCard>
-            </div>
-            <!-- 执行明细列表 -->
-            <NCard title="执行情况明细">
-              <NDataTable
-                :columns="execColumns"
-                :data="executionRecords"
-                :pagination="{ pageSize: 10 }"
-                :scroll-x="1400"
-                size="small"
-              />
-            </NCard>
-          </div>
-        </NTabPane>
-      </NTabs>
-    </NCard>
-
-    <!-- ============================================================ -->
-    <!-- Tab2: 方案详情弹窗 -->
-    <!-- ============================================================ -->
-    <NModal
-      v-model:show="detailModalVisible"
-      preset="card"
-      style="width: 820px; max-width: 95vw"
-      :mask-closable="true"
-    >
-      <template #header>
-        <div class="modal-header-centered">
-          <div class="modal-title">{{ currentPlanDetail?.planNo }} 方案详情</div>
-        </div>
-      </template>
-      <template #footer>
-        <div class="detail-footer">
-          <NButton @click="message.info('打印（仅样式）')">打印</NButton>
+          <NSelect
+            v-model:value="filters.planStatus"
+            :options="planStatusOptions"
+            placeholder="方案状态"
+            style="width: 130px"
+          />
+          <NSelect
+            v-model:value="filters.timeRange"
+            :options="timeRangeOptions"
+            style="width: 120px"
+          />
+          <NInput
+            v-model:value="filters.searchKeyword"
+            placeholder="患者姓名/病历号"
+            style="width: 170px"
+            clearable
+          />
           <NButton
             type="primary"
-            @click="detailModalVisible = false"
-            >关闭弹窗</NButton
+            @click="handleQuery"
+            >查询</NButton
           >
-        </div>
-      </template>
-      <div
-        v-if="currentPlanDetail"
-        class="plan-detail"
-      >
-        <!-- 患者基本信息 -->
-        <div class="detail-section">
-          <h3 class="section-title">患者基本信息</h3>
-          <NDescriptions
-            bordered
-            :column="3"
-            size="small"
+          <NButton @click="handleReset">重置</NButton>
+          <div style="flex: 1" />
+          <NButton
+            type="primary"
+            @click="handleOpenNewPlan"
+            >新建指导方案</NButton
           >
-            <NDescriptionsItem label="患者姓名">{{
-              currentPlanDetail.patientName
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="病历号">{{
-              currentPlanDetail.medicalRecordNo
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="性别">{{ currentPlanDetail.gender }}</NDescriptionsItem>
-            <NDescriptionsItem label="年龄">{{ currentPlanDetail.age }}岁</NDescriptionsItem>
-            <NDescriptionsItem label="所属分层">
-              <NTag size="small">{{ currentPlanDetail.stratification }}</NTag>
-            </NDescriptionsItem>
-            <NDescriptionsItem label="方案周期"
-              >{{ currentPlanDetail.planPeriodStart }} 至
-              {{ currentPlanDetail.planPeriodEnd }}</NDescriptionsItem
-            >
-            <NDescriptionsItem label="制定医生">{{
-              currentPlanDetail.createDoctor
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="制定时间">{{
-              currentPlanDetail.createTime
-            }}</NDescriptionsItem>
-          </NDescriptions>
-        </div>
-        <NDivider style="margin: 12px 0" />
+        </NSpace>
+      </NCard>
 
-        <!-- 饮食方案 -->
-        <div class="detail-section">
-          <h3 class="section-title">饮食方案</h3>
-          <NDescriptions
-            bordered
-            :column="3"
-            size="small"
+      <!-- ============================================================ -->
+      <!-- 2. 核心统计卡片 -->
+      <!-- ============================================================ -->
+      <div class="stat-cards">
+        <NCard
+          v-for="card in statCards"
+          :key="card.title"
+          class="stat-card"
+        >
+          <NStatistic
+            :label="card.title"
+            :value="card.value"
           >
-            <NDescriptionsItem label="每日总热量">{{
-              currentPlanDetail.dietPlan.dailyCalorie
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="碳水化合物">{{
-              currentPlanDetail.dietPlan.carbohydrate
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="蛋白质">{{
-              currentPlanDetail.dietPlan.protein
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="脂肪">{{ currentPlanDetail.dietPlan.fat }}</NDescriptionsItem>
-            <NDescriptionsItem
-              label="三餐分配"
-              :span="2"
-              >{{ currentPlanDetail.dietPlan.mealDistribution }}</NDescriptionsItem
-            >
-          </NDescriptions>
-          <p class="section-note">{{ currentPlanDetail.dietPlan.dietNotes }}</p>
-        </div>
-        <NDivider style="margin: 12px 0" />
-
-        <!-- 运动方案 -->
-        <div class="detail-section">
-          <h3 class="section-title">运动方案</h3>
-          <NDescriptions
-            bordered
-            :column="3"
-            size="small"
-          >
-            <NDescriptionsItem
-              label="运动类型"
-              :span="2"
-              >{{ currentPlanDetail.exercisePlan.exerciseType }}</NDescriptionsItem
-            >
-            <NDescriptionsItem label="运动频率">{{
-              currentPlanDetail.exercisePlan.frequency
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="每次时长">{{
-              currentPlanDetail.exercisePlan.duration
-            }}</NDescriptionsItem>
-            <NDescriptionsItem
-              label="运动强度"
-              :span="2"
-              >{{ currentPlanDetail.exercisePlan.intensity }}</NDescriptionsItem
-            >
-          </NDescriptions>
-          <p class="section-note">{{ currentPlanDetail.exercisePlan.exerciseNotes }}</p>
-        </div>
-        <NDivider style="margin: 12px 0" />
-
-        <!-- 体重管理 -->
-        <div class="detail-section">
-          <h3 class="section-title">体重管理</h3>
-          <NDescriptions
-            bordered
-            :column="4"
-            size="small"
-          >
-            <NDescriptionsItem label="当前体重">{{
-              currentPlanDetail.weightManagement.currentWeight
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="目标体重">{{
-              currentPlanDetail.weightManagement.targetWeight
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="BMI">{{
-              currentPlanDetail.weightManagement.bmi
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="体重目标">{{
-              currentPlanDetail.weightManagement.weightGoal
-            }}</NDescriptionsItem>
-          </NDescriptions>
-        </div>
-        <NDivider style="margin: 12px 0" />
-
-        <!-- 作息管理 -->
-        <div class="detail-section">
-          <h3 class="section-title">作息与睡眠管理</h3>
-          <NDescriptions
-            bordered
-            :column="4"
-            size="small"
-          >
-            <NDescriptionsItem label="建议入睡">{{
-              currentPlanDetail.sleepManagement.sleepTime
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="建议起床">{{
-              currentPlanDetail.sleepManagement.wakeTime
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="睡眠时长">{{
-              currentPlanDetail.sleepManagement.sleepDuration
-            }}</NDescriptionsItem>
-          </NDescriptions>
-          <p class="section-note">{{ currentPlanDetail.sleepManagement.sleepNotes }}</p>
-        </div>
-        <NDivider style="margin: 12px 0" />
-
-        <!-- 戒烟限酒 -->
-        <div class="detail-section">
-          <h3 class="section-title">戒烟限酒</h3>
-          <NDescriptions
-            bordered
-            :column="2"
-            size="small"
-          >
-            <NDescriptionsItem label="吸烟状态">{{
-              currentPlanDetail.habitManagement.smokingStatus
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="饮酒状态">{{
-              currentPlanDetail.habitManagement.drinkingStatus
-            }}</NDescriptionsItem>
-          </NDescriptions>
-          <p class="section-note">{{ currentPlanDetail.habitManagement.habitAdvice }}</p>
-        </div>
-        <NDivider style="margin: 12px 0" />
-
-        <!-- 个性化建议 -->
-        <div class="detail-section">
-          <h3 class="section-title">个性化建议</h3>
-          <p class="advice-text">{{ currentPlanDetail.personalizedAdvice }}</p>
-        </div>
+            <template #suffix>
+              <span
+                :style="{
+                  color: cardChangeStyle(card.changeType).color,
+                  fontSize: '13px',
+                  marginLeft: '8px',
+                  fontWeight: 500,
+                }"
+                >{{ cardChangeStyle(card.changeType).icon }}{{ card.change }}</span
+              >
+            </template>
+          </NStatistic>
+        </NCard>
       </div>
-      <NEmpty v-else />
-    </NModal>
 
-    <!-- ============================================================ -->
-    <!-- Tab2: 新建/编辑方案抽屉 -->
-    <!-- ============================================================ -->
-    <NDrawer
-      v-model:show="drawerVisible"
-      placement="right"
-      :width="520"
-    >
-      <NDrawerContent
-        title="新建指导方案"
-        closable
+      <!-- ============================================================ -->
+      <!-- 3. Tab导航 + 内容区 -->
+      <!-- ============================================================ -->
+      <NCard>
+        <NTabs
+          v-model:value="activeTab"
+          type="line"
+          @update:value="initCharts"
+        >
+          <!-- Tab1: 指导方案总览 -->
+          <NTabPane
+            name="overview"
+            tab="指导方案总览"
+          >
+            <div class="tab-content">
+              <!-- 图表行 -->
+              <div class="chart-row">
+                <NCard
+                  title="不同患者分层方案覆盖情况"
+                  class="chart-card"
+                >
+                  <div
+                    ref="barChartRef"
+                    class="chart-container"
+                  />
+                </NCard>
+                <NCard
+                  title="方案执行率分布"
+                  class="chart-card"
+                >
+                  <div
+                    ref="pieChartRef"
+                    class="chart-container"
+                  />
+                </NCard>
+              </div>
+              <!-- 表格行 -->
+              <div class="table-row">
+                <NCard
+                  title="未制定方案患者列表"
+                  class="table-card"
+                >
+                  <NDataTable
+                    :columns="unplannedColumns"
+                    :data="unplannedPatients"
+                    :pagination="{ pageSize: 8 }"
+                    size="small"
+                    :max-height="320"
+                  />
+                </NCard>
+                <NCard
+                  title="低执行率患者TOP20"
+                  class="table-card"
+                >
+                  <NDataTable
+                    :columns="lowExecColumns"
+                    :data="lowExecutionPatients"
+                    :pagination="{ pageSize: 8 }"
+                    size="small"
+                    :max-height="320"
+                  />
+                </NCard>
+              </div>
+            </div>
+          </NTabPane>
+
+          <!-- Tab2: 个体化方案管理 -->
+          <NTabPane
+            name="plans"
+            tab="个体化方案管理"
+          >
+            <NDataTable
+              :columns="planColumns"
+              :data="planList"
+              :pagination="{ pageSize: 10 }"
+              :scroll-x="1280"
+              size="small"
+            />
+          </NTabPane>
+
+          <!-- Tab3: 标准化指导库 -->
+          <NTabPane
+            name="library"
+            tab="标准化指导库"
+          >
+            <NCollapse
+              :default-expanded-names="['0']"
+              accordion
+            >
+              <NCollapseItem
+                v-for="(item, idx) in guidanceLibrary"
+                :key="idx"
+                :title="item.title"
+                :name="String(idx)"
+              >
+                <div class="guidance-content">
+                  <p
+                    v-for="(text, i) in item.content"
+                    :key="i"
+                    class="guidance-item"
+                  >
+                    {{ text }}
+                  </p>
+                </div>
+              </NCollapseItem>
+            </NCollapse>
+          </NTabPane>
+
+          <!-- Tab4: 执行情况跟踪 -->
+          <NTabPane
+            name="tracking"
+            tab="执行跟踪"
+          >
+            <div class="tab-content">
+              <!-- 执行统计卡片 -->
+              <div
+                class="stat-cards"
+                style="margin-bottom: 16px"
+              >
+                <NCard
+                  v-for="card in executionStatCards"
+                  :key="card.title"
+                  class="stat-card"
+                >
+                  <NStatistic
+                    :label="card.title"
+                    :value="card.value"
+                  >
+                    <template #suffix>
+                      <span
+                        :style="{
+                          color: cardChangeStyle(card.changeType).color,
+                          fontSize: '13px',
+                          marginLeft: '8px',
+                          fontWeight: 500,
+                        }"
+                        >{{ cardChangeStyle(card.changeType).icon }}{{ card.change }}</span
+                      >
+                    </template>
+                  </NStatistic>
+                </NCard>
+              </div>
+              <!-- 执行明细列表 -->
+              <NCard title="执行情况明细">
+                <NDataTable
+                  :columns="execColumns"
+                  :data="executionRecords"
+                  :pagination="{ pageSize: 10 }"
+                  :scroll-x="1400"
+                  size="small"
+                />
+              </NCard>
+            </div>
+          </NTabPane>
+        </NTabs>
+      </NCard>
+
+      <!-- ============================================================ -->
+      <!-- Tab2: 方案详情弹窗 -->
+      <!-- ============================================================ -->
+      <NModal
+        v-model:show="detailModalVisible"
+        preset="card"
+        style="width: 820px; max-width: 95vw"
+        :mask-closable="true"
       >
-        <div class="drawer-form">
-          <div class="form-item">
-            <label>患者选择</label>
-            <NSelect
-              v-model:value="newPlanForm.patientNo"
-              :options="mockPatientsForSelect"
-              placeholder="请选择患者"
-              filterable
-            />
+        <template #header>
+          <div class="modal-header-centered">
+            <div class="modal-title">{{ currentPlanDetail?.planNo }} 方案详情</div>
           </div>
-          <div class="form-item">
-            <label>患者分层</label>
-            <NSelect
-              v-model:value="newPlanForm.stratification"
-              :options="stratificationOptions"
-              placeholder="请选择分层"
-            />
-          </div>
-          <div class="form-item">
-            <label>方案周期</label>
-            <NSpace>
-              <NInput
-                v-model:value="newPlanForm.planPeriodStart"
-                placeholder="开始日期"
-                style="width: 150px"
-              />
-              <span>至</span>
-              <NInput
-                v-model:value="newPlanForm.planPeriodEnd"
-                placeholder="结束日期"
-                style="width: 150px"
-              />
-            </NSpace>
-          </div>
-          <div class="form-item">
-            <label>制定医生</label>
-            <NInput
-              v-model:value="newPlanForm.doctor"
-              placeholder="请输入医生姓名"
-            />
-          </div>
-          <NDivider>方案内容</NDivider>
-          <div class="form-item">
-            <label>饮食建议</label>
-            <NInput
-              v-model:value="newPlanForm.dietAdvice"
-              type="textarea"
-              :rows="3"
-              placeholder="请输入饮食指导建议"
-            />
-          </div>
-          <div class="form-item">
-            <label>运动建议</label>
-            <NInput
-              v-model:value="newPlanForm.exerciseAdvice"
-              type="textarea"
-              :rows="3"
-              placeholder="请输入运动指导建议"
-            />
-          </div>
-          <div class="form-item">
-            <label>体重管理建议</label>
-            <NInput
-              v-model:value="newPlanForm.weightAdvice"
-              type="textarea"
-              :rows="3"
-              placeholder="请输入体重管理建议"
-            />
-          </div>
-          <div class="form-item">
-            <label>个性化建议</label>
-            <NInput
-              v-model:value="newPlanForm.personalizedNote"
-              type="textarea"
-              :rows="3"
-              placeholder="请输入个性化建议"
-            />
-          </div>
-        </div>
+        </template>
         <template #footer>
-          <NSpace>
-            <NButton @click="drawerVisible = false">取消</NButton>
-            <NButton @click="message.info('已保存草稿')">保存草稿</NButton>
+          <div class="detail-footer">
+            <NButton @click="message.info('打印（仅样式）')">打印</NButton>
             <NButton
               type="primary"
-              @click="handleGeneratePlan"
-              >生成并生效</NButton
+              @click="detailModalVisible = false"
+              >关闭弹窗</NButton
             >
-          </NSpace>
+          </div>
         </template>
-      </NDrawerContent>
-    </NDrawer>
-
-    <!-- ============================================================ -->
-    <!-- Tab4: 随访记录弹窗 -->
-    <!-- ============================================================ -->
-    <NModal
-      v-model:show="followUpVisible"
-      preset="card"
-      title="随访记录"
-      style="width: 1300px; max-width: 96vw"
-      :mask-closable="true"
-    >
-      <NDataTable
-        :columns="followUpColumns"
-        :data="followUpRecords"
-        size="small"
-        :max-height="400"
-        :scroll-x="1200"
-      />
-      <div style="margin-top: 12px; text-align: right">
-        <NButton
-          type="primary"
-          @click="followUpVisible = false"
-          >关闭</NButton
+        <div
+          v-if="currentPlanDetail"
+          class="plan-detail"
         >
-      </div>
-    </NModal>
-  </div>
+          <!-- 患者基本信息 -->
+          <div class="detail-section">
+            <h3 class="section-title">患者基本信息</h3>
+            <NDescriptions
+              bordered
+              :column="3"
+              size="small"
+            >
+              <NDescriptionsItem label="患者姓名">{{
+                currentPlanDetail.patientName
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="病历号">{{
+                currentPlanDetail.medicalRecordNo
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="性别">{{ currentPlanDetail.gender }}</NDescriptionsItem>
+              <NDescriptionsItem label="年龄">{{ currentPlanDetail.age }}岁</NDescriptionsItem>
+              <NDescriptionsItem label="所属分层">
+                <NTag size="small">{{ currentPlanDetail.stratification }}</NTag>
+              </NDescriptionsItem>
+              <NDescriptionsItem label="方案周期"
+                >{{ currentPlanDetail.planPeriodStart }} 至
+                {{ currentPlanDetail.planPeriodEnd }}</NDescriptionsItem
+              >
+              <NDescriptionsItem label="制定医生">{{
+                currentPlanDetail.createDoctor
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="制定时间">{{
+                currentPlanDetail.createTime
+              }}</NDescriptionsItem>
+            </NDescriptions>
+          </div>
+          <NDivider style="margin: 12px 0" />
+
+          <!-- 饮食方案 -->
+          <div class="detail-section">
+            <h3 class="section-title">饮食方案</h3>
+            <NDescriptions
+              bordered
+              :column="3"
+              size="small"
+            >
+              <NDescriptionsItem label="每日总热量">{{
+                currentPlanDetail.dietPlan.dailyCalorie
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="碳水化合物">{{
+                currentPlanDetail.dietPlan.carbohydrate
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="蛋白质">{{
+                currentPlanDetail.dietPlan.protein
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="脂肪">{{
+                currentPlanDetail.dietPlan.fat
+              }}</NDescriptionsItem>
+              <NDescriptionsItem
+                label="三餐分配"
+                :span="2"
+                >{{ currentPlanDetail.dietPlan.mealDistribution }}</NDescriptionsItem
+              >
+            </NDescriptions>
+            <p class="section-note">{{ currentPlanDetail.dietPlan.dietNotes }}</p>
+          </div>
+          <NDivider style="margin: 12px 0" />
+
+          <!-- 运动方案 -->
+          <div class="detail-section">
+            <h3 class="section-title">运动方案</h3>
+            <NDescriptions
+              bordered
+              :column="3"
+              size="small"
+            >
+              <NDescriptionsItem
+                label="运动类型"
+                :span="2"
+                >{{ currentPlanDetail.exercisePlan.exerciseType }}</NDescriptionsItem
+              >
+              <NDescriptionsItem label="运动频率">{{
+                currentPlanDetail.exercisePlan.frequency
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="每次时长">{{
+                currentPlanDetail.exercisePlan.duration
+              }}</NDescriptionsItem>
+              <NDescriptionsItem
+                label="运动强度"
+                :span="2"
+                >{{ currentPlanDetail.exercisePlan.intensity }}</NDescriptionsItem
+              >
+            </NDescriptions>
+            <p class="section-note">{{ currentPlanDetail.exercisePlan.exerciseNotes }}</p>
+          </div>
+          <NDivider style="margin: 12px 0" />
+
+          <!-- 体重管理 -->
+          <div class="detail-section">
+            <h3 class="section-title">体重管理</h3>
+            <NDescriptions
+              bordered
+              :column="4"
+              size="small"
+            >
+              <NDescriptionsItem label="当前体重">{{
+                currentPlanDetail.weightManagement.currentWeight
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="目标体重">{{
+                currentPlanDetail.weightManagement.targetWeight
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="BMI">{{
+                currentPlanDetail.weightManagement.bmi
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="体重目标">{{
+                currentPlanDetail.weightManagement.weightGoal
+              }}</NDescriptionsItem>
+            </NDescriptions>
+          </div>
+          <NDivider style="margin: 12px 0" />
+
+          <!-- 作息管理 -->
+          <div class="detail-section">
+            <h3 class="section-title">作息与睡眠管理</h3>
+            <NDescriptions
+              bordered
+              :column="4"
+              size="small"
+            >
+              <NDescriptionsItem label="建议入睡">{{
+                currentPlanDetail.sleepManagement.sleepTime
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="建议起床">{{
+                currentPlanDetail.sleepManagement.wakeTime
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="睡眠时长">{{
+                currentPlanDetail.sleepManagement.sleepDuration
+              }}</NDescriptionsItem>
+            </NDescriptions>
+            <p class="section-note">{{ currentPlanDetail.sleepManagement.sleepNotes }}</p>
+          </div>
+          <NDivider style="margin: 12px 0" />
+
+          <!-- 戒烟限酒 -->
+          <div class="detail-section">
+            <h3 class="section-title">戒烟限酒</h3>
+            <NDescriptions
+              bordered
+              :column="2"
+              size="small"
+            >
+              <NDescriptionsItem label="吸烟状态">{{
+                currentPlanDetail.habitManagement.smokingStatus
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="饮酒状态">{{
+                currentPlanDetail.habitManagement.drinkingStatus
+              }}</NDescriptionsItem>
+            </NDescriptions>
+            <p class="section-note">{{ currentPlanDetail.habitManagement.habitAdvice }}</p>
+          </div>
+          <NDivider style="margin: 12px 0" />
+
+          <!-- 个性化建议 -->
+          <div class="detail-section">
+            <h3 class="section-title">个性化建议</h3>
+            <p class="advice-text">{{ currentPlanDetail.personalizedAdvice }}</p>
+          </div>
+        </div>
+        <NEmpty v-else />
+      </NModal>
+
+      <!-- ============================================================ -->
+      <!-- Tab2: 新建/编辑方案抽屉 -->
+      <!-- ============================================================ -->
+      <NDrawer
+        v-model:show="drawerVisible"
+        placement="right"
+        :width="520"
+      >
+        <NDrawerContent
+          title="新建指导方案"
+          closable
+        >
+          <div class="drawer-form">
+            <div class="form-item">
+              <label>患者选择</label>
+              <NSelect
+                v-model:value="newPlanForm.patientNo"
+                :options="mockPatientsForSelect"
+                placeholder="请选择患者"
+                filterable
+              />
+            </div>
+            <div class="form-item">
+              <label>患者分层</label>
+              <NSelect
+                v-model:value="newPlanForm.stratification"
+                :options="stratificationOptions"
+                placeholder="请选择分层"
+              />
+            </div>
+            <div class="form-item">
+              <label>方案周期</label>
+              <NSpace>
+                <NInput
+                  v-model:value="newPlanForm.planPeriodStart"
+                  placeholder="开始日期"
+                  style="width: 150px"
+                />
+                <span>至</span>
+                <NInput
+                  v-model:value="newPlanForm.planPeriodEnd"
+                  placeholder="结束日期"
+                  style="width: 150px"
+                />
+              </NSpace>
+            </div>
+            <div class="form-item">
+              <label>制定医生</label>
+              <NInput
+                v-model:value="newPlanForm.doctor"
+                placeholder="请输入医生姓名"
+              />
+            </div>
+            <NDivider>方案内容</NDivider>
+            <div class="form-item">
+              <label>饮食建议</label>
+              <NInput
+                v-model:value="newPlanForm.dietAdvice"
+                type="textarea"
+                :rows="3"
+                placeholder="请输入饮食指导建议"
+              />
+            </div>
+            <div class="form-item">
+              <label>运动建议</label>
+              <NInput
+                v-model:value="newPlanForm.exerciseAdvice"
+                type="textarea"
+                :rows="3"
+                placeholder="请输入运动指导建议"
+              />
+            </div>
+            <div class="form-item">
+              <label>体重管理建议</label>
+              <NInput
+                v-model:value="newPlanForm.weightAdvice"
+                type="textarea"
+                :rows="3"
+                placeholder="请输入体重管理建议"
+              />
+            </div>
+            <div class="form-item">
+              <label>个性化建议</label>
+              <NInput
+                v-model:value="newPlanForm.personalizedNote"
+                type="textarea"
+                :rows="3"
+                placeholder="请输入个性化建议"
+              />
+            </div>
+          </div>
+          <template #footer>
+            <NSpace>
+              <NButton @click="drawerVisible = false">取消</NButton>
+              <NButton @click="message.info('已保存草稿')">保存草稿</NButton>
+              <NButton
+                type="primary"
+                @click="handleGeneratePlan"
+                >生成并生效</NButton
+              >
+            </NSpace>
+          </template>
+        </NDrawerContent>
+      </NDrawer>
+
+      <!-- ============================================================ -->
+      <!-- Tab4: 随访记录弹窗 -->
+      <!-- ============================================================ -->
+      <NModal
+        v-model:show="followUpVisible"
+        preset="card"
+        title="随访记录"
+        style="width: 1300px; max-width: 96vw"
+        :mask-closable="true"
+      >
+        <NDataTable
+          :columns="followUpColumns"
+          :data="followUpRecords"
+          size="small"
+          :max-height="400"
+          :scroll-x="1200"
+        />
+        <div style="margin-top: 12px; text-align: right">
+          <NButton
+            type="primary"
+            @click="followUpVisible = false"
+            >关闭</NButton
+          >
+        </div>
+      </NModal>
+    </div>
+  </ScrollContainer>
 </template>
 
 <style scoped>
@@ -1124,13 +1128,13 @@ onUnmounted(() => {
   --radius-md: 14px;
   --radius-lg: 16px;
 
-  padding: 20px 24px;
+  padding: 16px 16px;
   max-height: 100%;
   display: flex;
   flex-direction: column;
   gap: 20px;
   overflow-y: auto;
-  background: linear-gradient(160deg, #f0f4f8 0%, #f5f7fa 100%);
+  /* background: linear-gradient(160deg, #f0f4f8 0%, #f5f7fa 100%); */
 }
 
 /* ================================================================

@@ -193,30 +193,62 @@ const columns: DataTableColumns<Report> = [
 
       if (row.reportStatus === 'draft') {
         buttons.push(
-          h(NButton, { size: 'tiny', type: 'default', onClick: () => handleEdit(row) }, () => '编辑'),
+          h(
+            NButton,
+            { size: 'tiny', type: 'default', onClick: () => handleEdit(row) },
+            () => '编辑',
+          ),
         )
         buttons.push(
-          h(NButton, { size: 'tiny', type: 'default', onClick: () => handlePreview(row) }, () => '预览'),
+          h(
+            NButton,
+            { size: 'tiny', type: 'default', onClick: () => handlePreview(row) },
+            () => '预览',
+          ),
         )
         buttons.push(
-          h(NButton, { size: 'tiny', type: 'error', onClick: () => handleDelete(row) }, () => '删除'),
+          h(
+            NButton,
+            { size: 'tiny', type: 'error', onClick: () => handleDelete(row) },
+            () => '删除',
+          ),
         )
         buttons.push(
-          h(NButton, { size: 'tiny', type: 'primary', onClick: () => handleArchive(row) }, () => '归档'),
+          h(
+            NButton,
+            { size: 'tiny', type: 'primary', onClick: () => handleArchive(row) },
+            () => '归档',
+          ),
         )
       } else if (row.reportStatus === 'archived') {
         buttons.push(
-          h(NButton, { size: 'tiny', type: 'info', onClick: () => handleViewDetail(row) }, () => '查看详情'),
+          h(
+            NButton,
+            { size: 'tiny', type: 'info', onClick: () => handleViewDetail(row) },
+            () => '查看详情',
+          ),
         )
         buttons.push(
-          h(NButton, { size: 'tiny', type: 'default', onClick: () => handleExportPdf(row) }, () => '导出PDF'),
+          h(
+            NButton,
+            { size: 'tiny', type: 'default', onClick: () => handleExportPdf(row) },
+            () => '导出PDF',
+          ),
         )
         buttons.push(
-          h(NButton, { size: 'tiny', type: 'default', onClick: () => handlePrint(row) }, () => '打印'),
+          h(
+            NButton,
+            { size: 'tiny', type: 'default', onClick: () => handlePrint(row) },
+            () => '打印',
+          ),
         )
       } else if (row.reportStatus === 'obsolete') {
         buttons.push(
-          h(NButton, { size: 'tiny', type: 'info', onClick: () => handleViewDetail(row) }, () => '查看详情'),
+          h(
+            NButton,
+            { size: 'tiny', type: 'info', onClick: () => handleViewDetail(row) },
+            () => '查看详情',
+          ),
         )
       }
 
@@ -748,7 +780,9 @@ const tableData = computed(() => filteredReports.value)
 
 .stat-card {
   cursor: default;
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
   border-radius: 14px;
   box-shadow: 0 1px 6px rgba(64, 158, 255, 0.06);
   border: 1px solid rgba(64, 158, 255, 0.06);
@@ -861,7 +895,7 @@ const tableData = computed(() => filteredReports.value)
 }
 
 .patient-info-row span {
-  min-width: 170px;
+  min-width: 165px;
 }
 
 .section-title {

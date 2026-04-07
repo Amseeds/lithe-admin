@@ -307,7 +307,10 @@ const showWatermarkModal = () => {
                     :disabled="isMaxSm || preferences.navigationMode !== 'sidebar'"
                   />
                 </div>
-                <div class="flex items-center justify-between">
+                <div
+                  class="flex items-center justify-between"
+                  v-if="true"
+                >
                   <span>显示底部</span>
                   <NSwitch
                     v-model:value="preferences.showFooter"

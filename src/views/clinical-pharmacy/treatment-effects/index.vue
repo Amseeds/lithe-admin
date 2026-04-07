@@ -19,6 +19,7 @@ import {
   type DataTableColumns,
 } from 'naive-ui'
 import * as echarts from 'echarts'
+import { ScrollContainer } from '@/components'
 import {
   efficacyCards,
   efficacyFactorsChart,
@@ -536,564 +537,565 @@ function getTrendChartData(index: any) {
 </script>
 
 <template>
-  <div class="treatment-effects">
-    <!-- 顶部全局筛选栏 -->
-    <NCard
-      class="filter-bar"
-      size="small"
-    >
-      <div class="filter-bar-inner">
-        <div class="filter-controls">
-          <div class="filter-item">
-            <span class="filter-label">时间范围</span>
-            <NSelect
-              v-model:value="timeRange"
-              :options="timeRangeOptions"
-              placeholder="请选择"
-              clearable
-              style="width: 140px"
-              size="small"
-            />
-          </div>
-          <div class="filter-item">
-            <span class="filter-label">患者分层</span>
-            <NSelect
-              v-model:value="patientStratification"
-              :options="patientStratificationOptions"
-              placeholder="请选择"
-              multiple
-              clearable
-              style="width: 180px"
-              size="small"
-            />
-          </div>
-          <div class="filter-item">
-            <span class="filter-label">疗效分级</span>
-            <NSelect
-              v-model:value="efficacyGrade"
-              :options="efficacyGradeOptions"
-              placeholder="请选择"
-              multiple
-              clearable
-              style="width: 180px"
-              size="small"
-            />
-          </div>
-          <div class="filter-item">
-            <span class="filter-label">患者姓名/病历号</span>
-            <NInput
-              v-model:value="searchText"
-              placeholder="请输入"
-              clearable
-              style="width: 160px"
-              size="small"
-            />
-          </div>
-          <div class="filter-buttons">
-            <NButton
-              size="small"
-              type="primary"
-            >查询</NButton>
-            <NButton
-              size="small"
-            >重置</NButton>
+  <ScrollContainer wrapper-class="flex flex-col gap-y-4 max-sm:gap-y-2">
+    <div class="treatment-effects">
+      <!-- 顶部全局筛选栏 -->
+      <NCard
+        class="filter-bar"
+        size="small"
+      >
+        <div class="filter-bar-inner">
+          <div class="filter-controls">
+            <div class="filter-item">
+              <span class="filter-label">时间范围</span>
+              <NSelect
+                v-model:value="timeRange"
+                :options="timeRangeOptions"
+                placeholder="请选择"
+                clearable
+                style="width: 140px"
+                size="small"
+              />
+            </div>
+            <div class="filter-item">
+              <span class="filter-label">患者分层</span>
+              <NSelect
+                v-model:value="patientStratification"
+                :options="patientStratificationOptions"
+                placeholder="请选择"
+                multiple
+                clearable
+                style="width: 180px"
+                size="small"
+              />
+            </div>
+            <div class="filter-item">
+              <span class="filter-label">疗效分级</span>
+              <NSelect
+                v-model:value="efficacyGrade"
+                :options="efficacyGradeOptions"
+                placeholder="请选择"
+                multiple
+                clearable
+                style="width: 180px"
+                size="small"
+              />
+            </div>
+            <div class="filter-item">
+              <span class="filter-label">患者姓名/病历号</span>
+              <NInput
+                v-model:value="searchText"
+                placeholder="请输入"
+                clearable
+                style="width: 160px"
+                size="small"
+              />
+            </div>
+            <div class="filter-buttons">
+              <NButton
+                size="small"
+                type="primary"
+                >查询</NButton
+              >
+              <NButton size="small">重置</NButton>
+            </div>
           </div>
         </div>
-      </div>
-    </NCard>
+      </NCard>
 
-    <!-- 核心主导航Tab -->
-    <NCard class="main-content">
-      <NTabs
-        v-model:value="activeTab"
-        type="line"
-        animated
-        @update:value="initCharts"
-      >
-        <!-- Tab1: 综合疗效总览 -->
-        <NTabPane
-          name="tab1"
-          tab="综合疗效总览"
+      <!-- 核心主导航Tab -->
+      <NCard class="main-content">
+        <NTabs
+          v-model:value="activeTab"
+          type="line"
+          animated
+          @update:value="initCharts"
         >
-          <!-- 疗效分级卡片 -->
-          <div class="efficacy-cards">
-            <NCard
-              v-for="card in efficacyCards"
-              :key="card.level"
-              :class="['efficacy-card', getEfficacyCardClass(card.level)]"
-              :bordered="false"
-              hoverable
-            >
-              <div class="card-header">
-                <span class="card-title">{{ card.level }}</span>
-                <span class="card-count"
-                  >{{ card.count }}<span style="font-size: 14px; font-weight: 400">人</span></span
-                >
-              </div>
-              <div class="card-content">
-                <span class="card-proportion">占全院 {{ card.proportion }}</span>
-                <span
-                  class="card-change"
-                  :class="{
-                    positive: card.change.startsWith('+'),
-                    negative: card.change.startsWith('-'),
-                  }"
-                >
-                  {{ card.change.startsWith('+') ? '↑' : '↓' }} {{ card.change }} 较上月
-                </span>
-              </div>
-            </NCard>
-          </div>
-
-          <!-- 核心分析图表区 -->
-          <NGrid
-            :cols="2"
-            :x-gap="16"
-            class="charts-row"
+          <!-- Tab1: 综合疗效总览 -->
+          <NTabPane
+            name="tab1"
+            tab="综合疗效总览"
           >
-            <NGi>
+            <!-- 疗效分级卡片 -->
+            <div class="efficacy-cards">
               <NCard
-                title="疗效影响因素对比"
-                :bordered="false"
-              >
-                <div
-                  ref="factorsChartRef"
-                  class="chart-container"
-                ></div>
-              </NCard>
-            </NGi>
-            <NGi>
-              <NCard
-                title="近6个月疗效趋势"
-                :bordered="false"
-              >
-                <div
-                  ref="trendChartRef"
-                  class="chart-container"
-                ></div>
-              </NCard>
-            </NGi>
-          </NGrid>
-
-          <!-- 重点关注患者列表 -->
-          <NGrid
-            :cols="2"
-            :x-gap="16"
-          >
-            <NGi>
-              <NCard
-                title="未达标患者TOP20"
-                :bordered="false"
-              >
-                <NDataTable
-                  :columns="unachievedColumns"
-                  :data="unachievedTop20"
-                  :pagination="false"
-                  :max-height="400"
-                />
-              </NCard>
-            </NGi>
-            <NGi>
-              <NCard
-                title="高风险异常患者列表"
-                :bordered="false"
-              >
-                <NDataTable
-                  :columns="highRiskColumns"
-                  :data="highRiskPatients"
-                  :pagination="false"
-                  :max-height="400"
-                />
-              </NCard>
-            </NGi>
-          </NGrid>
-        </NTabPane>
-
-        <!-- Tab2: 核心代谢指标评估 -->
-        <NTabPane
-          name="tab2"
-          tab="核心代谢指标评估"
-        >
-          <!-- 二级Tab -->
-          <NTabs
-            type="line"
-            v-model:value="activeTab2Sub"
-            tab-style="margin-bottom: 0px"
-          >
-            <NTabPane
-              v-for="sub in tab2SubOptions"
-              :key="sub.name"
-              :name="sub.name"
-              :tab="sub.label"
-            >
-              <!-- 指标达标情况统计卡片 -->
-              <NGrid
-                :cols="4"
-                :x-gap="16"
-                class="index-cards"
-              >
-                <NGi
-                  v-for="(idx, i) in currentTab2Indices"
-                  :key="idx.name"
-                >
-                  <NCard
-                    class="index-card"
-                    :bordered="false"
-                    :class="{ active: currentSelectedIndex === i }"
-                    hoverable
-                    @click="currentSelectedIndex = i"
-                  >
-                    <div class="index-name">
-                      <span class="index-name-text">{{ idx.name }}</span>
-                      <span class="index-unit">{{ idx.unit }}</span>
-                    </div>
-                    <NGrid
-                      :cols="2"
-                      :x-gap="8"
-                    >
-                      <NGi>
-                        <div class="index-stat">
-                          <span class="stat-label">达标</span>
-                          <span class="stat-value">{{ idx.达标人数 }}人</span>
-                          <div class="stat-rate-row">
-                            <span class="stat-rate">{{ idx.达标率 }}</span>
-                            <span
-                              class="stat-change"
-                              :class="{
-                                positive: idx.达标率涨跌.startsWith('+'),
-                                negative: idx.达标率涨跌.startsWith('-'),
-                              }"
-                            >
-                              {{ idx.达标率涨跌.startsWith('+') ? '↑' : '↓' }}{{ idx.达标率涨跌 }}
-                            </span>
-                          </div>
-                        </div>
-                      </NGi>
-                      <NGi>
-                        <div class="index-stat">
-                          <span class="stat-label">异常</span>
-                          <span class="stat-value">{{ idx.异常人数 }}人</span>
-                          <div class="stat-rate-row">
-                            <span class="stat-rate danger">{{ idx.异常率 }}</span>
-                            <span
-                              class="stat-change"
-                              :class="{
-                                positive: idx.异常率涨跌.startsWith('+'),
-                                negative: idx.异常率涨跌.startsWith('-'),
-                              }"
-                            >
-                              {{ idx.异常率涨跌.startsWith('+') ? '↑' : '↓' }}{{ idx.异常率涨跌 }}
-                            </span>
-                          </div>
-                        </div>
-                      </NGi>
-                    </NGrid>
-                  </NCard>
-                </NGi>
-              </NGrid>
-
-              <!-- 异常患者明细 -->
-              <NDivider>异常患者明细</NDivider>
-              <NCard :bordered="false">
-                <NDataTable
-                  :columns="tab2AbnormalColumns"
-                  :data="currentTab2AbnormalPatients"
-                  :pagination="false"
-                  :max-height="400"
-                />
-              </NCard>
-            </NTabPane>
-          </NTabs>
-        </NTabPane>
-
-        <!-- Tab3: 用药安全性评估 -->
-        <NTabPane
-          name="tab3"
-          tab="用药安全性评估"
-        >
-          <!-- 用药安全统计卡片 -->
-          <NGrid
-            :cols="4"
-            :x-gap="16"
-            class="safety-cards"
-          >
-            <NGi
-              v-for="(card, index) in medicationSafetyCards"
-              :key="card.title"
-            >
-              <NCard
-                :class="['safety-card', getSafetyCardClass(index)]"
+                v-for="card in efficacyCards"
+                :key="card.level"
+                :class="['efficacy-card', getEfficacyCardClass(card.level)]"
                 :bordered="false"
                 hoverable
               >
-                <div class="safety-title">{{ card.title }}</div>
-                <div class="safety-content">
-                  <span class="safety-value">{{ card.value }}</span>
-                  <span class="safety-unit">{{ card.unit }}</span>
-                  <span class="safety-rate">{{ card.rate }}</span>
+                <div class="card-header">
+                  <span class="card-title">{{ card.level }}</span>
+                  <span class="card-count"
+                    >{{ card.count }}<span style="font-size: 14px; font-weight: 400">人</span></span
+                  >
                 </div>
-                <div
-                  class="safety-change"
-                  :class="{
-                    positive: card.change.startsWith('+'),
-                    negative: card.change.startsWith('-'),
-                  }"
+                <div class="card-content">
+                  <span class="card-proportion">占全院 {{ card.proportion }}</span>
+                  <span
+                    class="card-change"
+                    :class="{
+                      positive: card.change.startsWith('+'),
+                      negative: card.change.startsWith('-'),
+                    }"
+                  >
+                    {{ card.change.startsWith('+') ? '↑' : '↓' }} {{ card.change }} 较上月
+                  </span>
+                </div>
+              </NCard>
+            </div>
+
+            <!-- 核心分析图表区 -->
+            <NGrid
+              :cols="2"
+              :x-gap="16"
+              class="charts-row"
+            >
+              <NGi>
+                <NCard
+                  title="疗效影响因素对比"
+                  :bordered="false"
                 >
-                  {{ card.change.startsWith('+') ? '↑' : '↓' }} {{ card.change }} 较上月
-                </div>
-                <div class="safety-subtitle">{{ card.subTitle }}</div>
-              </NCard>
-            </NGi>
-          </NGrid>
+                  <div
+                    ref="factorsChartRef"
+                    class="chart-container"
+                  ></div>
+                </NCard>
+              </NGi>
+              <NGi>
+                <NCard
+                  title="近6个月疗效趋势"
+                  :bordered="false"
+                >
+                  <div
+                    ref="trendChartRef"
+                    class="chart-container"
+                  ></div>
+                </NCard>
+              </NGi>
+            </NGrid>
 
-          <!-- 核心分析图表 -->
-          <NGrid
-            :cols="2"
-            :x-gap="16"
-            class="charts-row"
+            <!-- 重点关注患者列表 -->
+            <NGrid
+              :cols="2"
+              :x-gap="16"
+            >
+              <NGi>
+                <NCard
+                  title="未达标患者TOP20"
+                  :bordered="false"
+                >
+                  <NDataTable
+                    :columns="unachievedColumns"
+                    :data="unachievedTop20"
+                    :pagination="false"
+                    :max-height="400"
+                  />
+                </NCard>
+              </NGi>
+              <NGi>
+                <NCard
+                  title="高风险异常患者列表"
+                  :bordered="false"
+                >
+                  <NDataTable
+                    :columns="highRiskColumns"
+                    :data="highRiskPatients"
+                    :pagination="false"
+                    :max-height="400"
+                  />
+                </NCard>
+              </NGi>
+            </NGrid>
+          </NTabPane>
+
+          <!-- Tab2: 核心代谢指标评估 -->
+          <NTabPane
+            name="tab2"
+            tab="核心代谢指标评估"
           >
-            <NGi>
-              <NCard
-                title="不同降糖药不良反应发生率对比"
-                :bordered="false"
+            <!-- 二级Tab -->
+            <NTabs
+              type="line"
+              v-model:value="activeTab2Sub"
+              tab-style="margin-bottom: 0px"
+            >
+              <NTabPane
+                v-for="sub in tab2SubOptions"
+                :key="sub.name"
+                :name="sub.name"
+                :tab="sub.label"
               >
-                <div
-                  ref="adverseChartRef"
-                  class="chart-container"
-                ></div>
-              </NCard>
-            </NGi>
-            <NGi>
-              <NCard
-                title="用药依从性与疗效达标率相关性"
-                :bordered="false"
-              >
-                <div
-                  ref="complianceChartRef"
-                  class="chart-container"
-                ></div>
-              </NCard>
-            </NGi>
-          </NGrid>
+                <!-- 指标达标情况统计卡片 -->
+                <NGrid
+                  :cols="4"
+                  :x-gap="16"
+                  class="index-cards"
+                >
+                  <NGi
+                    v-for="(idx, i) in currentTab2Indices"
+                    :key="idx.name"
+                  >
+                    <NCard
+                      class="index-card"
+                      :bordered="false"
+                      :class="{ active: currentSelectedIndex === i }"
+                      hoverable
+                      @click="currentSelectedIndex = i"
+                    >
+                      <div class="index-name">
+                        <span class="index-name-text">{{ idx.name }}</span>
+                        <span class="index-unit">{{ idx.unit }}</span>
+                      </div>
+                      <NGrid
+                        :cols="2"
+                        :x-gap="8"
+                      >
+                        <NGi>
+                          <div class="index-stat">
+                            <span class="stat-label">达标</span>
+                            <span class="stat-value">{{ idx.达标人数 }}人</span>
+                            <div class="stat-rate-row">
+                              <span class="stat-rate">{{ idx.达标率 }}</span>
+                              <span
+                                class="stat-change"
+                                :class="{
+                                  positive: idx.达标率涨跌.startsWith('+'),
+                                  negative: idx.达标率涨跌.startsWith('-'),
+                                }"
+                              >
+                                {{ idx.达标率涨跌.startsWith('+') ? '↑' : '↓' }}{{ idx.达标率涨跌 }}
+                              </span>
+                            </div>
+                          </div>
+                        </NGi>
+                        <NGi>
+                          <div class="index-stat">
+                            <span class="stat-label">异常</span>
+                            <span class="stat-value">{{ idx.异常人数 }}人</span>
+                            <div class="stat-rate-row">
+                              <span class="stat-rate danger">{{ idx.异常率 }}</span>
+                              <span
+                                class="stat-change"
+                                :class="{
+                                  positive: idx.异常率涨跌.startsWith('+'),
+                                  negative: idx.异常率涨跌.startsWith('-'),
+                                }"
+                              >
+                                {{ idx.异常率涨跌.startsWith('+') ? '↑' : '↓' }}{{ idx.异常率涨跌 }}
+                              </span>
+                            </div>
+                          </div>
+                        </NGi>
+                      </NGrid>
+                    </NCard>
+                  </NGi>
+                </NGrid>
 
-          <!-- 用药安全异常明细 -->
-          <NGrid
-            :cols="2"
-            :x-gap="16"
+                <!-- 异常患者明细 -->
+                <NDivider>异常患者明细</NDivider>
+                <NCard :bordered="false">
+                  <NDataTable
+                    :columns="tab2AbnormalColumns"
+                    :data="currentTab2AbnormalPatients"
+                    :pagination="false"
+                    :max-height="400"
+                  />
+                </NCard>
+              </NTabPane>
+            </NTabs>
+          </NTabPane>
+
+          <!-- Tab3: 用药安全性评估 -->
+          <NTabPane
+            name="tab3"
+            tab="用药安全性评估"
           >
-            <NGi>
-              <NCard
-                title="药物不良反应记录列表"
-                :bordered="false"
+            <!-- 用药安全统计卡片 -->
+            <NGrid
+              :cols="4"
+              :x-gap="16"
+              class="safety-cards"
+            >
+              <NGi
+                v-for="(card, index) in medicationSafetyCards"
+                :key="card.title"
               >
-                <NDataTable
-                  :columns="drugAdverseColumns"
-                  :data="drugAdverseReactions"
-                  :pagination="false"
-                  :max-height="400"
-                />
-              </NCard>
-            </NGi>
-            <NGi>
-              <NCard
-                title="用药高风险患者列表"
-                :bordered="false"
-              >
-                <NDataTable
-                  :columns="highRiskMedColumns"
-                  :data="highRiskMedicationPatients"
-                  :pagination="false"
-                  :max-height="400"
-                />
-              </NCard>
-            </NGi>
-          </NGrid>
-        </NTabPane>
+                <NCard
+                  :class="['safety-card', getSafetyCardClass(index)]"
+                  :bordered="false"
+                  hoverable
+                >
+                  <div class="safety-title">{{ card.title }}</div>
+                  <div class="safety-content">
+                    <span class="safety-value">{{ card.value }}</span>
+                    <span class="safety-unit">{{ card.unit }}</span>
+                    <span class="safety-rate">{{ card.rate }}</span>
+                  </div>
+                  <div
+                    class="safety-change"
+                    :class="{
+                      positive: card.change.startsWith('+'),
+                      negative: card.change.startsWith('-'),
+                    }"
+                  >
+                    {{ card.change.startsWith('+') ? '↑' : '↓' }} {{ card.change }} 较上月
+                  </div>
+                  <div class="safety-subtitle">{{ card.subTitle }}</div>
+                </NCard>
+              </NGi>
+            </NGrid>
 
-        <!-- Tab4: 患者疗效明细列表 -->
-        <NTabPane
-          name="tab4"
-          tab="患者疗效明细列表"
-        >
-          <NCard :bordered="false">
+            <!-- 核心分析图表 -->
+            <NGrid
+              :cols="2"
+              :x-gap="16"
+              class="charts-row"
+            >
+              <NGi>
+                <NCard
+                  title="不同降糖药不良反应发生率对比"
+                  :bordered="false"
+                >
+                  <div
+                    ref="adverseChartRef"
+                    class="chart-container"
+                  ></div>
+                </NCard>
+              </NGi>
+              <NGi>
+                <NCard
+                  title="用药依从性与疗效达标率相关性"
+                  :bordered="false"
+                >
+                  <div
+                    ref="complianceChartRef"
+                    class="chart-container"
+                  ></div>
+                </NCard>
+              </NGi>
+            </NGrid>
+
+            <!-- 用药安全异常明细 -->
+            <NGrid
+              :cols="2"
+              :x-gap="16"
+            >
+              <NGi>
+                <NCard
+                  title="药物不良反应记录列表"
+                  :bordered="false"
+                >
+                  <NDataTable
+                    :columns="drugAdverseColumns"
+                    :data="drugAdverseReactions"
+                    :pagination="false"
+                    :max-height="400"
+                  />
+                </NCard>
+              </NGi>
+              <NGi>
+                <NCard
+                  title="用药高风险患者列表"
+                  :bordered="false"
+                >
+                  <NDataTable
+                    :columns="highRiskMedColumns"
+                    :data="highRiskMedicationPatients"
+                    :pagination="false"
+                    :max-height="400"
+                  />
+                </NCard>
+              </NGi>
+            </NGrid>
+          </NTabPane>
+
+          <!-- Tab4: 患者疗效明细列表 -->
+          <NTabPane
+            name="tab4"
+            tab="患者疗效明细列表"
+          >
+            <NCard :bordered="false">
+              <NDataTable
+                :columns="patientListColumns"
+                :data="patientList"
+                :pagination="{ pageSize: 10 }"
+                :max-height="600"
+              />
+            </NCard>
+          </NTabPane>
+        </NTabs>
+      </NCard>
+
+      <!-- 患者详情弹窗 -->
+      <NModal
+        v-model:show="showPatientDetail"
+        preset="card"
+        title="患者详情"
+        style="width: 960px; max-width: 95vw"
+        :mask-closable="true"
+      >
+        <template v-if="currentPatientDetail">
+          <!-- 患者基本信息 -->
+          <NCard
+            title="患者基本信息"
+            :bordered="false"
+            class="mb-4"
+          >
+            <NDescriptions
+              :column="3"
+              label-placement="left"
+            >
+              <NDescriptionsItem label="姓名">{{
+                currentPatientDetail.basicInfo.姓名
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="性别">{{
+                currentPatientDetail.basicInfo.性别
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="年龄"
+                >{{ currentPatientDetail.basicInfo.年龄 }}岁</NDescriptionsItem
+              >
+              <NDescriptionsItem label="病历号">{{
+                currentPatientDetail.basicInfo.病历号
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="糖尿病类型">{{
+                currentPatientDetail.basicInfo.糖尿病类型
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="病程">{{
+                currentPatientDetail.basicInfo.病程
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="所属分层">{{
+                currentPatientDetail.basicInfo.所属分层
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="最近HbA1c">{{
+                currentPatientDetail.basicInfo.最近HbA1c结果
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="综合疗效评级">
+                <NTag
+                  :type="
+                    currentPatientDetail.basicInfo.综合疗效评级 === '优秀达标'
+                      ? 'success'
+                      : currentPatientDetail.basicInfo.综合疗效评级 === '高风险异常'
+                        ? 'error'
+                        : 'info'
+                  "
+                >
+                  {{ currentPatientDetail.basicInfo.综合疗效评级 }}
+                </NTag>
+              </NDescriptionsItem>
+              <NDescriptionsItem label="整体达标情况">
+                <NTag
+                  :type="
+                    currentPatientDetail.basicInfo.整体达标情况 === '达标' ? 'success' : 'warning'
+                  "
+                >
+                  {{ currentPatientDetail.basicInfo.整体达标情况 }}
+                </NTag>
+              </NDescriptionsItem>
+            </NDescriptions>
+          </NCard>
+
+          <!-- 核心指标达标对比 -->
+          <NCard
+            title="核心指标达标对比总表"
+            :bordered="false"
+            class="mb-4"
+          >
             <NDataTable
-              :columns="patientListColumns"
-              :data="patientList"
-              :pagination="{ pageSize: 10 }"
-              :max-height="600"
+              :columns="indicatorColumns"
+              :data="currentPatientDetail.indicators"
+              :pagination="false"
+              :max-height="400"
             />
           </NCard>
-        </NTabPane>
-      </NTabs>
-    </NCard>
 
-    <!-- 患者详情弹窗 -->
-    <NModal
-      v-model:show="showPatientDetail"
-      preset="card"
-      title="患者详情"
-      style="width: 960px; max-width: 95vw"
-      :mask-closable="true"
-    >
-      <template v-if="currentPatientDetail">
-        <!-- 患者基本信息 -->
-        <NCard
-          title="患者基本信息"
-          :bordered="false"
-          class="mb-4"
-        >
-          <NDescriptions
-            :column="3"
-            label-placement="left"
+          <!-- 治疗效果趋势 -->
+          <NCard
+            title="治疗效果趋势"
+            :bordered="false"
+            class="mb-4"
           >
-            <NDescriptionsItem label="姓名">{{
-              currentPatientDetail.basicInfo.姓名
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="性别">{{
-              currentPatientDetail.basicInfo.性别
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="年龄"
-              >{{ currentPatientDetail.basicInfo.年龄 }}岁</NDescriptionsItem
+            <NGrid
+              :cols="2"
+              :x-gap="16"
             >
-            <NDescriptionsItem label="病历号">{{
-              currentPatientDetail.basicInfo.病历号
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="糖尿病类型">{{
-              currentPatientDetail.basicInfo.糖尿病类型
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="病程">{{
-              currentPatientDetail.basicInfo.病程
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="所属分层">{{
-              currentPatientDetail.basicInfo.所属分层
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="最近HbA1c">{{
-              currentPatientDetail.basicInfo.最近HbA1c结果
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="综合疗效评级">
-              <NTag
-                :type="
-                  currentPatientDetail.basicInfo.综合疗效评级 === '优秀达标'
-                    ? 'success'
-                    : currentPatientDetail.basicInfo.综合疗效评级 === '高风险异常'
-                      ? 'error'
-                      : 'info'
-                "
-              >
-                {{ currentPatientDetail.basicInfo.综合疗效评级 }}
-              </NTag>
-            </NDescriptionsItem>
-            <NDescriptionsItem label="整体达标情况">
-              <NTag
-                :type="
-                  currentPatientDetail.basicInfo.整体达标情况 === '达标' ? 'success' : 'warning'
-                "
-              >
-                {{ currentPatientDetail.basicInfo.整体达标情况 }}
-              </NTag>
-            </NDescriptionsItem>
-          </NDescriptions>
-        </NCard>
+              <NGi>
+                <div class="chart-title">近12个月HbA1c变化趋势</div>
+                <div
+                  ref="hba1cTrendRef"
+                  class="chart-container"
+                ></div>
+              </NGi>
+              <NGi>
+                <div class="chart-title">近3个月血糖波动趋势</div>
+                <div
+                  ref="glucoseTrendRef"
+                  class="chart-container"
+                ></div>
+              </NGi>
+            </NGrid>
+          </NCard>
 
-        <!-- 核心指标达标对比 -->
-        <NCard
-          title="核心指标达标对比总表"
-          :bordered="false"
-          class="mb-4"
-        >
-          <NDataTable
-            :columns="indicatorColumns"
-            :data="currentPatientDetail.indicators"
-            :pagination="false"
-            :max-height="400"
-          />
-        </NCard>
-
-        <!-- 治疗效果趋势 -->
-        <NCard
-          title="治疗效果趋势"
-          :bordered="false"
-          class="mb-4"
-        >
-          <NGrid
-            :cols="2"
-            :x-gap="16"
+          <!-- 用药安全性 -->
+          <NCard
+            title="用药安全性专项评估"
+            :bordered="false"
+            class="mb-4"
           >
-            <NGi>
-              <div class="chart-title">近12个月HbA1c变化趋势</div>
-              <div
-                ref="hba1cTrendRef"
-                class="chart-container"
-              ></div>
-            </NGi>
-            <NGi>
-              <div class="chart-title">近3个月血糖波动趋势</div>
-              <div
-                ref="glucoseTrendRef"
-                class="chart-container"
-              ></div>
-            </NGi>
-          </NGrid>
-        </NCard>
-
-        <!-- 用药安全性 -->
-        <NCard
-          title="用药安全性专项评估"
-          :bordered="false"
-          class="mb-4"
-        >
-          <NDescriptions
-            :column="2"
-            label-placement="left"
-          >
-            <NDescriptionsItem label="当前用药方案">{{
-              currentPatientDetail.currentMedication.用药方案
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="用药时长">{{
-              currentPatientDetail.currentMedication.用药时长
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="用药依从性">{{
-              currentPatientDetail.currentMedication.用药依从性
-            }}</NDescriptionsItem>
-            <NDescriptionsItem label="历史不良反应">{{
-              currentPatientDetail.currentMedication.历史不良反应
-            }}</NDescriptionsItem>
-            <NDescriptionsItem
-              label="用药风险提示"
-              :span="2"
-              >{{ currentPatientDetail.currentMedication.用药风险提示 }}</NDescriptionsItem
+            <NDescriptions
+              :column="2"
+              label-placement="left"
             >
-          </NDescriptions>
-        </NCard>
+              <NDescriptionsItem label="当前用药方案">{{
+                currentPatientDetail.currentMedication.用药方案
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="用药时长">{{
+                currentPatientDetail.currentMedication.用药时长
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="用药依从性">{{
+                currentPatientDetail.currentMedication.用药依从性
+              }}</NDescriptionsItem>
+              <NDescriptionsItem label="历史不良反应">{{
+                currentPatientDetail.currentMedication.历史不良反应
+              }}</NDescriptionsItem>
+              <NDescriptionsItem
+                label="用药风险提示"
+                :span="2"
+                >{{ currentPatientDetail.currentMedication.用药风险提示 }}</NDescriptionsItem
+              >
+            </NDescriptions>
+          </NCard>
 
-        <!-- 随访记录 -->
-        <NCard
-          title="历次随访评估记录"
-          :bordered="false"
-          class="mb-4"
-        >
-          <NDataTable
-            :columns="followUpColumns"
-            :data="currentPatientDetail.followUpRecords"
-            :pagination="false"
-            :max-height="300"
-          />
-        </NCard>
+          <!-- 随访记录 -->
+          <NCard
+            title="历次随访评估记录"
+            :bordered="false"
+            class="mb-4"
+          >
+            <NDataTable
+              :columns="followUpColumns"
+              :data="currentPatientDetail.followUpRecords"
+              :pagination="false"
+              :max-height="300"
+            />
+          </NCard>
 
-        <!-- 历史报告 -->
-        <NCard
-          title="历史疗效报告"
-          :bordered="false"
-        >
-          <NDataTable
-            :columns="reportColumns"
-            :data="currentPatientDetail.efficacyReports"
-            :pagination="false"
-          />
-        </NCard>
-      </template>
-    </NModal>
-  </div>
+          <!-- 历史报告 -->
+          <NCard
+            title="历史疗效报告"
+            :bordered="false"
+          >
+            <NDataTable
+              :columns="reportColumns"
+              :data="currentPatientDetail.efficacyReports"
+              :pagination="false"
+            />
+          </NCard>
+        </template>
+      </NModal>
+    </div>
+  </ScrollContainer>
 </template>
 
 <script lang="ts">
@@ -1149,7 +1151,7 @@ export default {}
   }
 }
 .treatment-effects {
-  padding: 16px;
+  /* padding: 16px; */
   /* background: #f5f5f5; */
   min-height: calc(100vh - 60px);
   max-height: 100%;

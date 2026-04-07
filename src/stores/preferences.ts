@@ -55,7 +55,7 @@ export const DEFAULT_PREFERENCES_OPTIONS = {
     maxWidth: 456,
     mobileWidth: 256,
   },
-  showFooter: true,
+  showFooter: false,
   tabs: {
     show: true,
     showTabClose: true,

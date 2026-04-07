@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { h, ref, nextTick, onMounted, onUnmounted, watch } from 'vue'
+import { ScrollContainer } from '@/components'
 import type { ECharts } from 'echarts'
 import {
   NCard,
@@ -330,7 +331,7 @@ function initTab1Charts() {
           name: '患者总数',
           type: 'bar',
           data: coverageBarData.map((d) => d.患者总数),
-          itemStyle: { color: '#e2e8f0' },
+          itemStyle: { color: '#818cf8' },
           barWidth: 28,
         },
         {
@@ -426,654 +427,655 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="personalized-medication">
-    <!-- ============================================================ -->
-    <!-- 1. 顶部筛选栏 -->
-    <!-- ============================================================ -->
-    <NCard
-      class="filter-card"
-      :bordered="false"
-    >
-      <NSpace
-        align="center"
-        :wrap="true"
-        :size="16"
-      >
-        <NSpace
-          align="center"
-          :size="8"
-        >
-          <span class="filter-label">患者分层</span>
-          <NSelect
-            v-model:value="stratificationFilter"
-            :options="stratificationOptions"
-            multiple
-            placeholder="全部"
-            style="width: 240px"
-            size="small"
-          />
-        </NSpace>
-        <NSpace
-          align="center"
-          :size="8"
-        >
-          <span class="filter-label">方案状态</span>
-          <NSelect
-            v-model:value="statusFilter"
-            :options="statusOptions"
-            placeholder="全部"
-            style="width: 120px"
-            size="small"
-          />
-        </NSpace>
-        <NSpace
-          align="center"
-          :size="8"
-        >
-          <span class="filter-label">时间范围</span>
-          <NSelect
-            v-model:value="timeRangeFilter"
-            :options="timeRangeOptions"
-            style="width: 120px"
-            size="small"
-          />
-        </NSpace>
-        <NInput
-          v-model:value="searchText"
-          placeholder="患者姓名/病历号"
-          style="width: 160px"
-          size="small"
-          clearable
-        />
-        <NButton
-          type="primary"
-          size="small"
-          >查询</NButton
-        >
-        <NButton size="small">重置</NButton>
-        <NButton
-          type="primary"
-          size="small"
-          @click="openCreateDrawer"
-          >新建用药方案</NButton
-        >
-      </NSpace>
-    </NCard>
-
-    <!-- ============================================================ -->
-    <!-- 2. 核心统计卡片组 -->
-    <!-- ============================================================ -->
-    <div class="stat-cards">
+  <ScrollContainer wrapper-class="flex flex-col gap-y-4 max-sm:gap-y-2 personalized-medication">
+    <div class="">
+      <!-- ============================================================ -->
+      <!-- 1. 顶部筛选栏 -->
+      <!-- ============================================================ -->
       <NCard
-        v-for="card in statCards"
-        :key="card.title"
-        class="stat-card"
+        class="filter-card"
         :bordered="false"
       >
-        <NStatistic
-          :value="card.value"
-          :label="card.title"
+        <NSpace
+          align="center"
+          :wrap="true"
+          :size="16"
         >
-          <template #suffix>
-            <span
-              class="stat-change"
-              :class="
-                card.changeType === 'increase'
-                  ? 'positive'
-                  : card.changeType === 'decrease'
-                    ? 'negative'
-                    : 'neutral'
-              "
-            >
-              {{ card.change.startsWith('+') ? '↑' : card.change.startsWith('-') ? '↓' : ''
-              }}{{ card.change }}
-            </span>
-          </template>
-          <template
-            #suffix
-            v-if="typeof card.value === 'string' && card.value.includes('%')"
-          ></template>
-        </NStatistic>
-      </NCard>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- 3. Tab导航 + 内容区 -->
-    <!-- ============================================================ -->
-    <NCard
-      class="main-content"
-      :bordered="false"
-    >
-      <NTabs
-        v-model:value="activeTab"
-        type="line"
-        animated
-        @update:value="initCharts"
-      >
-        <!-- Tab1: 用药方案总览 -->
-        <NTabPane
-          name="overview"
-          tab="用药方案总览"
-        >
-          <div class="tab-content">
-            <!-- 图表行 -->
-            <NGrid
-              :cols="2"
-              :x-gap="16"
-              :y-gap="16"
-              class="mb-4"
-            >
-              <NGi>
-                <NCard
-                  title="不同患者分层方案覆盖情况"
-                  :bordered="false"
-                  class="chart-card"
-                >
-                  <div
-                    ref="barChartRef"
-                    class="chart-container"
-                  ></div>
-                </NCard>
-              </NGi>
-              <NGi>
-                <NCard
-                  title="降糖药物使用类型分布"
-                  :bordered="false"
-                  class="chart-card"
-                >
-                  <div
-                    ref="pieChartRef"
-                    class="chart-container"
-                  ></div>
-                </NCard>
-              </NGi>
-            </NGrid>
-
-            <!-- 表格行 -->
-            <NGrid
-              :cols="2"
-              :x-gap="16"
-              :y-gap="16"
-            >
-              <NGi>
-                <NCard
-                  title="未制定用药方案患者列表"
-                  :bordered="false"
-                  class="table-card"
-                >
-                  <NDataTable
-                    :columns="[
-                      { title: '患者姓名', key: '患者姓名', width: 80 },
-                      { title: '病历号', key: '病历号', width: 110 },
-                      { title: '年龄', key: '年龄', width: 60 },
-                      { title: '所属分层', key: '所属分层', width: 100 },
-                      { title: '最近HbA1c', key: '最近HbA1c', width: 90 },
-                      {
-                        title: '操作',
-                        key: 'actions',
-                        width: 90,
-                        render(row) {
-                          return h(
-                            NButton,
-                            {
-                              type: 'primary',
-                              size: 'tiny',
-                              text: true,
-                              onClick: () => openCreateDrawer(),
-                            },
-                            { default: () => '新建方案' },
-                          )
-                        },
-                      },
-                    ]"
-                    :data="unplannedPatients"
-                    :pagination="{ pageSize: 5 }"
-                    size="small"
-                    :max-height="320"
-                  />
-                </NCard>
-              </NGi>
-              <NGi>
-                <NCard
-                  title="高风险/不规范方案患者列表"
-                  :bordered="false"
-                  class="table-card"
-                >
-                  <NDataTable
-                    :columns="[
-                      { title: '患者姓名', key: '患者姓名', width: 80 },
-                      { title: '病历号', key: '病历号', width: 110 },
-                      { title: '所属分层', key: '所属分层', width: 100 },
-                      { title: '风险类型', key: '风险类型', width: 100 },
-                      {
-                        title: '风险等级',
-                        key: '风险等级',
-                        width: 80,
-                        render(row) {
-                          const t =
-                            row.风险等级 === '高'
-                              ? 'error'
-                              : row.风险等级 === '中'
-                                ? 'warning'
-                                : 'success'
-                          return h(
-                            NTag,
-                            { type: t, size: 'small' },
-                            { default: () => row.风险等级 },
-                          )
-                        },
-                      },
-                      {
-                        title: '操作',
-                        key: 'actions',
-                        width: 90,
-                        render(row) {
-                          return h(
-                            NButton,
-                            {
-                              type: 'primary',
-                              size: 'tiny',
-                              text: true,
-                              onClick: () =>
-                                openDetail({
-                                  ...row,
-                                  方案编号: row.方案编号,
-                                  方案周期: '',
-                                  制定医生: '',
-                                  方案状态: '生效中',
-                                  规范评级: '不规范',
-                                  制定日期: '',
-                                  到期日期: '',
-                                }),
-                            },
-                            { default: () => '查看详情' },
-                          )
-                        },
-                      },
-                    ]"
-                    :data="riskPatients"
-                    :pagination="{ pageSize: 5 }"
-                    size="small"
-                    :max-height="320"
-                  />
-                </NCard>
-              </NGi>
-            </NGrid>
-          </div>
-        </NTabPane>
-
-        <!-- Tab2: 个体化方案管理 -->
-        <NTabPane
-          name="management"
-          tab="个体化方案管理"
-        >
-          <NDataTable
-            :columns="columns"
-            :data="tableData"
-            :pagination="{ pageSize: 10 }"
-            :scroll-x="1200"
+          <NSpace
+            align="center"
+            :size="8"
+          >
+            <span class="filter-label">患者分层</span>
+            <NSelect
+              v-model:value="stratificationFilter"
+              :options="stratificationOptions"
+              multiple
+              placeholder="全部"
+              style="width: 240px"
+              size="small"
+            />
+          </NSpace>
+          <NSpace
+            align="center"
+            :size="8"
+          >
+            <span class="filter-label">方案状态</span>
+            <NSelect
+              v-model:value="statusFilter"
+              :options="statusOptions"
+              placeholder="全部"
+              style="width: 120px"
+              size="small"
+            />
+          </NSpace>
+          <NSpace
+            align="center"
+            :size="8"
+          >
+            <span class="filter-label">时间范围</span>
+            <NSelect
+              v-model:value="timeRangeFilter"
+              :options="timeRangeOptions"
+              style="width: 120px"
+              size="small"
+            />
+          </NSpace>
+          <NInput
+            v-model:value="searchText"
+            placeholder="患者姓名/病历号"
+            style="width: 160px"
             size="small"
-            :max-height="560"
+            clearable
           />
-        </NTabPane>
+          <NButton
+            type="primary"
+            size="small"
+            >查询</NButton
+          >
+          <NButton size="small">重置</NButton>
+          <NButton
+            type="primary"
+            size="small"
+            @click="openCreateDrawer"
+            >新建用药方案</NButton
+          >
+        </NSpace>
+      </NCard>
 
-        <!-- Tab3: 标准化用药模板库 -->
-        <NTabPane
-          name="templates"
-          tab="标准化用药模板库"
+      <!-- ============================================================ -->
+      <!-- 2. 核心统计卡片组 -->
+      <!-- ============================================================ -->
+      <div class="stat-cards">
+        <NCard
+          v-for="card in statCards"
+          :key="card.title"
+          class="stat-card"
+          :bordered="false"
         >
-          <div class="template-section">
-            <div class="template-note">
-              基于《中国2型糖尿病防治指南2024版》整理，仅供临床用药参考，不作为处方依据
-            </div>
-            <NCollapse :default-expanded-names="['t1']">
-              <NCollapseItem
-                v-for="(tpl, idx) in medicationTemplates"
-                :key="idx"
-                :title="tpl.分层名称"
-                :name="`t${idx}`"
+          <NStatistic
+            :value="card.value"
+            :label="card.title"
+          >
+            <template #suffix>
+              <span
+                class="stat-change"
+                :class="
+                  card.changeType === 'increase'
+                    ? 'positive'
+                    : card.changeType === 'decrease'
+                      ? 'negative'
+                      : 'neutral'
+                "
               >
-                <div class="tpl-content">
-                  <p><strong>适用人群：</strong>{{ tpl.适用人群 }}</p>
-                  <p><strong>推荐用药方案：</strong>{{ tpl.推荐用药方案 }}</p>
-                  <p><strong>一线药物选择：</strong></p>
-                  <ul>
-                    <li
-                      v-for="d in tpl.一线药物选择"
-                      :key="d"
-                    >
-                      {{ d }}
-                    </li>
-                  </ul>
-                  <p><strong>二线药物选择：</strong></p>
-                  <ul>
-                    <li
-                      v-for="d in tpl.二线药物选择"
-                      :key="d"
-                    >
-                      {{ d }}
-                    </li>
-                  </ul>
-                  <p><strong>联合用药原则：</strong>{{ tpl.联合用药原则 }}</p>
-                  <p><strong>禁用药物：</strong></p>
-                  <ul>
-                    <li
-                      v-for="d in tpl.禁用药物"
-                      :key="d"
-                      style="color: #f56c6c"
-                    >
-                      {{ d }}
-                    </li>
-                  </ul>
-                  <p><strong>特殊注意事项：</strong></p>
-                  <ul>
-                    <li
-                      v-for="n in tpl.特殊注意事项"
-                      :key="n"
-                    >
-                      {{ n }}
-                    </li>
-                  </ul>
-                  <p><strong>随访监测要求：</strong>{{ tpl.随访监测要求 }}</p>
-                  <p><strong>控糖目标参考：</strong>{{ tpl.控糖目标参考 }}</p>
-                </div>
-              </NCollapseItem>
-            </NCollapse>
-          </div>
-        </NTabPane>
+                {{ card.change.startsWith('+') ? '↑' : card.change.startsWith('-') ? '↓' : ''
+                }}{{ card.change }}
+              </span>
+            </template>
+            <template
+              #suffix
+              v-if="typeof card.value === 'string' && card.value.includes('%')"
+            ></template>
+          </NStatistic>
+        </NCard>
+      </div>
 
-        <!-- Tab4: 用药安全与随访 -->
-        <NTabPane
-          name="safety"
-          tab="用药安全与随访"
+      <!-- ============================================================ -->
+      <!-- 3. Tab导航 + 内容区 -->
+      <!-- ============================================================ -->
+      <NCard
+        class="main-content"
+        :bordered="false"
+      >
+        <NTabs
+          v-model:value="activeTab"
+          type="line"
+          animated
+          @update:value="initCharts"
         >
-          <div class="tab-content">
-            <!-- 4张执行统计卡片 -->
-            <div class="exec-cards">
-              <NCard
-                v-for="card in executionStatCards"
-                :key="card.title"
-                :bordered="false"
-                class="exec-card"
+          <!-- Tab1: 用药方案总览 -->
+          <NTabPane
+            name="overview"
+            tab="用药方案总览"
+          >
+            <div class="tab-content">
+              <!-- 图表行 -->
+              <NGrid
+                :cols="2"
+                :x-gap="16"
+                :y-gap="16"
+                class="mb-4"
               >
-                <div class="exec-card-value">
-                  <span class="exec-num">{{ card.value }}</span>
-                  <span
-                    v-if="card.title.includes('率')"
-                    class="exec-unit"
-                    >%</span
+                <NGi>
+                  <NCard
+                    title="不同患者分层方案覆盖情况"
+                    :bordered="false"
+                    class="chart-card"
                   >
-                </div>
-                <div class="exec-card-title">{{ card.title }}</div>
-                <div class="exec-card-sub">{{ card.subtitle }}</div>
-                <div
-                  class="stat-change"
-                  :class="card.changeType === 'increase' ? 'positive' : 'negative'"
+                    <div
+                      ref="barChartRef"
+                      class="chart-container"
+                    ></div>
+                  </NCard>
+                </NGi>
+                <NGi>
+                  <NCard
+                    title="降糖药物使用类型分布"
+                    :bordered="false"
+                    class="chart-card"
+                  >
+                    <div
+                      ref="pieChartRef"
+                      class="chart-container"
+                    ></div>
+                  </NCard>
+                </NGi>
+              </NGrid>
+
+              <!-- 表格行 -->
+              <NGrid
+                :cols="2"
+                :x-gap="16"
+                :y-gap="16"
+              >
+                <NGi>
+                  <NCard
+                    title="未制定用药方案患者列表"
+                    :bordered="false"
+                    class="table-card"
+                  >
+                    <NDataTable
+                      :columns="[
+                        { title: '患者姓名', key: '患者姓名', width: 80 },
+                        { title: '病历号', key: '病历号', width: 110 },
+                        { title: '年龄', key: '年龄', width: 60 },
+                        { title: '所属分层', key: '所属分层', width: 100 },
+                        { title: '最近HbA1c', key: '最近HbA1c', width: 90 },
+                        {
+                          title: '操作',
+                          key: 'actions',
+                          width: 90,
+                          render(row) {
+                            return h(
+                              NButton,
+                              {
+                                type: 'primary',
+                                size: 'tiny',
+                                text: true,
+                                onClick: () => openCreateDrawer(),
+                              },
+                              { default: () => '新建方案' },
+                            )
+                          },
+                        },
+                      ]"
+                      :data="unplannedPatients"
+                      :pagination="{ pageSize: 5 }"
+                      size="small"
+                      :max-height="320"
+                    />
+                  </NCard>
+                </NGi>
+                <NGi>
+                  <NCard
+                    title="高风险/不规范方案患者列表"
+                    :bordered="false"
+                    class="table-card"
+                  >
+                    <NDataTable
+                      :columns="[
+                        { title: '患者姓名', key: '患者姓名', width: 80 },
+                        { title: '病历号', key: '病历号', width: 110 },
+                        { title: '所属分层', key: '所属分层', width: 100 },
+                        { title: '风险类型', key: '风险类型', width: 100 },
+                        {
+                          title: '风险等级',
+                          key: '风险等级',
+                          width: 80,
+                          render(row) {
+                            const t =
+                              row.风险等级 === '高'
+                                ? 'error'
+                                : row.风险等级 === '中'
+                                  ? 'warning'
+                                  : 'success'
+                            return h(
+                              NTag,
+                              { type: t, size: 'small' },
+                              { default: () => row.风险等级 },
+                            )
+                          },
+                        },
+                        {
+                          title: '操作',
+                          key: 'actions',
+                          width: 90,
+                          render(row) {
+                            return h(
+                              NButton,
+                              {
+                                type: 'primary',
+                                size: 'tiny',
+                                text: true,
+                                onClick: () =>
+                                  openDetail({
+                                    ...row,
+                                    方案编号: row.方案编号,
+                                    方案周期: '',
+                                    制定医生: '',
+                                    方案状态: '生效中',
+                                    规范评级: '不规范',
+                                    制定日期: '',
+                                    到期日期: '',
+                                  }),
+                              },
+                              { default: () => '查看详情' },
+                            )
+                          },
+                        },
+                      ]"
+                      :data="riskPatients"
+                      :pagination="{ pageSize: 5 }"
+                      size="small"
+                      :max-height="320"
+                    />
+                  </NCard>
+                </NGi>
+              </NGrid>
+            </div>
+          </NTabPane>
+
+          <!-- Tab2: 个体化方案管理 -->
+          <NTabPane
+            name="management"
+            tab="个体化方案管理"
+          >
+            <NDataTable
+              :columns="columns"
+              :data="tableData"
+              :pagination="{ pageSize: 10 }"
+              :scroll-x="1200"
+              size="small"
+              :max-height="560"
+            />
+          </NTabPane>
+
+          <!-- Tab3: 标准化用药模板库 -->
+          <NTabPane
+            name="templates"
+            tab="标准化用药模板库"
+          >
+            <div class="template-section">
+              <div class="template-note">
+                基于《中国2型糖尿病防治指南2024版》整理，仅供临床用药参考，不作为处方依据
+              </div>
+              <NCollapse :default-expanded-names="['t1']">
+                <NCollapseItem
+                  v-for="(tpl, idx) in medicationTemplates"
+                  :key="idx"
+                  :title="tpl.分层名称"
+                  :name="`t${idx}`"
                 >
-                  {{ card.change.startsWith('+') ? '↑' : '↓' }}{{ card.change }}
-                </div>
+                  <div class="tpl-content">
+                    <p><strong>适用人群：</strong>{{ tpl.适用人群 }}</p>
+                    <p><strong>推荐用药方案：</strong>{{ tpl.推荐用药方案 }}</p>
+                    <p><strong>一线药物选择：</strong></p>
+                    <ul>
+                      <li
+                        v-for="d in tpl.一线药物选择"
+                        :key="d"
+                      >
+                        {{ d }}
+                      </li>
+                    </ul>
+                    <p><strong>二线药物选择：</strong></p>
+                    <ul>
+                      <li
+                        v-for="d in tpl.二线药物选择"
+                        :key="d"
+                      >
+                        {{ d }}
+                      </li>
+                    </ul>
+                    <p><strong>联合用药原则：</strong>{{ tpl.联合用药原则 }}</p>
+                    <p><strong>禁用药物：</strong></p>
+                    <ul>
+                      <li
+                        v-for="d in tpl.禁用药物"
+                        :key="d"
+                        style="color: #f56c6c"
+                      >
+                        {{ d }}
+                      </li>
+                    </ul>
+                    <p><strong>特殊注意事项：</strong></p>
+                    <ul>
+                      <li
+                        v-for="n in tpl.特殊注意事项"
+                        :key="n"
+                      >
+                        {{ n }}
+                      </li>
+                    </ul>
+                    <p><strong>随访监测要求：</strong>{{ tpl.随访监测要求 }}</p>
+                    <p><strong>控糖目标参考：</strong>{{ tpl.控糖目标参考 }}</p>
+                  </div>
+                </NCollapseItem>
+              </NCollapse>
+            </div>
+          </NTabPane>
+
+          <!-- Tab4: 用药安全与随访 -->
+          <NTabPane
+            name="safety"
+            tab="用药安全与随访"
+          >
+            <div class="tab-content">
+              <!-- 4张执行统计卡片 -->
+              <div class="exec-cards">
+                <NCard
+                  v-for="card in executionStatCards"
+                  :key="card.title"
+                  :bordered="false"
+                  class="exec-card"
+                >
+                  <div class="exec-card-value">
+                    <span class="exec-num">{{ card.value }}</span>
+                    <span
+                      v-if="card.title.includes('率')"
+                      class="exec-unit"
+                      >%</span
+                    >
+                  </div>
+                  <div class="exec-card-title">{{ card.title }}</div>
+                  <div class="exec-card-sub">{{ card.subtitle }}</div>
+                  <div
+                    class="stat-change"
+                    :class="card.changeType === 'increase' ? 'positive' : 'negative'"
+                  >
+                    {{ card.change.startsWith('+') ? '↑' : '↓' }}{{ card.change }}
+                  </div>
+                </NCard>
+              </div>
+
+              <!-- 用药执行与随访明细列表 -->
+              <NCard
+                title="用药执行与随访明细"
+                :bordered="false"
+              >
+                <NDataTable
+                  :columns="executionColumns"
+                  :data="executionRecords"
+                  :pagination="{ pageSize: 10 }"
+                  :scroll-x="1200"
+                  size="small"
+                  :max-height="450"
+                />
               </NCard>
             </div>
+          </NTabPane>
+        </NTabs>
+      </NCard>
 
-            <!-- 用药执行与随访明细列表 -->
-            <NCard
-              title="用药执行与随访明细"
-              :bordered="false"
-            >
-              <NDataTable
-                :columns="executionColumns"
-                :data="executionRecords"
-                :pagination="{ pageSize: 10 }"
-                :scroll-x="1200"
+      <!-- ============================================================ -->
+      <!-- 方案详情弹窗 -->
+      <!-- ============================================================ -->
+      <NModal
+        v-model:show="detailModalVisible"
+        preset="card"
+        title="用药方案详情"
+        style="width: 960px; max-width: 95vw"
+        :mask-closable="true"
+      >
+        <template v-if="currentDetail">
+          <div class="plan-detail">
+            <!-- 一、患者基本信息 -->
+            <div class="detail-section">
+              <div class="section-title">一、患者基本信息</div>
+              <NDescriptions
+                :column="3"
+                label-placement="left"
                 size="small"
-                :max-height="450"
-              />
-            </NCard>
-          </div>
-        </NTabPane>
-      </NTabs>
-    </NCard>
-
-    <!-- ============================================================ -->
-    <!-- 方案详情弹窗 -->
-    <!-- ============================================================ -->
-    <NModal
-      v-model:show="detailModalVisible"
-      preset="card"
-      title="用药方案详情"
-      style="width: 960px; max-width: 95vw"
-      :mask-closable="true"
-    >
-      <template v-if="currentDetail">
-        <div class="plan-detail">
-          <!-- 一、患者基本信息 -->
-          <div class="detail-section">
-            <div class="section-title">一、患者基本信息</div>
-            <NDescriptions
-              :column="3"
-              label-placement="left"
-              size="small"
-              bordered
-            >
-              <NDescriptionsItem label="患者姓名">{{
-                currentDetail.basicInfo.患者姓名
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="性别">{{ currentDetail.basicInfo.性别 }}</NDescriptionsItem>
-              <NDescriptionsItem label="年龄"
-                >{{ currentDetail.basicInfo.年龄 }}岁</NDescriptionsItem
+                bordered
               >
-              <NDescriptionsItem label="病历号">{{
-                currentDetail.basicInfo.病历号
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="所属分层">
-                <NTag size="small">{{ currentDetail.basicInfo.所属分层 }}</NTag>
-              </NDescriptionsItem>
-              <NDescriptionsItem label="糖尿病类型">{{
-                currentDetail.basicInfo.糖尿病类型
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="方案编号">{{
-                currentDetail.basicInfo.方案编号
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="方案状态">
-                <NTag
-                  :type="getStatusType(currentDetail.basicInfo.方案状态)"
-                  size="small"
-                  >{{ currentDetail.basicInfo.方案状态 }}</NTag
+                <NDescriptionsItem label="患者姓名">{{
+                  currentDetail.basicInfo.患者姓名
+                }}</NDescriptionsItem>
+                <NDescriptionsItem label="性别">{{
+                  currentDetail.basicInfo.性别
+                }}</NDescriptionsItem>
+                <NDescriptionsItem label="年龄"
+                  >{{ currentDetail.basicInfo.年龄 }}岁</NDescriptionsItem
                 >
-              </NDescriptionsItem>
-              <NDescriptionsItem label="制定医生">{{
-                currentDetail.basicInfo.制定医生
-              }}</NDescriptionsItem>
-              <NDescriptionsItem
-                label="方案周期"
-                :span="2"
-                >{{ currentDetail.basicInfo.方案周期 }}</NDescriptionsItem
+                <NDescriptionsItem label="病历号">{{
+                  currentDetail.basicInfo.病历号
+                }}</NDescriptionsItem>
+                <NDescriptionsItem label="所属分层">
+                  <NTag size="small">{{ currentDetail.basicInfo.所属分层 }}</NTag>
+                </NDescriptionsItem>
+                <NDescriptionsItem label="糖尿病类型">{{
+                  currentDetail.basicInfo.糖尿病类型
+                }}</NDescriptionsItem>
+                <NDescriptionsItem label="方案编号">{{
+                  currentDetail.basicInfo.方案编号
+                }}</NDescriptionsItem>
+                <NDescriptionsItem label="方案状态">
+                  <NTag
+                    :type="getStatusType(currentDetail.basicInfo.方案状态)"
+                    size="small"
+                    >{{ currentDetail.basicInfo.方案状态 }}</NTag
+                  >
+                </NDescriptionsItem>
+                <NDescriptionsItem label="制定医生">{{
+                  currentDetail.basicInfo.制定医生
+                }}</NDescriptionsItem>
+                <NDescriptionsItem
+                  label="方案周期"
+                  :span="2"
+                  >{{ currentDetail.basicInfo.方案周期 }}</NDescriptionsItem
+                >
+                <NDescriptionsItem label="制定日期">{{
+                  currentDetail.basicInfo.制定日期
+                }}</NDescriptionsItem>
+              </NDescriptions>
+            </div>
+
+            <!-- 二、控糖目标展示 -->
+            <div class="detail-section">
+              <div class="section-title">二、控糖目标展示</div>
+              <div class="section-note">以下控糖目标仅供参考展示，不做制定功能</div>
+              <NDescriptions
+                :column="3"
+                label-placement="left"
+                size="small"
+                bordered
               >
-              <NDescriptionsItem label="制定日期">{{
-                currentDetail.basicInfo.制定日期
-              }}</NDescriptionsItem>
-            </NDescriptions>
-          </div>
+                <NDescriptionsItem label="HbA1c目标">{{
+                  currentDetail.glucoseTarget.HbA1c目标
+                }}</NDescriptionsItem>
+                <NDescriptionsItem label="空腹血糖目标">{{
+                  currentDetail.glucoseTarget.空腹血糖目标
+                }}</NDescriptionsItem>
+                <NDescriptionsItem label="餐后2h血糖目标">{{
+                  currentDetail.glucoseTarget.餐后2h血糖目标
+                }}</NDescriptionsItem>
+                <NDescriptionsItem label="血压目标">{{
+                  currentDetail.glucoseTarget.血压目标
+                }}</NDescriptionsItem>
+                <NDescriptionsItem label="LDL-C目标">{{
+                  currentDetail.glucoseTarget.LDLC目标
+                }}</NDescriptionsItem>
+              </NDescriptions>
+            </div>
 
-          <!-- 二、控糖目标展示 -->
-          <div class="detail-section">
-            <div class="section-title">二、控糖目标展示</div>
-            <div class="section-note">以下控糖目标仅供参考展示，不做制定功能</div>
-            <NDescriptions
-              :column="3"
-              label-placement="left"
-              size="small"
-              bordered
-            >
-              <NDescriptionsItem label="HbA1c目标">{{
-                currentDetail.glucoseTarget.HbA1c目标
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="空腹血糖目标">{{
-                currentDetail.glucoseTarget.空腹血糖目标
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="餐后2h血糖目标">{{
-                currentDetail.glucoseTarget.餐后2h血糖目标
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="血压目标">{{
-                currentDetail.glucoseTarget.血压目标
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="LDL-C目标">{{
-                currentDetail.glucoseTarget.LDLC目标
-              }}</NDescriptionsItem>
-            </NDescriptions>
-          </div>
+            <!-- 三、当前用药方案 -->
+            <div class="detail-section">
+              <div class="section-title">三、当前用药方案</div>
+              <div class="advice-text">{{ currentDetail.currentMedication.用药方案概述 }}</div>
+              <div style="margin-top: 12px">
+                <NDataTable
+                  :columns="medDetailColumns"
+                  :data="currentDetail.currentMedication.用药明细"
+                  :pagination="false"
+                  size="small"
+                  bordered
+                />
+              </div>
+              <NDescriptions
+                :column="2"
+                label-placement="left"
+                size="small"
+                style="margin-top: 12px"
+                bordered
+              >
+                <NDescriptionsItem label="用药时长">{{
+                  currentDetail.currentMedication.用药时长
+                }}</NDescriptionsItem>
+                <NDescriptionsItem label="依从性评估">{{
+                  currentDetail.currentMedication.依从性评估
+                }}</NDescriptionsItem>
+              </NDescriptions>
+            </div>
 
-          <!-- 三、当前用药方案 -->
-          <div class="detail-section">
-            <div class="section-title">三、当前用药方案</div>
-            <div class="advice-text">{{ currentDetail.currentMedication.用药方案概述 }}</div>
-            <div style="margin-top: 12px">
+            <!-- 四、方案规范评级依据 -->
+            <div class="detail-section">
+              <div class="section-title">四、方案规范评级依据</div>
+              <NDescriptions
+                :column="1"
+                label-placement="left"
+                size="small"
+                bordered
+              >
+                <NDescriptionsItem label="规范评级">
+                  <NTag
+                    :type="getGradeType(currentDetail.complianceAssessment.规范评级)"
+                    size="small"
+                    >{{ currentDetail.complianceAssessment.规范评级 }}</NTag
+                  >
+                </NDescriptionsItem>
+                <NDescriptionsItem label="评级依据">
+                  <ul style="margin: 0; padding-left: 16px; line-height: 1.8">
+                    <li
+                      v-for="item in currentDetail.complianceAssessment.评级依据"
+                      :key="item"
+                    >
+                      {{ item }}
+                    </li>
+                  </ul>
+                </NDescriptionsItem>
+                <NDescriptionsItem label="指南推荐方案">{{
+                  currentDetail.complianceAssessment.指南推荐方案
+                }}</NDescriptionsItem>
+                <NDescriptionsItem label="与指南差异">{{
+                  currentDetail.complianceAssessment.与指南差异
+                }}</NDescriptionsItem>
+              </NDescriptions>
+            </div>
+
+            <!-- 五、用药安全提示 -->
+            <div class="detail-section">
+              <div class="section-title">五、用药安全提示</div>
+              <NDescriptions
+                :column="1"
+                label-placement="left"
+                size="small"
+                bordered
+              >
+                <NDescriptionsItem label="肝功能状态">{{
+                  currentDetail.safetyAlerts.肝功能状态
+                }}</NDescriptionsItem>
+                <NDescriptionsItem label="肾功能状态">{{
+                  currentDetail.safetyAlerts.肾功能状态
+                }}</NDescriptionsItem>
+                <NDescriptionsItem label="低血糖风险评估">{{
+                  currentDetail.safetyAlerts.低血糖风险评估
+                }}</NDescriptionsItem>
+                <NDescriptionsItem label="药物相互作用提示">{{
+                  currentDetail.safetyAlerts.药物相互作用提示
+                }}</NDescriptionsItem>
+                <NDescriptionsItem label="禁忌症排查">{{
+                  currentDetail.safetyAlerts.禁忌症排查
+                }}</NDescriptionsItem>
+                <NDescriptionsItem label="不良反应记录">{{
+                  currentDetail.safetyAlerts.不良反应记录
+                }}</NDescriptionsItem>
+              </NDescriptions>
+            </div>
+
+            <!-- 六、方案调整记录 -->
+            <div class="detail-section">
+              <div class="section-title">六、方案调整记录</div>
               <NDataTable
-                :columns="medDetailColumns"
-                :data="currentDetail.currentMedication.用药明细"
+                :columns="[
+                  { title: '调整日期', key: '调整日期', width: 110 },
+                  { title: '调整原因', key: '调整原因', width: 150 },
+                  { title: '调整内容', key: '调整内容' },
+                  { title: '调整医生', key: '调整医生', width: 80 },
+                ]"
+                :data="currentDetail.adjustmentHistory"
                 :pagination="false"
                 size="small"
                 bordered
               />
             </div>
-            <NDescriptions
-              :column="2"
-              label-placement="left"
-              size="small"
-              style="margin-top: 12px"
-              bordered
-            >
-              <NDescriptionsItem label="用药时长">{{
-                currentDetail.currentMedication.用药时长
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="依从性评估">{{
-                currentDetail.currentMedication.依从性评估
-              }}</NDescriptionsItem>
-            </NDescriptions>
-          </div>
 
-          <!-- 四、方案规范评级依据 -->
-          <div class="detail-section">
-            <div class="section-title">四、方案规范评级依据</div>
-            <NDescriptions
-              :column="1"
-              label-placement="left"
-              size="small"
-              bordered
-            >
-              <NDescriptionsItem label="规范评级">
-                <NTag
-                  :type="getGradeType(currentDetail.complianceAssessment.规范评级)"
-                  size="small"
-                  >{{ currentDetail.complianceAssessment.规范评级 }}</NTag
-                >
-              </NDescriptionsItem>
-              <NDescriptionsItem label="评级依据">
-                <ul style="margin: 0; padding-left: 16px; line-height: 1.8">
-                  <li
-                    v-for="item in currentDetail.complianceAssessment.评级依据"
-                    :key="item"
+            <!-- 七、随访计划 -->
+            <div class="detail-section">
+              <div class="section-title">七、随访计划</div>
+              <NDescriptions
+                :column="2"
+                label-placement="left"
+                size="small"
+                bordered
+              >
+                <NDescriptionsItem label="下次随访日期">{{
+                  currentDetail.followUpPlan.下次随访日期
+                }}</NDescriptionsItem>
+                <NDescriptionsItem label="随访频次">{{
+                  currentDetail.followUpPlan.随访频次
+                }}</NDescriptionsItem>
+                <NDescriptionsItem label="随访监测指标">
+                  <NSpace
+                    :size="4"
+                    :wrap="true"
                   >
-                    {{ item }}
-                  </li>
-                </ul>
-              </NDescriptionsItem>
-              <NDescriptionsItem label="指南推荐方案">{{
-                currentDetail.complianceAssessment.指南推荐方案
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="与指南差异">{{
-                currentDetail.complianceAssessment.与指南差异
-              }}</NDescriptionsItem>
-            </NDescriptions>
+                    <NTag
+                      v-for="item in currentDetail.followUpPlan.随访监测指标"
+                      :key="item"
+                      size="small"
+                      type="info"
+                      >{{ item }}</NTag
+                    >
+                  </NSpace>
+                </NDescriptionsItem>
+                <NDescriptionsItem label="备注">{{
+                  currentDetail.followUpPlan.备注
+                }}</NDescriptionsItem>
+              </NDescriptions>
+            </div>
           </div>
-
-          <!-- 五、用药安全提示 -->
-          <div class="detail-section">
-            <div class="section-title">五、用药安全提示</div>
-            <NDescriptions
-              :column="1"
-              label-placement="left"
-              size="small"
-              bordered
-            >
-              <NDescriptionsItem label="肝功能状态">{{
-                currentDetail.safetyAlerts.肝功能状态
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="肾功能状态">{{
-                currentDetail.safetyAlerts.肾功能状态
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="低血糖风险评估">{{
-                currentDetail.safetyAlerts.低血糖风险评估
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="药物相互作用提示">{{
-                currentDetail.safetyAlerts.药物相互作用提示
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="禁忌症排查">{{
-                currentDetail.safetyAlerts.禁忌症排查
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="不良反应记录">{{
-                currentDetail.safetyAlerts.不良反应记录
-              }}</NDescriptionsItem>
-            </NDescriptions>
-          </div>
-
-          <!-- 六、方案调整记录 -->
-          <div class="detail-section">
-            <div class="section-title">六、方案调整记录</div>
-            <NDataTable
-              :columns="[
-                { title: '调整日期', key: '调整日期', width: 110 },
-                { title: '调整原因', key: '调整原因', width: 150 },
-                { title: '调整内容', key: '调整内容' },
-                { title: '调整医生', key: '调整医生', width: 80 },
-              ]"
-              :data="currentDetail.adjustmentHistory"
-              :pagination="false"
-              size="small"
-              bordered
-            />
-          </div>
-
-          <!-- 七、随访计划 -->
-          <div class="detail-section">
-            <div class="section-title">七、随访计划</div>
-            <NDescriptions
-              :column="2"
-              label-placement="left"
-              size="small"
-              bordered
-            >
-              <NDescriptionsItem label="下次随访日期">{{
-                currentDetail.followUpPlan.下次随访日期
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="随访频次">{{
-                currentDetail.followUpPlan.随访频次
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="随访监测指标">
-                <NSpace
-                  :size="4"
-                  :wrap="true"
-                >
-                  <NTag
-                    v-for="item in currentDetail.followUpPlan.随访监测指标"
-                    :key="item"
-                    size="small"
-                    type="info"
-                    >{{ item }}</NTag
-                  >
-                </NSpace>
-              </NDescriptionsItem>
-              <NDescriptionsItem label="备注">{{
-                currentDetail.followUpPlan.备注
-              }}</NDescriptionsItem>
-            </NDescriptions>
-          </div>
-
-         
-        </div>
-      </template>
-      <template #footer>
-         <!-- 底部按钮 -->
+        </template>
+        <template #footer>
+          <!-- 底部按钮 -->
           <div class="detail-footer">
             <NButton>打印</NButton>
             <NButton
@@ -1082,133 +1084,134 @@ onUnmounted(() => {
               >关闭</NButton
             >
           </div>
-      </template>
-    </NModal>
+        </template>
+      </NModal>
 
-    <!-- ============================================================ -->
-    <!-- 新建/编辑方案抽屉 -->
-    <!-- ============================================================ -->
-    <NDrawer
-      v-model:show="drawerVisible"
-      placement="right"
-      :width="560"
-    >
-      <NDrawerContent
-        :title="drawerTitle"
-        closable
+      <!-- ============================================================ -->
+      <!-- 新建/编辑方案抽屉 -->
+      <!-- ============================================================ -->
+      <NDrawer
+        v-model:show="drawerVisible"
+        placement="right"
+        :width="560"
       >
-        <div class="drawer-form">
-          <div class="form-item">
-            <label>患者选择</label>
-            <NSelect
-              placeholder="请选择患者"
-              style="width: 100%"
-            />
-          </div>
-          <div class="form-item">
-            <label>方案周期</label>
-            <NSelect
-              placeholder="请选择方案周期"
-              :options="timeRangeOptions"
-              style="width: 100%"
-            />
-          </div>
-          <div class="form-item">
-            <label>患者分层</label>
-            <NSelect
-              v-model:value="stratificationFilter"
-              :options="stratificationOptions"
-              placeholder="请选择患者分层"
-              style="width: 100%"
-            />
-          </div>
-          <NDivider>控糖目标（仅展示）</NDivider>
-          <div class="form-item">
-            <label>HbA1c目标</label>
-            <NInput
-              value="<7.0%"
-              disabled
-            />
-          </div>
-          <div class="form-item">
-            <label>空腹血糖目标</label>
-            <NInput
-              value="4.4-7.2mmol/L"
-              disabled
-            />
-          </div>
-          <NDivider>用药模板选择</NDivider>
-          <div class="form-item">
-            <label>用药模板</label>
-            <NSelect
-              placeholder="请选择标准化用药模板"
-              style="width: 100%"
-            />
-          </div>
-          <NDivider>用药明细</NDivider>
-          <div class="form-item">
-            <label>用药明细表格</label>
-            <NDataTable
-              :columns="[
-                { title: '药物名称', key: 'name' },
-                { title: '用法用量', key: 'dosage' },
-                { title: '频次', key: 'freq' },
-              ]"
-              :data="[]"
-              size="small"
-              bordered
-              style="width: 100%"
-            />
-          </div>
-          <NDivider>调整规则</NDivider>
-          <div class="form-item">
-            <label>调整原因</label>
-            <NInput
-              type="textarea"
-              placeholder="请输入调整原因"
-              :rows="3"
-            />
-          </div>
-          <div class="form-item">
-            <label>安全提示</label>
-            <div class="section-note">
-              请确保所选药物无禁忌症，注意肝肾功能、药物相互作用等安全因素
+        <NDrawerContent
+          :title="drawerTitle"
+          closable
+        >
+          <div class="drawer-form">
+            <div class="form-item">
+              <label>患者选择</label>
+              <NSelect
+                placeholder="请选择患者"
+                style="width: 100%"
+              />
+            </div>
+            <div class="form-item">
+              <label>方案周期</label>
+              <NSelect
+                placeholder="请选择方案周期"
+                :options="timeRangeOptions"
+                style="width: 100%"
+              />
+            </div>
+            <div class="form-item">
+              <label>患者分层</label>
+              <NSelect
+                v-model:value="stratificationFilter"
+                :options="stratificationOptions"
+                placeholder="请选择患者分层"
+                style="width: 100%"
+              />
+            </div>
+            <NDivider>控糖目标（仅展示）</NDivider>
+            <div class="form-item">
+              <label>HbA1c目标</label>
+              <NInput
+                value="<7.0%"
+                disabled
+              />
+            </div>
+            <div class="form-item">
+              <label>空腹血糖目标</label>
+              <NInput
+                value="4.4-7.2mmol/L"
+                disabled
+              />
+            </div>
+            <NDivider>用药模板选择</NDivider>
+            <div class="form-item">
+              <label>用药模板</label>
+              <NSelect
+                placeholder="请选择标准化用药模板"
+                style="width: 100%"
+              />
+            </div>
+            <NDivider>用药明细</NDivider>
+            <div class="form-item">
+              <label>用药明细表格</label>
+              <NDataTable
+                :columns="[
+                  { title: '药物名称', key: 'name' },
+                  { title: '用法用量', key: 'dosage' },
+                  { title: '频次', key: 'freq' },
+                ]"
+                :data="[]"
+                size="small"
+                bordered
+                style="width: 100%"
+              />
+            </div>
+            <NDivider>调整规则</NDivider>
+            <div class="form-item">
+              <label>调整原因</label>
+              <NInput
+                type="textarea"
+                placeholder="请输入调整原因"
+                :rows="3"
+              />
+            </div>
+            <div class="form-item">
+              <label>安全提示</label>
+              <div class="section-note">
+                请确保所选药物无禁忌症，注意肝肾功能、药物相互作用等安全因素
+              </div>
             </div>
           </div>
-        </div>
-        <template #footer>
-          <NSpace justify="end">
-            <NButton @click="drawerVisible = false">取消</NButton>
-            <NButton @click="drawerVisible = false">保存草稿</NButton>
-            <NButton
-              type="primary"
-              @click="handleCreatePlan"
-              >生成并生效</NButton
-            >
-          </NSpace>
-        </template>
-      </NDrawerContent>
-    </NDrawer>
+          <template #footer>
+            <NSpace justify="end">
+              <NButton @click="drawerVisible = false">取消</NButton>
+              <NButton @click="drawerVisible = false">保存草稿</NButton>
+              <NButton
+                type="primary"
+                @click="handleCreatePlan"
+                >生成并生效</NButton
+              >
+            </NSpace>
+          </template>
+        </NDrawerContent>
+      </NDrawer>
 
-    <!-- ============================================================ -->
-    <!-- Tab4 随访记录弹窗 -->
-    <!-- ============================================================ -->
-    <NModal
-      v-model:show="followUpVisible"
-      preset="card"
-      title="随访记录"
-      style="width: 1400px; max-width: 96vw"
-      :mask-closable="true"
-    >
-      <NDataTable
-        :columns="followUpColumns"
-        :data="followUpRecords"
-        size="small"
-        :max-height="400"
-        :scroll-x="1400"
-      />
-    </NModal>
-  </div>
+      <!-- ============================================================ -->
+      <!-- Tab4 随访记录弹窗 -->
+      <!-- ============================================================ -->
+      <NModal
+        v-model:show="followUpVisible"
+        preset="card"
+        title="随访记录"
+        style="width: 1500px; max-width: 96vw"
+        :mask-closable="true"
+      >
+        <NDataTable
+          :columns="followUpColumns"
+          :data="followUpRecords"
+          size="small"
+          :max-height="400"
+          :scroll-x="1400"
+        />
+      </NModal>
+    </div>
+  </ScrollContainer>
 </template>
 
 <style scoped>
@@ -1224,7 +1227,9 @@ onUnmounted(() => {
 .filter-card {
   margin-bottom: 20px;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 2px 8px rgba(64, 158, 255, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.04);
   border: 1px solid rgba(64, 158, 255, 0.08);
 }
 
@@ -1252,10 +1257,14 @@ onUnmounted(() => {
   position: relative;
   overflow: hidden;
   border-radius: 14px;
-  box-shadow: 0 2px 12px rgba(64, 158, 255, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 2px 12px rgba(64, 158, 255, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.9);
   background: #ffffff;
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
   cursor: default;
 }
 
@@ -1283,7 +1292,9 @@ onUnmounted(() => {
 }
 
 .stat-card:hover {
-  box-shadow: 0 8px 24px rgba(64, 158, 255, 0.14), 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 8px 24px rgba(64, 158, 255, 0.14),
+    0 2px 8px rgba(0, 0, 0, 0.08);
   transform: translateY(-3px);
 }
 
@@ -1314,7 +1325,9 @@ onUnmounted(() => {
   background: #ffffff;
   border-radius: 14px;
   overflow: visible;
-  box-shadow: 0 2px 12px rgba(64, 158, 255, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 2px 12px rgba(64, 158, 255, 0.06),
+    0 1px 3px rgba(0, 0, 0, 0.04);
   border: 1px solid rgba(64, 158, 255, 0.06);
 }
 
@@ -1426,7 +1439,9 @@ onUnmounted(() => {
   border: 1px solid #f0f2f5;
   box-shadow: 0 1px 6px rgba(64, 158, 255, 0.06);
   padding: 20px 16px;
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
   cursor: default;
 }
 
