@@ -18,42 +18,42 @@ export const macrovascularCards: ComplicationSubCard[] = [
 
 // 微血管并发症分期分布柱状图数据
 export const microvascularStageDistribution: ComplicationStageDistribution[] = [
-  { 并发症名称: '糖尿病肾病', 早期: 15, 中期: 14, 晚期: 9 },
-  { 并发症名称: '视网膜病变', 早期: 14, 中期: 12, 晚期: 6 },
-  { 并发症名称: '周围神经病变', 早期: 12, 中期: 10, 晚期: 6 },
+  { complicationName: '糖尿病肾病', early: 15, mid: 14, late: 9 },
+  { complicationName: '视网膜病变', early: 14, mid: 12, late: 6 },
+  { complicationName: '周围神经病变', early: 12, mid: 10, late: 6 },
 ]
 
 // 大血管并发症分期分布柱状图数据
 export const macrovascularStageDistribution: ComplicationStageDistribution[] = [
-  { 并发症名称: '冠心病', 早期: 8, 中期: 9, 晚期: 5 },
-  { 并发症名称: '脑梗', 早期: 6, 中期: 5, 晚期: 4 },
-  { 并发症名称: '外周血管病变', 早期: 5, 中期: 4, 晚期: 3 },
+  { complicationName: '冠心病', early: 8, mid: 9, late: 5 },
+  { complicationName: '脑梗', early: 6, mid: 5, late: 4 },
+  { complicationName: '外周血管病变', early: 5, mid: 4, late: 3 },
 ]
 
 // 微血管并发症进展患者明细列表
 export const microvascularProgressPatients: ComplicationDetailPatient[] = [
-  { id: 1, 患者姓名: '李建国', 病历号: '20260001', 年龄: 58, 所属分层: '心血管高危' as PatientCategory, 并发症名称: '糖尿病肾病', 当前分期: '晚期' as ComplicationStage, 较上次变化: '中期→晚期', 最近检查日期: '2026-03-15' },
-  { id: 2, 患者姓名: '王秀英', 病历号: '20260005', 年龄: 72, 所属分层: '老年衰弱' as PatientCategory, 并发症名称: '视网膜病变', 当前分期: '中期' as ComplicationStage, 较上次变化: '早期→中期', 最近检查日期: '2026-03-10' },
-  { id: 3, 患者姓名: '张志强', 病历号: '20260012', 年龄: 65, 所属分层: '肾功能不全' as PatientCategory, 并发症名称: '糖尿病肾病', 当前分期: '中期' as ComplicationStage, 较上次变化: '早期→中期', 最近检查日期: '2026-03-08' },
-  { id: 4, 患者姓名: '刘淑芬', 病历号: '20260018', 年龄: 45, 所属分层: '年轻低危' as PatientCategory, 并发症名称: '周围神经病变', 当前分期: '早期' as ComplicationStage, 较上次变化: '新发', 最近检查日期: '2026-03-12' },
-  { id: 5, 患者姓名: '陈德明', 病历号: '20260023', 年龄: 68, 所属分层: '心血管高危' as PatientCategory, 并发症名称: '糖尿病肾病', 当前分期: '中期' as ComplicationStage, 较上次变化: '早期→中期', 最近检查日期: '2026-03-05' },
-  { id: 6, 患者姓名: '杨伟东', 病历号: '20260034', 年龄: 62, 所属分层: '肾功能不全' as PatientCategory, 并发症名称: '视网膜病变', 当前分期: '晚期' as ComplicationStage, 较上次变化: '中期→晚期', 最近检查日期: '2026-03-02' },
-  { id: 7, 患者姓名: '孙丽娟', 病历号: '20260041', 年龄: 48, 所属分层: '年轻低危' as PatientCategory, 并发症名称: '糖尿病肾病', 当前分期: '早期' as ComplicationStage, 较上次变化: '新发', 最近检查日期: '2026-03-20' },
-  { id: 8, 患者姓名: '周建国', 病历号: '20260047', 年龄: 75, 所属分层: '老年衰弱' as PatientCategory, 并发症名称: '周围神经病变', 当前分期: '中期' as ComplicationStage, 较上次变化: '早期→中期', 最近检查日期: '2026-03-07' },
-  { id: 9, 患者姓名: '冯淑英', 病历号: '20260063', 年龄: 43, 所属分层: '年轻低危' as PatientCategory, 并发症名称: '糖尿病肾病', 当前分期: '中期' as ComplicationStage, 较上次变化: '早期→中期', 最近检查日期: '2026-03-16' },
-  { id: 10, 患者姓名: '林德伟', 病历号: '20260069', 年龄: 70, 所属分层: '老年衰弱' as PatientCategory, 并发症名称: '视网膜病变', 当前分期: '早期' as ComplicationStage, 较上次变化: '新发', 最近检查日期: '2026-03-09' },
-  { id: 11, 患者姓名: '何桂芳', 病历号: '20260075', 年龄: 58, 所属分层: '肾功能不全' as PatientCategory, 并发症名称: '糖尿病肾病', 当前分期: '晚期' as ComplicationStage, 较上次变化: '中期→晚期', 最近检查日期: '2026-03-11' },
-  { id: 12, 患者姓名: '韩伟明', 病历号: '20260105', 年龄: 61, 所属分层: '肾功能不全' as PatientCategory, 并发症名称: '视网膜病变', 当前分期: '中期' as ComplicationStage, 较上次变化: '早期→中期', 最近检查日期: '2026-03-13' },
+  { id: 1, name: '李建国', medicalRecordNo: '20260001', age: 58, category: '心血管高危' as PatientCategory, complicationName: '糖尿病肾病', currentStage: '晚期' as ComplicationStage, changeFromLast: '中期→晚期', lastCheckDate: '2026-03-15' },
+  { id: 2, name: '王秀英', medicalRecordNo: '20260005', age: 72, category: '老年衰弱' as PatientCategory, complicationName: '视网膜病变', currentStage: '中期' as ComplicationStage, changeFromLast: '早期→中期', lastCheckDate: '2026-03-10' },
+  { id: 3, name: '张志强', medicalRecordNo: '20260012', age: 65, category: '肾功能不全' as PatientCategory, complicationName: '糖尿病肾病', currentStage: '中期' as ComplicationStage, changeFromLast: '早期→中期', lastCheckDate: '2026-03-08' },
+  { id: 4, name: '刘淑芬', medicalRecordNo: '20260018', age: 45, category: '年轻低危' as PatientCategory, complicationName: '周围神经病变', currentStage: '早期' as ComplicationStage, changeFromLast: '新发', lastCheckDate: '2026-03-12' },
+  { id: 5, name: '陈德明', medicalRecordNo: '20260023', age: 68, category: '心血管高危' as PatientCategory, complicationName: '糖尿病肾病', currentStage: '中期' as ComplicationStage, changeFromLast: '早期→中期', lastCheckDate: '2026-03-05' },
+  { id: 6, name: '杨伟东', medicalRecordNo: '20260034', age: 62, category: '肾功能不全' as PatientCategory, complicationName: '视网膜病变', currentStage: '晚期' as ComplicationStage, changeFromLast: '中期→晚期', lastCheckDate: '2026-03-02' },
+  { id: 7, name: '孙丽娟', medicalRecordNo: '20260041', age: 48, category: '年轻低危' as PatientCategory, complicationName: '糖尿病肾病', currentStage: '早期' as ComplicationStage, changeFromLast: '新发', lastCheckDate: '2026-03-20' },
+  { id: 8, name: '周建国', medicalRecordNo: '20260047', age: 75, category: '老年衰弱' as PatientCategory, complicationName: '周围神经病变', currentStage: '中期' as ComplicationStage, changeFromLast: '早期→中期', lastCheckDate: '2026-03-07' },
+  { id: 9, name: '冯淑英', medicalRecordNo: '20260063', age: 43, category: '年轻低危' as PatientCategory, complicationName: '糖尿病肾病', currentStage: '中期' as ComplicationStage, changeFromLast: '早期→中期', lastCheckDate: '2026-03-16' },
+  { id: 10, name: '林德伟', medicalRecordNo: '20260069', age: 70, category: '老年衰弱' as PatientCategory, complicationName: '视网膜病变', currentStage: '早期' as ComplicationStage, changeFromLast: '新发', lastCheckDate: '2026-03-09' },
+  { id: 11, name: '何桂芳', medicalRecordNo: '20260075', age: 58, category: '肾功能不全' as PatientCategory, complicationName: '糖尿病肾病', currentStage: '晚期' as ComplicationStage, changeFromLast: '中期→晚期', lastCheckDate: '2026-03-11' },
+  { id: 12, name: '韩伟明', medicalRecordNo: '20260105', age: 61, category: '肾功能不全' as PatientCategory, complicationName: '视网膜病变', currentStage: '中期' as ComplicationStage, changeFromLast: '早期→中期', lastCheckDate: '2026-03-13' },
 ]
 
 // 大血管并发症进展患者明细列表
 export const macrovascularProgressPatients: ComplicationDetailPatient[] = [
-  { id: 1, 患者姓名: '张志强', 病历号: '20260012', 年龄: 65, 所属分层: '肾功能不全' as PatientCategory, 并发症名称: '冠心病', 当前分期: '早期' as ComplicationStage, 较上次变化: '新发', 最近检查日期: '2026-03-08' },
-  { id: 2, 患者姓名: '赵桂兰', 病历号: '20260028', 年龄: 55, 所属分层: '手术期' as PatientCategory, 并发症名称: '外周血管病变', 当前分期: '早期' as ComplicationStage, 较上次变化: '新发', 最近检查日期: '2026-03-18' },
-  { id: 3, 患者姓名: '周建国', 病历号: '20260047', 年龄: 75, 所属分层: '老年衰弱' as PatientCategory, 并发症名称: '冠心病', 当前分期: '中期' as ComplicationStage, 较上次变化: '早期→中期', 最近检查日期: '2026-03-07' },
-  { id: 4, 患者姓名: '何桂芳', 病历号: '20260075', 年龄: 58, 所属分层: '肾功能不全' as PatientCategory, 并发症名称: '冠心病', 当前分期: '晚期' as ComplicationStage, 较上次变化: '中期→晚期', 最近检查日期: '2026-03-11' },
-  { id: 5, 患者姓名: '郑志强', 病历号: '20260058', 年龄: 60, 所属分层: '手术期' as PatientCategory, 并发症名称: '脑梗', 当前分期: '早期' as ComplicationStage, 较上次变化: '新发', 最近检查日期: '2026-03-01' },
-  { id: 6, 患者姓名: '邓秀芬', 病历号: '20260111', 年龄: 47, 所属分层: '年轻低危' as PatientCategory, 并发症名称: '脑梗', 当前分期: '早期' as ComplicationStage, 较上次变化: '新发', 最近检查日期: '2026-03-21' },
-  { id: 7, 患者姓名: '罗秀兰', 病历号: '20260087', 年龄: 66, 所属分层: '手术期' as PatientCategory, 并发症名称: '外周血管病变', 当前分期: '中期' as ComplicationStage, 较上次变化: '早期→中期', 最近检查日期: '2026-03-04' },
-  { id: 8, 患者姓名: '陈伟东', 病历号: '20260027', 年龄: 70, 所属分层: '老年衰弱' as PatientCategory, 并发症名称: '外周血管病变', 当前分期: '中期' as ComplicationStage, 较上次变化: '早期→中期', 最近检查日期: '2026-03-02' },
+  { id: 1, name: '张志强', medicalRecordNo: '20260012', age: 65, category: '肾功能不全' as PatientCategory, complicationName: '冠心病', currentStage: '早期' as ComplicationStage, changeFromLast: '新发', lastCheckDate: '2026-03-08' },
+  { id: 2, name: '赵桂兰', medicalRecordNo: '20260028', age: 55, category: '手术期' as PatientCategory, complicationName: '外周血管病变', currentStage: '早期' as ComplicationStage, changeFromLast: '新发', lastCheckDate: '2026-03-18' },
+  { id: 3, name: '周建国', medicalRecordNo: '20260047', age: 75, category: '老年衰弱' as PatientCategory, complicationName: '冠心病', currentStage: '中期' as ComplicationStage, changeFromLast: '早期→中期', lastCheckDate: '2026-03-07' },
+  { id: 4, name: '何桂芳', medicalRecordNo: '20260075', age: 58, category: '肾功能不全' as PatientCategory, complicationName: '冠心病', currentStage: '晚期' as ComplicationStage, changeFromLast: '中期→晚期', lastCheckDate: '2026-03-11' },
+  { id: 5, name: '郑志强', medicalRecordNo: '20260058', age: 60, category: '手术期' as PatientCategory, complicationName: '脑梗', currentStage: '早期' as ComplicationStage, changeFromLast: '新发', lastCheckDate: '2026-03-01' },
+  { id: 6, name: '邓秀芬', medicalRecordNo: '20260111', age: 47, category: '年轻低危' as PatientCategory, complicationName: '脑梗', currentStage: '早期' as ComplicationStage, changeFromLast: '新发', lastCheckDate: '2026-03-21' },
+  { id: 7, name: '罗秀兰', medicalRecordNo: '20260087', age: 66, category: '手术期' as PatientCategory, complicationName: '外周血管病变', currentStage: '中期' as ComplicationStage, changeFromLast: '早期→中期', lastCheckDate: '2026-03-04' },
+  { id: 8, name: '陈伟东', medicalRecordNo: '20260027', age: 70, category: '老年衰弱' as PatientCategory, complicationName: '外周血管病变', currentStage: '中期' as ComplicationStage, changeFromLast: '早期→中期', lastCheckDate: '2026-03-02' },
 ]

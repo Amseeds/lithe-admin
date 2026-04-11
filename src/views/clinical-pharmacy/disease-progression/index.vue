@@ -89,49 +89,49 @@ const patientList = ref<Patient[]>(generatePatientList())
 
 // 表格列 - Tab1 并发症进展TOP20
 const top20Columns = [
-  { title: '患者姓名', key: '患者姓名', width: 80 },
-  { title: '病历号', key: '病历号', width: 110 },
-  { title: '年龄', key: '年龄', width: 50 },
-  { title: '所属分层', key: '所属分层', width: 100 },
-  { title: '并发症类型', key: '并发症类型', width: 120 },
-  { title: '进展情况', key: '进展情况', width: 100 },
-  { title: '发现日期', key: '发现日期', width: 100 },
+  { title: '患者姓名', key: 'name', width: 80 },
+  { title: '病历号', key: 'medicalRecordNo', width: 110 },
+  { title: '年龄', key: 'age', width: 50 },
+  { title: '所属分层', key: 'category', width: 100 },
+  { title: '并发症类型', key: 'complicationType', width: 120 },
+  { title: '进展情况', key: 'progressStatus', width: 100 },
+  { title: '发现日期', key: 'discoveryDate', width: 100 },
 ]
 
 // 表格列 - Tab1 高进展风险
 const highRiskColumns = [
-  { title: '患者姓名', key: '患者姓名', width: 80 },
-  { title: '病历号', key: '病历号', width: 110 },
-  { title: '年龄', key: '年龄', width: 50 },
-  { title: '所属分层', key: '所属分层', width: 100 },
-  { title: '并发症类型', key: '并发症类型', width: 130 },
-  { title: '进展情况', key: '进展情况', width: 100 },
-  { title: '发现日期', key: '发现日期', width: 100 },
+  { title: '患者姓名', key: 'name', width: 80 },
+  { title: '病历号', key: 'medicalRecordNo', width: 110 },
+  { title: '年龄', key: 'age', width: 50 },
+  { title: '所属分层', key: 'category', width: 100 },
+  { title: '并发症类型', key: 'complicationType', width: 130 },
+  { title: '进展情况', key: 'progressStatus', width: 100 },
+  { title: '发现日期', key: 'discoveryDate', width: 100 },
 ]
 
 // 表格列 - Tab2 胰岛功能明细
 const pancreaticColumns = [
-  { title: '患者姓名', key: '患者姓名', width: 100 },
-  { title: '病历号', key: '病历号', width: 120 },
-  { title: '年龄', key: '年龄', width: 60 },
-  { title: '所属分层', key: '所属分层', width: 120 },
-  { title: '胰岛功能分级', key: '胰岛功能分级', width: 120 },
-  { title: '基线C肽', key: '基线C肽', width: 100 },
-  { title: '最近C肽', key: '最近C肽', width: 100 },
-  { title: '下降幅度', key: '下降幅度', width: 100 },
-  { title: '检测日期', key: '检测日期', width: 120 },
+  { title: '患者姓名', key: 'name', width: 100 },
+  { title: '病历号', key: 'medicalRecordNo', width: 120 },
+  { title: '年龄', key: 'age', width: 60 },
+  { title: '所属分层', key: 'category', width: 120 },
+  { title: '胰岛功能分级', key: 'pancreaticLevel', width: 120 },
+  { title: '基线C肽', key: 'baselineCPeptide', width: 100 },
+  { title: '最近C肽', key: 'latestCPeptide', width: 100 },
+  { title: '下降幅度', key: 'declineRate', width: 100 },
+  { title: '检测日期', key: 'testDate', width: 120 },
 ]
 
 // 表格列 - Tab3 并发症明细
 const complicationDetailColumns = [
-  { title: '患者姓名', key: '患者姓名', width: 100 },
-  { title: '病历号', key: '病历号', width: 120 },
-  { title: '年龄', key: '年龄', width: 60 },
-  { title: '所属分层', key: '所属分层', width: 120 },
-  { title: '并发症名称', key: '并发症名称', width: 140 },
-  { title: '当前分期', key: '当前分期', width: 100 },
-  { title: '较上次变化', key: '较上次变化', width: 140 },
-  { title: '最近检查日期', key: '最近检查日期', width: 120 },
+  { title: '患者姓名', key: 'name', width: 100 },
+  { title: '病历号', key: 'medicalRecordNo', width: 120 },
+  { title: '年龄', key: 'age', width: 60 },
+  { title: '所属分层', key: 'category', width: 120 },
+  { title: '并发症名称', key: 'complicationName', width: 140 },
+  { title: '当前分期', key: 'currentStage', width: 100 },
+  { title: '较上次变化', key: 'changeFromLast', width: 140 },
+  { title: '最近检查日期', key: 'lastCheckDate', width: 120 },
 ]
 
 // 表格列 - Tab4 患者列表
@@ -162,20 +162,20 @@ const patientListColumns = [
 
 // 表格列 - 弹窗检查对比
 const examResultColumns = [
-  { title: '检查项目', key: '检查项目', width: 160 },
-  { title: '检查日期', key: '检查日期', width: 120 },
-  { title: '本次结果', key: '本次结果', width: 180 },
-  { title: '上次结果', key: '上次结果', width: 140 },
-  { title: '变化趋势', key: '变化趋势', width: 100 },
-  { title: '异常等级', key: '异常等级', width: 120 },
+  { title: '检查项目', key: 'examItem', width: 160 },
+  { title: '检查日期', key: 'examDate', width: 120 },
+  { title: '本次结果', key: 'currentResult', width: 180 },
+  { title: '上次结果', key: 'previousResult', width: 140 },
+  { title: '变化趋势', key: 'changeTrend', width: 100 },
+  { title: '异常等级', key: 'abnormityLevel', width: 120 },
 ]
 
 // 表格列 - 弹窗随访记录
 const followUpColumns = [
-  { title: '随访日期', key: '随访日期', width: 120 },
-  { title: '随访医生', key: '随访医生', width: 100 },
-  { title: '进展评估结论', key: '进展评估结论', width: 250 },
-  { title: '治疗调整建议', key: '治疗调整建议', width: 250 },
+  { title: '随访日期', key: 'followUpDate', width: 120 },
+  { title: '随访医生', key: 'followUpDoctor', width: 100 },
+  { title: '进展评估结论', key: 'progressConclusion', width: 250 },
+  { title: '治疗调整建议', key: 'treatmentAdvice', width: 250 },
 ]
 
 // 图表实例
@@ -305,29 +305,29 @@ function initTab3Charts() {
     const dist = currentTab3Distribution.value
     stageBarChart.setOption({
       tooltip: { trigger: 'axis' },
-      legend: { data: ['早期', '中期', '晚期'] },
-      xAxis: { type: 'category', data: dist.map((d) => d.并发症名称), axisLabel: { interval: 0 } },
+      legend: { data: ['early', 'mid', 'late'] },
+      xAxis: { type: 'category', data: dist.map((d) => d.complicationName), axisLabel: { interval: 0 } },
       yAxis: { type: 'value', name: '人数' },
       series: [
         {
-          name: '早期',
+          name: 'early',
           type: 'bar',
           stack: 'total',
-          data: dist.map((d) => d.早期),
+          data: dist.map((d) => d.early),
           itemStyle: { color: '#91CC75' },
         },
         {
-          name: '中期',
+          name: 'mid',
           type: 'bar',
           stack: 'total',
-          data: dist.map((d) => d.中期),
+          data: dist.map((d) => d.mid),
           itemStyle: { color: '#FAC858' },
         },
         {
-          name: '晚期',
+          name: 'late',
           type: 'bar',
           stack: 'total',
-          data: dist.map((d) => d.晚期),
+          data: dist.map((d) => d.late),
           itemStyle: { color: '#EE6666' },
         },
       ],
@@ -814,53 +814,53 @@ function handleViewPatientDetail(patient: Patient) {
               label-placement="left"
             >
               <NDescriptionsItem label="姓名">{{
-                currentPatientDetail.basicInfo.姓名
+                currentPatientDetail.basicInfo.name
               }}</NDescriptionsItem>
               <NDescriptionsItem label="性别">{{
-                currentPatientDetail.basicInfo.性别
+                currentPatientDetail.basicInfo.gender
               }}</NDescriptionsItem>
               <NDescriptionsItem label="年龄"
-                >{{ currentPatientDetail.basicInfo.年龄 }}岁</NDescriptionsItem
+                >{{ currentPatientDetail.basicInfo.age }}岁</NDescriptionsItem
               >
               <NDescriptionsItem label="病历号">{{
-                currentPatientDetail.basicInfo.病历号
+                currentPatientDetail.basicInfo.medicalRecordNo
               }}</NDescriptionsItem>
               <NDescriptionsItem label="糖尿病类型">{{
-                currentPatientDetail.basicInfo.糖尿病类型
+                currentPatientDetail.basicInfo.diabetesType
               }}</NDescriptionsItem>
               <NDescriptionsItem label="病程">{{
-                currentPatientDetail.basicInfo.病程
+                currentPatientDetail.basicInfo.diseaseDuration
               }}</NDescriptionsItem>
               <NDescriptionsItem label="所属分层">{{
-                currentPatientDetail.basicInfo.所属分层
+                currentPatientDetail.basicInfo.category
               }}</NDescriptionsItem>
               <NDescriptionsItem label="并发症类型">
                 <NTag
                   :type="
-                    currentPatientDetail.basicInfo.并发症类型 === '无并发症' ? 'success' : 'warning'
+                    currentPatientDetail.basicInfo.complicationType === '无并发症' ? 'success' : 'warning'
                   "
                 >
-                  {{ currentPatientDetail.basicInfo.并发症类型 }}
+                  {{ currentPatientDetail.basicInfo.complicationType }}
                 </NTag>
               </NDescriptionsItem>
               <NDescriptionsItem label="胰岛功能">
                 <NTag
                   :type="
-                    currentPatientDetail.basicInfo.胰岛功能 === '正常'
+                    currentPatientDetail.basicInfo.pancreaticFunction === '正常'
                       ? 'success'
-                      : currentPatientDetail.basicInfo.胰岛功能 === '重度减退'
+                      : currentPatientDetail.basicInfo.pancreaticFunction === '重度减退'
                         ? 'error'
                         : 'warning'
                   "
                 >
-                  {{ currentPatientDetail.basicInfo.胰岛功能 }}
+                  {{ currentPatientDetail.basicInfo.pancreaticFunction }}
                 </NTag>
               </NDescriptionsItem>
               <NDescriptionsItem label="最近C肽">{{
-                currentPatientDetail.basicInfo.最近C肽
+                currentPatientDetail.basicInfo.latestCPeptide
               }}</NDescriptionsItem>
               <NDescriptionsItem label="最近检查日期">{{
-                currentPatientDetail.basicInfo.最近检查日期
+                currentPatientDetail.basicInfo.lastCheckDate
               }}</NDescriptionsItem>
             </NDescriptions>
           </NCard>
@@ -972,7 +972,7 @@ function handleViewPatientDetail(patient: Patient) {
   overflow: visible;
 }
 
-:deep(.n-tab-pane) {
+::deep(.n-tab-pane) {
   padding-bottom: 32px;
 }
 

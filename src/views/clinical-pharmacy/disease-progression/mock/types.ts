@@ -62,48 +62,48 @@ export interface PancreaticStatCard {
 // 并发症进展患者（TOP20/高进展风险）
 export interface ComplicationProgressPatient {
   id: number
-  患者姓名: string
-  病历号: string
-  年龄: number
-  所属分层: PatientCategory
-  并发症类型: string
-  进展情况: string
-  发现日期: string
+  name: string
+  medicalRecordNo: string
+  age: number
+  category: PatientCategory
+  complicationType: string
+  progressStatus: string
+  discoveryDate: string
 }
 
 // 胰岛功能明细患者
 export interface PancreaticFunctionPatient {
   id: number
-  患者姓名: string
-  病历号: string
-  年龄: number
-  所属分层: PatientCategory
-  胰岛功能分级: PancreaticFunctionLevel
-  基线C肽: string
-  最近C肽: string
-  下降幅度: string
-  检测日期: string
+  name: string
+  medicalRecordNo: string
+  age: number
+  category: PatientCategory
+  pancreaticLevel: PancreaticFunctionLevel
+  baselineCPeptide: string
+  latestCPeptide: string
+  declineRate: string
+  testDate: string
 }
 
 // 并发症分期分布
 export interface ComplicationStageDistribution {
-  并发症名称: string
-  早期: number
-  中期: number
-  晚期: number
+  complicationName: string
+  early: number
+  mid: number
+  late: number
 }
 
 // 并发症进展患者明细（Tab3）
 export interface ComplicationDetailPatient {
   id: number
-  患者姓名: string
-  病历号: string
-  年龄: number
-  所属分层: PatientCategory
-  并发症名称: string
-  当前分期: ComplicationStage
-  较上次变化: string
-  最近检查日期: string
+  name: string
+  medicalRecordNo: string
+  age: number
+  category: PatientCategory
+  complicationName: string
+  currentStage: ComplicationStage
+  changeFromLast: string
+  lastCheckDate: string
 }
 
 // Tab3二级Tab统计卡片
@@ -132,36 +132,36 @@ export interface CPeptideRecord {
 
 // 并发症检查对比记录
 export interface ExaminationResult {
-  检查项目: string
-  检查日期: string
-  本次结果: string
-  上次结果: string
-  变化趋势: string
-  异常等级: ProgressRiskLevel
+  examItem: string
+  examDate: string
+  currentResult: string
+  previousResult: string
+  changeTrend: string
+  abnormityLevel: ProgressRiskLevel
 }
 
 // 随访进展评估记录
 export interface ProgressFollowUpRecord {
-  随访日期: string
-  随访医生: string
-  进展评估结论: string
-  治疗调整建议: string
+  followUpDate: string
+  followUpDoctor: string
+  progressConclusion: string
+  treatmentAdvice: string
 }
 
 // 患者进展详情（弹窗数据）
 export interface PatientProgressDetail {
   basicInfo: {
-    姓名: string
-    性别: '男' | '女'
-    年龄: number
-    病历号: string
-    糖尿病类型: string
-    病程: string
-    所属分层: PatientCategory
-    并发症类型: ComplicationType
-    胰岛功能: PancreaticFunctionLevel
-    最近C肽: string
-    最近检查日期: string
+    name: string
+    gender: '男' | '女'
+    age: number
+    medicalRecordNo: string
+    diabetesType: string
+    diseaseDuration: string
+    category: PatientCategory
+    complicationType: ComplicationType
+    pancreaticFunction: PancreaticFunctionLevel
+    latestCPeptide: string
+    lastCheckDate: string
   }
   complicationTimeline: ComplicationTimelineEvent[]
   cPeptideTrend: { months: string[]; values: string[]; baseline: number }

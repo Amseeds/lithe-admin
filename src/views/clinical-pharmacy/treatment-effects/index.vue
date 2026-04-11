@@ -127,44 +127,44 @@ const patientList = ref<Patient[]>(generatePatientList())
 
 // 表格列定义 - Tab1未达标患者
 const unachievedColumns = [
-  { title: '患者姓名', key: '患者姓名', width: 100 },
-  { title: '病历号', key: '病历号', width: 120 },
-  { title: '年龄', key: '年龄', width: 60 },
-  { title: '所属分层', key: '所属分层', width: 120 },
-  { title: '超标核心指标', key: '超标核心指标', width: 180 },
-  { title: '最近随访时间', key: '最近随访时间', width: 120 },
+  { title: '患者姓名', key: 'name', width: 100 },
+  { title: '病历号', key: 'medicalRecordNo', width: 120 },
+  { title: '年龄', key: 'age', width: 60 },
+  { title: '所属分层', key: 'category', width: 120 },
+  { title: '超标核心指标', key: 'exceededIndicator', width: 180 },
+  { title: '最近随访时间', key: 'lastFollowUpDate', width: 120 },
 ]
 
 // 表格列定义 - Tab1高风险患者
 const highRiskColumns = [
-  { title: '患者姓名', key: '患者姓名', width: 100 },
-  { title: '病历号', key: '病历号', width: 100 },
-  { title: '年龄', key: '年龄', width: 60 },
-  { title: '所属分层', key: '所属分层', width: 120 },
-  { title: '异常类型', key: '异常类型', width: 150 },
-  { title: '风险等级', key: '风险等级', width: 100 },
-  { title: '处理状态', key: '处理状态', width: 100 },
+  { title: '患者姓名', key: 'name', width: 100 },
+  { title: '病历号', key: 'medicalRecordNo', width: 100 },
+  { title: '年龄', key: 'age', width: 60 },
+  { title: '所属分层', key: 'category', width: 120 },
+  { title: '异常类型', key: 'abnormalType', width: 150 },
+  { title: '风险等级', key: 'riskLevel', width: 100 },
+  { title: '处理状态', key: 'handleStatus', width: 100 },
 ]
 
 // 表格列定义 - Tab3药物不良反应
 const drugAdverseColumns = [
-  { title: '患者姓名', key: '患者姓名', width: 100 },
-  { title: '病历号', key: '病历号', width: 120 },
-  { title: '所用药物', key: '所用药物', width: 120 },
-  { title: '不良反应类型', key: '不良反应类型', width: 120 },
-  { title: '发生时间', key: '发生时间', width: 120 },
-  { title: '处理措施', key: '处理措施', width: 150 },
-  { title: '转归情况', key: '转归情况', width: 100 },
+  { title: '患者姓名', key: 'name', width: 100 },
+  { title: '病历号', key: 'medicalRecordNo', width: 120 },
+  { title: '所用药物', key: 'drugUsed', width: 120 },
+  { title: '不良反应类型', key: 'adverseReactionType', width: 120 },
+  { title: '发生时间', key: 'occurrenceTime', width: 120 },
+  { title: '处理措施', key: 'treatment', width: 150 },
+  { title: '转归情况', key: 'outcome', width: 100 },
 ]
 
 // 表格列定义 - Tab3用药高风险
 const highRiskMedColumns = [
-  { title: '患者姓名', key: '患者姓名', width: 100 },
-  { title: '病历号', key: '病历号', width: 120 },
-  { title: '联用药物', key: '联用药物', width: 200 },
-  { title: '风险类型', key: '风险类型', width: 150 },
-  { title: '风险等级', key: '风险等级', width: 100 },
-  { title: '处理状态', key: '处理状态', width: 100 },
+  { title: '患者姓名', key: 'name', width: 100 },
+  { title: '病历号', key: 'medicalRecordNo', width: 120 },
+  { title: '联用药物', key: 'combinedDrugs', width: 200 },
+  { title: '风险类型', key: 'riskType', width: 150 },
+  { title: '风险等级', key: 'riskLevel', width: 100 },
+  { title: '处理状态', key: 'handleStatus', width: 100 },
 ]
 
 // 表格列定义 - Tab4患者列表
@@ -199,42 +199,42 @@ const patientListColumns = [
 
 // 表格列定义 - Tab2异常患者
 const tab2AbnormalColumns = [
-  { title: '患者姓名', key: '患者姓名', width: 100 },
-  { title: '病历号', key: '病历号', width: 120 },
-  { title: '年龄', key: '年龄', width: 80 },
-  { title: '所属分层', key: '所属分层', width: 120 },
-  { title: '最近检测值', key: '最近检测值', width: 110 },
-  { title: '个人目标值', key: '个人目标值', width: 110 },
-  { title: '异常等级', key: '异常等级', width: 100 },
-  { title: '上次检测值', key: '上次检测值', width: 110 },
-  { title: '变化幅度', key: '变化幅度', width: 100 },
-  { title: '检测时间', key: '检测时间', width: 120 },
+  { title: '患者姓名', key: 'name', width: 100 },
+  { title: '病历号', key: 'medicalRecordNo', width: 120 },
+  { title: '年龄', key: 'age', width: 80 },
+  { title: '所属分层', key: 'category', width: 120 },
+  { title: '最近检测值', key: 'latestValue', width: 110 },
+  { title: '个人目标值', key: 'personalTarget', width: 110 },
+  { title: '异常等级', key: 'abnormalLevel', width: 100 },
+  { title: '上次检测值', key: 'previousValue', width: 110 },
+  { title: '变化幅度', key: 'changeRate', width: 100 },
+  { title: '检测时间', key: 'testDate', width: 120 },
 ]
 
 // 表格列定义 - 患者详情指标
 const indicatorColumns = [
-  { title: '指标名称', key: '指标名称', width: 150 },
-  { title: '个人目标值', key: '个人目标值', width: 110 },
-  { title: '最近检测值', key: '最近检测值', width: 120 },
-  { title: '上次检测值', key: '上次检测值', width: 120 },
-  { title: '变化幅度', key: '变化幅度', width: 100 },
-  { title: '是否达标', key: '是否达标', width: 100 },
-  { title: '异常等级', key: '异常等级', width: 100 },
+  { title: '指标名称', key: 'indicatorName', width: 150 },
+  { title: '个人目标值', key: 'personalTarget', width: 110 },
+  { title: '最近检测值', key: 'latestValue', width: 120 },
+  { title: '上次检测值', key: 'previousValue', width: 120 },
+  { title: '变化幅度', key: 'changeRate', width: 100 },
+  { title: '是否达标', key: 'isStandard', width: 100 },
+  { title: '异常等级', key: 'abnormalLevel', width: 100 },
 ]
 
 // 表格列定义 - 随访记录
 const followUpColumns = [
-  { title: '随访日期', key: '随访日期', width: 120 },
-  { title: '随访医生', key: '随访医生', width: 100 },
-  { title: '疗效评估结论', key: '疗效评估结论', width: 200 },
-  { title: '治疗调整建议', key: '治疗调整建议', width: 200 },
+  { title: '随访日期', key: 'followUpDate', width: 120 },
+  { title: '随访医生', key: 'followUpDoctor', width: 100 },
+  { title: '疗效评估结论', key: 'efficacyConclusion', width: 200 },
+  { title: '治疗调整建议', key: 'treatmentAdvice', width: 200 },
 ]
 
 // 表格列定义 - 历史报告
 const reportColumns = [
-  { title: '报告日期', key: '报告日期', width: 120 },
-  { title: '报告类型', key: '报告类型', width: 150 },
-  { title: '核心结论', key: '核心结论', width: 300 },
+  { title: '报告日期', key: 'reportDate', width: 120 },
+  { title: '报告类型', key: 'reportType', width: 150 },
+  { title: '核心结论', key: 'coreConclusion', width: 300 },
 ]
 
 // 图表实例
@@ -312,7 +312,6 @@ function initTab3Charts() {
         data: adverseReactionChart.xAxis,
         axisLabel: {
           interval: 0,
-          //   rotate: 30,
         },
       },
       yAxis: { type: 'value', name: '发生率(%)' },
@@ -354,7 +353,7 @@ function initTab3Charts() {
 function initDetailCharts() {
   if (currentPatientDetail.value && hba1cTrendRef.value && glucoseTrendRef.value) {
     const hba1cTrend = generateHba1cTrend(
-      currentPatientDetail.value.basicInfo.最近HbA1c结果.replace('%', ''),
+      currentPatientDetail.value.basicInfo.latestHbA1c.replace('%', ''),
     )
     const glucoseTrend = generateGlucoseTrend()
 
@@ -527,12 +526,12 @@ function getSafetyCardClass(index: number): string {
 
 // 生成Tab2分布图数据
 function getDistributionChartData(index: any) {
-  return generateDistributionData(index.正常范围, index.目标值)
+  return generateDistributionData(index.normalRange, index.target)
 }
 
 // 生成Tab2趋势图数据
 function getTrendChartData(index: any) {
-  return generateTrendData(index.目标值 * 1.2, index.目标值)
+  return generateTrendData(index.target * 1.2, index.target)
 }
 </script>
 
@@ -595,7 +594,7 @@ function getTrendChartData(index: any) {
               <NButton
                 size="small"
                 type="primary"
-                >查询</NButton
+              >查询</NButton
               >
               <NButton size="small">重置</NButton>
             </div>
@@ -755,17 +754,17 @@ function getTrendChartData(index: any) {
                         <NGi>
                           <div class="index-stat">
                             <span class="stat-label">达标</span>
-                            <span class="stat-value">{{ idx.达标人数 }}人</span>
+                            <span class="stat-value">{{ idx.standardCount }}人</span>
                             <div class="stat-rate-row">
-                              <span class="stat-rate">{{ idx.达标率 }}</span>
+                              <span class="stat-rate">{{ idx.standardRate }}</span>
                               <span
                                 class="stat-change"
                                 :class="{
-                                  positive: idx.达标率涨跌.startsWith('+'),
-                                  negative: idx.达标率涨跌.startsWith('-'),
+                                  positive: idx.standardRateChange.startsWith('+'),
+                                  negative: idx.standardRateChange.startsWith('-'),
                                 }"
                               >
-                                {{ idx.达标率涨跌.startsWith('+') ? '↑' : '↓' }}{{ idx.达标率涨跌 }}
+                                {{ idx.standardRateChange.startsWith('+') ? '↑' : '↓' }}{{ idx.standardRateChange }}
                               </span>
                             </div>
                           </div>
@@ -773,17 +772,17 @@ function getTrendChartData(index: any) {
                         <NGi>
                           <div class="index-stat">
                             <span class="stat-label">异常</span>
-                            <span class="stat-value">{{ idx.异常人数 }}人</span>
+                            <span class="stat-value">{{ idx.abnormalCount }}人</span>
                             <div class="stat-rate-row">
-                              <span class="stat-rate danger">{{ idx.异常率 }}</span>
+                              <span class="stat-rate danger">{{ idx.abnormalRate }}</span>
                               <span
                                 class="stat-change"
                                 :class="{
-                                  positive: idx.异常率涨跌.startsWith('+'),
-                                  negative: idx.异常率涨跌.startsWith('-'),
+                                  positive: idx.abnormalRateChange.startsWith('+'),
+                                  negative: idx.abnormalRateChange.startsWith('-'),
                                 }"
                               >
-                                {{ idx.异常率涨跌.startsWith('+') ? '↑' : '↓' }}{{ idx.异常率涨跌 }}
+                                {{ idx.abnormalRateChange.startsWith('+') ? '↑' : '↓' }}{{ idx.abnormalRateChange }}
                               </span>
                             </div>
                           </div>
@@ -948,49 +947,49 @@ function getTrendChartData(index: any) {
               label-placement="left"
             >
               <NDescriptionsItem label="姓名">{{
-                currentPatientDetail.basicInfo.姓名
+                currentPatientDetail.basicInfo.name
               }}</NDescriptionsItem>
               <NDescriptionsItem label="性别">{{
-                currentPatientDetail.basicInfo.性别
+                currentPatientDetail.basicInfo.gender
               }}</NDescriptionsItem>
               <NDescriptionsItem label="年龄"
-                >{{ currentPatientDetail.basicInfo.年龄 }}岁</NDescriptionsItem
+                >{{ currentPatientDetail.basicInfo.age }}岁</NDescriptionsItem
               >
               <NDescriptionsItem label="病历号">{{
-                currentPatientDetail.basicInfo.病历号
+                currentPatientDetail.basicInfo.medicalRecordNo
               }}</NDescriptionsItem>
               <NDescriptionsItem label="糖尿病类型">{{
-                currentPatientDetail.basicInfo.糖尿病类型
+                currentPatientDetail.basicInfo.diabetesType
               }}</NDescriptionsItem>
               <NDescriptionsItem label="病程">{{
-                currentPatientDetail.basicInfo.病程
+                currentPatientDetail.basicInfo.diseaseDuration
               }}</NDescriptionsItem>
               <NDescriptionsItem label="所属分层">{{
-                currentPatientDetail.basicInfo.所属分层
+                currentPatientDetail.basicInfo.category
               }}</NDescriptionsItem>
               <NDescriptionsItem label="最近HbA1c">{{
-                currentPatientDetail.basicInfo.最近HbA1c结果
+                currentPatientDetail.basicInfo.latestHbA1c
               }}</NDescriptionsItem>
               <NDescriptionsItem label="综合疗效评级">
                 <NTag
                   :type="
-                    currentPatientDetail.basicInfo.综合疗效评级 === '优秀达标'
+                    currentPatientDetail.basicInfo.comprehensiveEfficacyLevel === '优秀达标'
                       ? 'success'
-                      : currentPatientDetail.basicInfo.综合疗效评级 === '高风险异常'
+                      : currentPatientDetail.basicInfo.comprehensiveEfficacyLevel === '高风险异常'
                         ? 'error'
                         : 'info'
                   "
                 >
-                  {{ currentPatientDetail.basicInfo.综合疗效评级 }}
+                  {{ currentPatientDetail.basicInfo.comprehensiveEfficacyLevel }}
                 </NTag>
               </NDescriptionsItem>
               <NDescriptionsItem label="整体达标情况">
                 <NTag
                   :type="
-                    currentPatientDetail.basicInfo.整体达标情况 === '达标' ? 'success' : 'warning'
+                    currentPatientDetail.basicInfo.overallStandardStatus === '达标' ? 'success' : 'warning'
                   "
                 >
-                  {{ currentPatientDetail.basicInfo.整体达标情况 }}
+                  {{ currentPatientDetail.basicInfo.overallStandardStatus }}
                 </NTag>
               </NDescriptionsItem>
             </NDescriptions>
@@ -1048,21 +1047,21 @@ function getTrendChartData(index: any) {
               label-placement="left"
             >
               <NDescriptionsItem label="当前用药方案">{{
-                currentPatientDetail.currentMedication.用药方案
+                currentPatientDetail.currentMedication.medicationPlan
               }}</NDescriptionsItem>
               <NDescriptionsItem label="用药时长">{{
-                currentPatientDetail.currentMedication.用药时长
+                currentPatientDetail.currentMedication.medicationDuration
               }}</NDescriptionsItem>
               <NDescriptionsItem label="用药依从性">{{
-                currentPatientDetail.currentMedication.用药依从性
+                currentPatientDetail.currentMedication.medicationCompliance
               }}</NDescriptionsItem>
               <NDescriptionsItem label="历史不良反应">{{
-                currentPatientDetail.currentMedication.历史不良反应
+                currentPatientDetail.currentMedication.historicalAdverseReactions
               }}</NDescriptionsItem>
               <NDescriptionsItem
                 label="用药风险提示"
                 :span="2"
-                >{{ currentPatientDetail.currentMedication.用药风险提示 }}</NDescriptionsItem
+                >{{ currentPatientDetail.currentMedication.medicationRiskWarning }}</NDescriptionsItem
               >
             </NDescriptions>
           </NCard>
@@ -1204,7 +1203,7 @@ export default {}
   overflow: visible;
 }
 
-:deep(.n-tab-pane) {
+::deep(.n-tab-pane) {
   padding-bottom: 32px;
 }
 

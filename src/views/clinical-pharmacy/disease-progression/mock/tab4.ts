@@ -99,17 +99,17 @@ function formatDate(date: Date): string {
 export function generatePatientProgressDetail(patient: Patient): PatientProgressDetail {
   return {
     basicInfo: {
-      姓名: patient.name,
-      性别: patient.gender,
-      年龄: patient.age,
-      病历号: patient.medicalRecordNo,
-      糖尿病类型: patient.diabetesType,
-      病程: patient.diseaseDuration,
-      所属分层: patient.category,
-      并发症类型: patient.complicationType,
-      胰岛功能: patient.pancreaticFunction,
-      最近C肽: patient.cPeptideLevel + ' ng/mL',
-      最近检查日期: patient.lastCheckDate,
+      name: patient.name,
+      gender: patient.gender,
+      age: patient.age,
+      medicalRecordNo: patient.medicalRecordNo,
+      diabetesType: patient.diabetesType,
+      diseaseDuration: patient.diseaseDuration,
+      category: patient.category,
+      complicationType: patient.complicationType,
+      pancreaticFunction: patient.pancreaticFunction,
+      latestCPeptide: patient.cPeptideLevel + ' ng/mL',
+      lastCheckDate: patient.lastCheckDate,
     },
     complicationTimeline: generateTimeline(patient),
     cPeptideTrend: generateCPeptideTrend(patient.cPeptideLevel),
@@ -203,12 +203,12 @@ function generateExaminationResults(patient: Patient): ExaminationResult[] {
     date.setDate(date.getDate() - Math.floor(Math.random() * 30))
     const trend = parseFloat(item.current) < parseFloat(item.last) ? '↓' : '↑'
     results.push({
-      检查项目: item.name,
-      检查日期: formatDate(date),
-      本次结果: item.current,
-      上次结果: item.last,
-      变化趋势: trend,
-      异常等级: item.risk,
+      examItem: item.name,
+      examDate: formatDate(date),
+      currentResult: item.current,
+      previousResult: item.last,
+      changeTrend: trend,
+      abnormityLevel: item.risk,
     })
   })
 
@@ -249,10 +249,10 @@ function generateFollowUpRecords(): ProgressFollowUpRecord[] {
     date.setDate(date.getDate() - i * 28 - Math.floor(Math.random() * 7))
 
     records.push({
-      随访日期: formatDate(date),
-      随访医生: doctors[i % doctors.length],
-      进展评估结论: conclusions[i],
-      治疗调整建议: suggestions[i],
+      followUpDate: formatDate(date),
+      followUpDoctor: doctors[i % doctors.length],
+      progressConclusion: conclusions[i],
+      treatmentAdvice: suggestions[i],
     })
   }
 
