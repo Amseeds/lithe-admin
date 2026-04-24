@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { h, ref, computed } from 'vue'
 import {
   NSelect,
   NCard,
@@ -17,18 +16,22 @@ import {
 } from 'naive-ui'
 import type { Report, ReportFilters, ReportDetail } from './mock/types'
 import type { DataTableColumns } from 'naive-ui'
+
+import { h, ref, computed, onMounted } from 'vue'
+
 import {
   statCards,
   reportList,
   generateReportDetail,
   filterReports,
-  createNewReport,
   reportTypeMap,
   efficacyRatingMap,
   archiveStatusMap,
   reportStatusMap,
   mockPatients,
 } from './mock/data'
+import { getReportList, createEfficacyReport, getEfficacyReport } from '@/api/efficacyReport'
+import { getPatientList, type PatientQueryParams } from '@/api/patientRecords'
 
 defineOptions({
   name: 'EfficacyReport',
@@ -69,11 +72,27 @@ const reportStatusOptions: SelectOption[] = [
 ]
 
 // 过滤后的报告列表
-const filteredReports = computed(() => filterReports(filters.value))
+// const filteredReports = computed(() => filterReports(filters.value))
+const filteredReports = ref([])
+const loading = ref(false)
 
+// 获取列表数据
+const getList = async () => {
+  loading.value = true
+  try {
+    const { data } = await getReportList(filters)
+    filteredReports.value = data.list || []
+    // pagination.itemCount = data.total || 0
+  } catch (error) {
+    message.error('获取数据失败')
+    console.error(error)
+  } finally {
+    loading.value = false
+  }
+}
 // 查询按钮点击
 function handleQuery() {
-  // 仅做样式反馈
+  getList()
   message.success('查询成功')
 }
 
@@ -112,7 +131,7 @@ const columns: DataTableColumns<Report> = [
     width: 80,
   },
   {
-    title: '病历号',
+    title: '住院号',
     key: 'medicalRecordNo',
     width: 120,
   },
@@ -148,41 +167,46 @@ const columns: DataTableColumns<Report> = [
     width: 90,
     render(row: Report) {
       const tagType: 'default' | 'warning' | 'success' | 'error' =
-        row.reportStatus === 'draft'
-          ? 'warning'
-          : row.reportStatus === 'archived'
-            ? 'success'
-            : 'error'
-      return h(NTag, { type: tagType, size: 'small' }, () => reportStatusMap[row.reportStatus])
+        row.reportStatus === 'draft' ? 'warning' : row.reportStatus === '已归档' ? 'error' : 'error'
+      return h(NTag, { type: tagType, size: 'small' }, () => row.reportStatus)
     },
   },
   {
     title: '疗效评级',
     key: 'efficacyRating',
     width: 100,
+    // render(row: Report) {
+    //   const ratingText = efficacyRatingMap[row.efficacyRating]
+    //   const colorMap: Record<string, string> = {
+    //     优秀达标: '#18a058',
+    //     稳定达标: '#2080f0',
+    //     部分达标: '#f0a020',
+    //     未达标: '#d03050',
+    //   }
+    //   return h('span', { style: { color: colorMap[ratingText] || '#666' } }, ratingText)
+    // },
     render(row: Report) {
-      const ratingText = efficacyRatingMap[row.efficacyRating]
-      const colorMap: Record<string, string> = {
-        优秀达标: '#18a058',
-        稳定达标: '#2080f0',
-        部分达标: '#f0a020',
-        未达标: '#d03050',
-      }
-      return h('span', { style: { color: colorMap[ratingText] || '#666' } }, ratingText)
+      const tagType: 'default' | 'warning' | 'success' | 'error' =
+        row.efficacyRating === '良好'
+          ? 'success'
+          : row.efficacyRating === '已归档'
+            ? 'error'
+            : 'error'
+      return h(NTag, { type: tagType, size: 'small' }, () => row.efficacyRating)
     },
   },
-  {
-    title: '归档状态',
-    key: 'archiveStatus',
-    width: 90,
-    render(row: Report) {
-      return h(
-        NTag,
-        { type: row.archiveStatus === 'archived' ? 'success' : 'default', size: 'small' },
-        () => archiveStatusMap[row.archiveStatus],
-      )
-    },
-  },
+  // {
+  //   title: '归档状态',
+  //   key: 'archiveStatus',
+  //   width: 90,
+  //   render(row: Report) {
+  //     return h(
+  //       NTag,
+  //       { type: row.archiveStatus === 'archived' ? 'success' : 'default', size: 'small' },
+  //       () => archiveStatusMap[row.archiveStatus],
+  //     )
+  //   },
+  // },
   {
     title: '操作',
     key: 'actions',
@@ -190,67 +214,73 @@ const columns: DataTableColumns<Report> = [
     fixed: 'right',
     render(row: Report) {
       const buttons: any[] = []
-
-      if (row.reportStatus === 'draft') {
-        buttons.push(
-          h(
-            NButton,
-            { size: 'tiny', type: 'default', onClick: () => handleEdit(row) },
-            () => '编辑',
-          ),
-        )
-        buttons.push(
-          h(
-            NButton,
-            { size: 'tiny', type: 'default', onClick: () => handlePreview(row) },
-            () => '预览',
-          ),
-        )
-        buttons.push(
-          h(
-            NButton,
-            { size: 'tiny', type: 'error', onClick: () => handleDelete(row) },
-            () => '删除',
-          ),
-        )
-        buttons.push(
-          h(
-            NButton,
-            { size: 'tiny', type: 'primary', onClick: () => handleArchive(row) },
-            () => '归档',
-          ),
-        )
-      } else if (row.reportStatus === 'archived') {
-        buttons.push(
-          h(
-            NButton,
-            { size: 'tiny', type: 'info', onClick: () => handleViewDetail(row) },
-            () => '查看详情',
-          ),
-        )
-        buttons.push(
-          h(
-            NButton,
-            { size: 'tiny', type: 'default', onClick: () => handleExportPdf(row) },
-            () => '导出PDF',
-          ),
-        )
-        buttons.push(
-          h(
-            NButton,
-            { size: 'tiny', type: 'default', onClick: () => handlePrint(row) },
-            () => '打印',
-          ),
-        )
-      } else if (row.reportStatus === 'obsolete') {
-        buttons.push(
-          h(
-            NButton,
-            { size: 'tiny', type: 'info', onClick: () => handleViewDetail(row) },
-            () => '查看详情',
-          ),
-        )
-      }
+      buttons.push(
+        h(
+          NButton,
+          { size: 'tiny', type: 'info', onClick: () => handleViewDetail(row) },
+          () => '查看详情',
+        ),
+      )
+      // if (row.reportStatus === 'draft') {
+      //   buttons.push(
+      //     h(
+      //       NButton,
+      //       { size: 'tiny', type: 'default', onClick: () => handleEdit(row) },
+      //       () => '编辑',
+      //     ),
+      //   )
+      //   buttons.push(
+      //     h(
+      //       NButton,
+      //       { size: 'tiny', type: 'default', onClick: () => handlePreview(row) },
+      //       () => '预览',
+      //     ),
+      //   )
+      //   buttons.push(
+      //     h(
+      //       NButton,
+      //       { size: 'tiny', type: 'error', onClick: () => handleDelete(row) },
+      //       () => '删除',
+      //     ),
+      //   )
+      //   buttons.push(
+      //     h(
+      //       NButton,
+      //       { size: 'tiny', type: 'primary', onClick: () => handleArchive(row) },
+      //       () => '归档',
+      //     ),
+      //   )
+      // } else if (row.reportStatus === 'archived') {
+      //   buttons.push(
+      //     h(
+      //       NButton,
+      //       { size: 'tiny', type: 'info', onClick: () => handleViewDetail(row) },
+      //       () => '查看详情',
+      //     ),
+      //   )
+      //   buttons.push(
+      //     h(
+      //       NButton,
+      //       { size: 'tiny', type: 'default', onClick: () => handleExportPdf(row) },
+      //       () => '导出PDF',
+      //     ),
+      //   )
+      //   buttons.push(
+      //     h(
+      //       NButton,
+      //       { size: 'tiny', type: 'default', onClick: () => handlePrint(row) },
+      //       () => '打印',
+      //     ),
+      //   )
+      // } else if (row.reportStatus === 'obsolete') {
+      //   buttons.push(
+      //     h(
+      //       NButton,
+      //       { size: 'tiny', type: 'info', onClick: () => handleViewDetail(row) },
+      //       () => '查看详情',
+      //     ),
+      //   )
+      // }
 
       return h(NSpace, { size: 6 }, () => buttons)
     },
@@ -276,9 +306,15 @@ function handleArchive(row: Report) {
   message.success(`归档报告：${row.reportNo}`)
 }
 
-function handleViewDetail(row: Report) {
+async function handleViewDetail(row: Report) {
   currentReport.value = row
-  currentDetail.value = generateReportDetail(row)
+  // currentDetail.value = generateReportDetail(row)
+  const { code, data } = await getEfficacyReport(row.id)
+  console.log(code, 'code===')
+  console.log(data, 'data===')
+  if (code === 200) {
+    currentDetail.value = data
+  }
   detailModalVisible.value = true
 }
 
@@ -315,17 +351,39 @@ function handlePrintFromModal() {
 const drawerVisible = ref(false)
 
 const drawerForm = ref({
-  patientIndex: 0,
-  reportType: 'monthly' as 'monthly' | 'quarterly' | 'annual' | 'followup',
-  suggestions: '',
+  medicalRecordNo: '',
+  // reportType: 'monthly' as 'monthly' | 'quarterly' | 'annual' | 'followup',
+  // suggestions: '',
 })
 
-const patientOptions = computed(() =>
-  mockPatients.slice(0, 30).map((p, i) => ({
-    label: `${p.name} - ${p.medicalRecordNo}`,
-    value: i,
-  })),
-)
+const patientOptions = ref<SelectOption[]>([])
+const patientLoading = ref(false)
+
+const loadPatientList = async (searchValue: string) => {
+  patientLoading.value = true
+  try {
+    const params: PatientQueryParams = {
+      zyh: searchValue,
+      pageNum: 1,
+      pageSize: 100,
+    }
+    const { data } = await getPatientList(params)
+    const list = data.list || []
+    patientOptions.value = list.map((item) => ({
+      label: `${item.name} (${item.zyh})`,
+      value: item.zyh,
+    }))
+  } catch (error) {
+    message.error('获取患者列表失败')
+    console.error(error)
+  } finally {
+    patientLoading.value = false
+  }
+}
+
+const handlePatientSearch = (query: string) => {
+  loadPatientList(query)
+}
 
 const drawerReportTypeOptions: SelectOption[] = [
   { label: '月度随访', value: 'monthly' },
@@ -341,9 +399,9 @@ function openDrawer() {
 function closeDrawer() {
   drawerVisible.value = false
   drawerForm.value = {
-    patientIndex: 0,
-    reportType: 'monthly',
-    suggestions: '',
+    medicalRecordNo: '',
+    // reportType: 'monthly',
+    // suggestions: '',
   }
 }
 
@@ -352,21 +410,27 @@ function handleSaveDraft() {
   closeDrawer()
 }
 
-function handleGenerateAndArchive() {
-  const newReport = createNewReport({
-    patientIndex: drawerForm.value.patientIndex,
-    reportType: drawerForm.value.reportType,
-    status: 'archived',
+async function handleGenerateAndArchive() {
+  console.log(drawerForm.value, '===handleGenerateAndArchive')
+  const { code, res } = await createEfficacyReport({
+    medicalRecordNo: drawerForm.value.medicalRecordNo,
+    // reportType: drawerForm.value.reportType,
+    // status: 'archived',
   })
-  reportList.unshift(newReport)
-  message.success('生成成功，报告已归档')
-  closeDrawer()
+  if (code === 200) {
+    message.success('生成成功，报告已归档')
+    closeDrawer()
+  }
 }
 
 // ============================================================
 // 表格数据
 // ============================================================
 const tableData = computed(() => filteredReports.value)
+
+onMounted(() => {
+  getList()
+})
 </script>
 
 <template>
@@ -505,13 +569,13 @@ const tableData = computed(() => filteredReports.value)
             <div class="patient-info-row">
               <span>患者姓名：{{ currentDetail.patientName }}</span>
               <span>性别：{{ currentDetail.patientGender }}</span>
-              <span>年龄：{{ currentDetail.patientAge }}岁</span>
+              <span>年龄：{{ currentDetail.patientAge }}</span>
               <span>病历号：{{ currentDetail.medicalRecordNo }}</span>
             </div>
             <div class="patient-info-row">
               <span>糖尿病类型：{{ currentDetail.diabetesType }}</span>
-              <span>确诊时间：{{ currentDetail.diagnosisDate }}</span>
-              <span>病程：{{ currentDetail.diseaseDuration }}年</span>
+              <!-- <span>确诊时间：{{ currentDetail.diagnosisDate }}</span> -->
+              <!-- <span>病程：{{ currentDetail.diseaseDuration }}年</span> -->
             </div>
             <div class="patient-info-row">
               <span>所属分层：{{ currentDetail.stratification }}</span>
@@ -675,13 +739,16 @@ const tableData = computed(() => filteredReports.value)
           <div class="form-item">
             <label>患者选择</label>
             <NSelect
-              v-model:value="drawerForm.patientIndex"
+              v-model:value="drawerForm.medicalRecordNo"
               :options="patientOptions"
-              style="width: 100%"
-              placeholder="请选择患者"
+              :loading="patientLoading"
+              filterable
+              remote
+              placeholder="输入住院号搜索患者"
+              @search="handlePatientSearch"
             />
           </div>
-          <div class="form-item">
+          <!-- <div class="form-item">
             <label>报告类型</label>
             <NSelect
               v-model:value="drawerForm.reportType"
@@ -702,13 +769,13 @@ const tableData = computed(() => filteredReports.value)
               :rows="4"
               placeholder="请输入治疗方案调整建议"
             />
-          </div>
+          </div> -->
         </div>
 
         <template #footer>
           <div class="drawer-footer">
             <NButton @click="closeDrawer">取消</NButton>
-            <NButton @click="handleSaveDraft">保存草稿</NButton>
+            <!-- <NButton @click="handleSaveDraft">保存草稿</NButton> -->
             <NButton
               type="primary"
               @click="handleGenerateAndArchive"

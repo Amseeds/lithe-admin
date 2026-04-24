@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, h } from 'vue'
+import dayjs from 'dayjs'
+import { ref, reactive, computed, onMounted, watch, h } from 'vue'
 import {
   NCard,
   NMenu,
@@ -15,6 +16,7 @@ import {
   NTag,
   NEmpty,
   NScrollbar,
+  NDatePicker,
 } from 'naive-ui'
 import * as echarts from 'echarts'
 import type { MenuOption, DataTableColumns } from 'naive-ui'
@@ -24,7 +26,7 @@ import {
   categoryStatistics,
   hba1cDistribution,
   generalIndicatorCards,
-  patientList,
+  // patientList,
   patientDetails,
   getPatientCategoryPieData,
   isLeafNode,
@@ -32,6 +34,7 @@ import {
   type PatientDetail,
   type PatientData,
 } from './mock/data'
+import { getDashboardData } from '@/api/bloodSugarTargets'
 
 // 当前选中的分类
 const currentCategory = ref('overview')
@@ -39,20 +42,119 @@ const currentCategory = ref('overview')
 // 展开的菜单项
 const expandedKeys = ref<string[]>(['t2dm'])
 
+const range = ref<[number, number]>([
+  dayjs().subtract(1, 'day').startOf('day').valueOf(),
+  dayjs().endOf('day').valueOf(),
+])
+
 // 时间范围选项
 const timeRangeOptions = [
-  { label: '近1个月', value: '1month' },
-  { label: '近3个月', value: '3months' },
-  { label: '近6个月', value: '6months' },
+  { label: '近1个月', value: '1' },
+  { label: '近3个月', value: '3' },
+  { label: '近6个月', value: '6' },
 ]
-const selectedTimeRange = ref('3months')
-
+const selectedTimeRange = ref('3')
+const searchParams = reactive({
+  startDate: dayjs().subtract(1, 'day').format('YYYY-MM-DD'),
+  endDate: dayjs().format('YYYY-MM-DD'),
+})
 // 搜索关键字
 const searchKeyword = ref('')
 
 // 详情弹窗
 const showDetailModal = ref(false)
 const selectedPatient = ref<PatientDetail | null>(null)
+
+const getData = async (val) => {
+  if (val) {
+    searchParams.startDate = dayjs(val[0]).format('YYYY-MM-DD')
+    searchParams.endDate = dayjs(val[1]).format('YYYY-MM-DD')
+  }
+  console.log(searchParams, 'searchParams==')
+  const { code, data } = await getDashboardData(searchParams)
+  console.log(code, 'code===')
+  console.log(data, 'data===')
+  if (code === 200) {
+    patientList.value = data.patientList
+    if (data.categoryPie && categoryPieChart) {
+      categoryPieChart.hideLoading()
+      categoryPieChart.setOption({
+        tooltip: {
+          trigger: 'item',
+          formatter: '{b}: {c}人 ({d}%)',
+        },
+        legend: {
+          orient: 'vertical',
+          right: 10,
+          top: 'center',
+          textStyle: { fontSize: 12 },
+        },
+        series: [
+          {
+            name: '患者分类',
+            type: 'pie',
+            radius: ['40%', '70%'],
+            center: ['35%', '50%'],
+            itemStyle: {
+              borderRadius: 6,
+              borderColor: '#fff',
+              borderWidth: 2,
+            },
+            label: {
+              show: true,
+              formatter: '{b}\n{c}人',
+              fontSize: 11,
+            },
+            data: data.categoryPie.map((item: { name: string; value: number }, index: number) => ({
+              ...item,
+              itemStyle: {
+                color: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'][
+                  index % 6
+                ],
+              },
+            })),
+          },
+        ],
+      })
+    }
+    if (data.hba1cDistribution && hba1cPieChart) {
+      hba1cPieChart.hideLoading()
+      hba1cPieChart.setOption({
+        tooltip: {
+          trigger: 'item',
+          formatter: '{b}: {c}人 ({d}%)',
+        },
+        legend: {
+          orient: 'vertical',
+          right: 10,
+          top: 'center',
+          textStyle: { fontSize: 12 },
+        },
+        series: [
+          {
+            name: 'HbA1c分布',
+            type: 'pie',
+            radius: ['40%', '70%'],
+            center: ['35%', '50%'],
+            itemStyle: {
+              borderRadius: 6,
+              borderColor: '#fff',
+              borderWidth: 2,
+            },
+            label: {
+              show: true,
+              formatter: '{b}\n{c}人',
+              fontSize: 11,
+            },
+            data: data.hba1cDistribution.map((item: { name: string; value: number }) => ({
+              ...item,
+            })),
+          },
+        ],
+      })
+    }
+  }
+}
 
 // 将 MenuCategory 转换为 NMenu 的 MenuOption
 const convertToMenuOptions = (categories: typeof menuCategories): MenuOption[] => {
@@ -72,16 +174,17 @@ const convertToMenuOptions = (categories: typeof menuCategories): MenuOption[] =
 const menuOptions: MenuOption[] = convertToMenuOptions(menuCategories)
 
 // 过滤后的患者列表
-const filteredPatientList = computed(() => {
-  if (currentCategory.value === 'overview') {
-    return patientList
-  }
-  // 只有叶子节点才过滤患者
-  if (!isLeafNode(currentCategory.value, menuCategories)) {
-    return []
-  }
-  return patientList.filter((p) => p.category === currentCategory.value)
-})
+// const filteredPatientList = computed(() => {
+//   if (currentCategory.value === 'overview') {
+//     return patientList
+//   }
+//   // 只有叶子节点才过滤患者
+//   if (!isLeafNode(currentCategory.value, menuCategories)) {
+//     return []
+//   }
+//   return patientList.filter((p) => p.category === currentCategory.value)
+// })
+const patientList = ref([])
 
 // 当前分类的统计数据
 const currentCategoryStats = computed(() => {
@@ -116,7 +219,7 @@ const handleViewDetail = (patientId: number) => {
 // 表格列定义
 const tableColumns: DataTableColumns<PatientData> = [
   { title: '患者姓名', key: 'name', width: 100 },
-  { title: '病历号', key: 'medicalRecordNo', width: 140 },
+  { title: '病历号', key: 'patientId', width: 140 },
   { title: '年龄', key: 'age', width: 80 },
   {
     title: '所属分层',
@@ -124,19 +227,29 @@ const tableColumns: DataTableColumns<PatientData> = [
     width: 160,
     render: (row) => row.categoryName,
   },
-  { title: '最近HbA1c结果', key: 'hba1c', width: 120 },
   {
-    title: '空腹血糖达标情况',
-    key: 'fastingStatus',
+    title: '最近HbA1c结果',
+    key: 'hba1cTarget',
+    width: 120,
+    render: (row) => row.hba1cTarget,
+  },
+  // {
+  //   title: '空腹血糖达标情况',
+  //   key: 'fastingStatus',
+  //   width: 140,
+  //   render: (row) => {
+  //     const isControlled = row.fastingStatus === '达标'
+  //     return h(
+  //       NTag,
+  //       { type: isControlled ? 'success' : 'warning', size: 'small' },
+  //       { default: () => row.fastingStatus },
+  //     )
+  //   },
+  // },
+  {
+    title: '空腹血糖',
+    key: 'fastingTarget',
     width: 140,
-    render: (row) => {
-      const isControlled = row.fastingStatus === '达标'
-      return h(
-        NTag,
-        { type: isControlled ? 'success' : 'warning', size: 'small' },
-        { default: () => row.fastingStatus },
-      )
-    },
   },
   {
     title: '控糖目标状态',
@@ -175,111 +288,23 @@ const initPieCharts = () => {
   // 患者分类占比饼图
   const categoryChartDom = document.getElementById('category-pie-chart')
   if (categoryChartDom) {
-    // 如果已存在实例，先销毁
     if (categoryPieChart) {
       categoryPieChart.dispose()
       categoryPieChart = null
     }
     categoryPieChart = echarts.init(categoryChartDom)
-    const pieData = getPatientCategoryPieData()
-    categoryPieChart.setOption({
-      tooltip: {
-        trigger: 'item',
-        formatter: '{b}: {c}人 ({d}%)',
-      },
-      legend: {
-        orient: 'vertical',
-        right: 10,
-        top: 'center',
-        textStyle: { fontSize: 12 },
-      },
-      series: [
-        {
-          name: '患者分类',
-          type: 'pie',
-          radius: ['40%', '70%'],
-          center: ['35%', '50%'],
-          avoidLabelOverlap: false,
-          itemStyle: {
-            borderRadius: 6,
-            borderColor: '#fff',
-            borderWidth: 2,
-          },
-          label: {
-            show: true,
-            formatter: '{b}\n{c}人',
-            fontSize: 11,
-          },
-          emphasis: {
-            label: {
-              show: true,
-              fontSize: 12,
-              fontWeight: 'bold',
-            },
-          },
-          data: pieData.map((item, index) => ({
-            ...item,
-            itemStyle: {
-              color: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'][index % 6],
-            },
-          })),
-        },
-      ],
-    })
+    categoryPieChart.showLoading()
   }
 
   // HbA1c分布饼图
   const hba1cChartDom = document.getElementById('hba1c-pie-chart')
   if (hba1cChartDom) {
-    // 如果已存在实例，先销毁
     if (hba1cPieChart) {
       hba1cPieChart.dispose()
       hba1cPieChart = null
     }
     hba1cPieChart = echarts.init(hba1cChartDom)
-    hba1cPieChart.setOption({
-      tooltip: {
-        trigger: 'item',
-        formatter: '{b}: {c}人 ({d}%)',
-      },
-      legend: {
-        orient: 'vertical',
-        right: 10,
-        top: 'center',
-        textStyle: { fontSize: 12 },
-      },
-      series: [
-        {
-          name: 'HbA1c分布',
-          type: 'pie',
-          radius: ['40%', '70%'],
-          center: ['35%', '50%'],
-          avoidLabelOverlap: false,
-          itemStyle: {
-            borderRadius: 6,
-            borderColor: '#fff',
-            borderWidth: 2,
-          },
-          label: {
-            show: true,
-            formatter: '{b}\n{c}人',
-            fontSize: 11,
-          },
-          emphasis: {
-            label: {
-              show: true,
-              fontSize: 12,
-              fontWeight: 'bold',
-            },
-          },
-          data: hba1cDistribution.map((item) => ({
-            name: item.name,
-            value: item.value,
-            itemStyle: { color: item.color },
-          })),
-        },
-      ],
-    })
+    hba1cPieChart.showLoading()
   }
 }
 
@@ -387,6 +412,7 @@ watch(currentCategory, (newVal) => {
 onMounted(() => {
   initPieCharts()
   window.addEventListener('resize', handleResize)
+  getData()
 })
 </script>
 
@@ -421,17 +447,29 @@ onMounted(() => {
         <!-- 顶部筛选栏 -->
         <NCard class="mb-4">
           <div class="flex items-center gap-4">
-            <NSelect
+            <NDatePicker
+              v-model:value="range"
+              type="daterange"
+              clearable
+              @confirm="
+                (val) => {
+                  console.log(val, '=====')
+                  getData(val)
+                }
+              "
+            />
+
+            <!-- <NSelect
               v-model:value="selectedTimeRange"
               :options="timeRangeOptions"
               style="width: 140px"
-            />
-            <NInput
+            /> -->
+            <!-- <NInput
               v-model:value="searchKeyword"
               placeholder="患者姓名/病历号"
               style="width: 200px"
               clearable
-            />
+            /> -->
           </div>
         </NCard>
 
@@ -497,7 +535,7 @@ onMounted(() => {
         <NCard title="全院患者列表">
           <NDataTable
             :columns="tableColumns"
-            :data="filteredPatientList"
+            :data="patientList"
             :bordered="false"
             :row-key="(row: PatientData) => row.id"
           />

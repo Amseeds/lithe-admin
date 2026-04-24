@@ -1,5 +1,5 @@
 // 报告状态枚举
-export type ReportStatus = 'draft' | 'archived' | 'obsolete'
+export type ReportStatus = 'draft' | '已归档' | '未归档'
 
 // 报告类型枚举
 export type ReportType = 'monthly' | 'quarterly' | 'annual' | 'followup'

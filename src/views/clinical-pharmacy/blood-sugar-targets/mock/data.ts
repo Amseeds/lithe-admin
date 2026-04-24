@@ -99,42 +99,43 @@ export const menuCategories: MenuCategory[] = [
       { key: 't1dm-children', name: '儿童青少年' },
       { key: 't1dm-adult', name: '成人' },
       { key: 't1dm-elderly', name: '老年人' },
-      { key: 't1dm-brittle', name: '脆性糖尿病' },
+      // { key: 't1dm-brittle', name: '脆性糖尿病' },
     ],
   },
   {
     key: 'gdm',
     name: '妊娠相关糖尿病',
     children: [
-      { key: 'gdm-pgdm', name: '孕前糖尿病合并妊娠' },
-      { key: 'gdm-odm', name: '妊娠期显性糖尿病' },
-      { key: 'gdm-only', name: '妊娠期糖尿病' },
+      // { key: 'gdm-pgdm', name: '孕前糖尿病合并妊娠' },
+      // { key: 'gdm-odm', name: '妊娠期显性糖尿病' },
+      // { key: 'gdm-only', name: '妊娠期糖尿病' },
+      { key: 'gdm-only', name: '妊娠相关糖尿病' },
     ],
   },
-  {
-    key: 'st',
-    name: '特殊类型糖尿病',
-    children: [
-      { key: 'st-monogenic', name: '单基因糖尿病' },
-      { key: 'st-mitochondrial', name: '线粒体糖尿病' },
-      { key: 'st-pancreatic', name: '胰源性糖尿病' },
-      { key: 'st-other', name: '其他特殊类型' },
-    ],
-  },
-  {
-    key: 'ss',
-    name: '特殊场景临时目标',
-    children: [
-      { key: 'ss-perioperative', name: '围手术期' },
-      { key: 'ss-critical', name: '住院/危重症' },
-      { key: 'ss-infection', name: '急性感染/应激状态' },
-      { key: 'ss-hypoglycemia', name: '低血糖恢复期' },
-    ],
-  },
-  {
-    key: 'prediabetes',
-    name: '糖尿病前期',
-  },
+  // {
+  //   key: 'st',
+  //   name: '特殊类型糖尿病',
+  //   children: [
+  //     { key: 'st-monogenic', name: '单基因糖尿病' },
+  //     { key: 'st-mitochondrial', name: '线粒体糖尿病' },
+  //     { key: 'st-pancreatic', name: '胰源性糖尿病' },
+  //     { key: 'st-other', name: '其他特殊类型' },
+  //   ],
+  // },
+  // {
+  //   key: 'ss',
+  //   name: '特殊场景临时目标',
+  //   children: [
+  //     { key: 'ss-perioperative', name: '围手术期' },
+  //     { key: 'ss-critical', name: '住院/危重症' },
+  //     { key: 'ss-infection', name: '急性感染/应激状态' },
+  //     { key: 'ss-hypoglycemia', name: '低血糖恢复期' },
+  //   ],
+  // },
+  // {
+  //   key: 'prediabetes',
+  //   name: '糖尿病前期',
+  // },
 ]
 
 // ==================== 叶子节点分类定义 ====================
