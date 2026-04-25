@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { NButton, NTabPane, NTabs, NDataTable, NTag, NNumberAnimation } from 'naive-ui'
-import { ref, computed, h, reactive } from 'vue'
+import { NButton, NTabPane, NTabs, NDataTable, NTag, NNumberAnimation, useMessage } from 'naive-ui'
+import { ref, computed, h, reactive, onMounted, nextTick } from 'vue'
 
 import { ScrollContainer } from '@/components'
 
 import { pendingWarnings, handledWarnings, type PendingWarning, type HandledWarning } from './mock'
+import { getDashboardData, getWarningLing, updateWarningStatus } from '@/api/alertManagement'
 
 defineOptions({
   name: 'AlertManagement',
 })
-
+const message = useMessage()
 // 当前Tab
 const activeTab = ref('pending')
 
@@ -19,13 +20,42 @@ const pendingData = ref<PendingWarning[]>([...pendingWarnings])
 // 已处理预警数据
 const handledData = ref<HandledWarning[]>([...handledWarnings])
 
+const boardData = ref({
+  totalCount: 0,
+  pendingCount: 0,
+  handledCount: 0,
+  handleRate: 0,
+})
+const getBoardData = async () => {
+  const { code, data } = await getDashboardData()
+  if (code === 200) {
+    boardData.value = data
+    console.log(data, 'data=====')
+  }
+}
+const searchParams = reactive({
+  pageNum: 1,
+  pageSize: 10,
+  disposeStatus: '待处理',
+})
+const handleGetWarning = async () => {
+  console.log(activeTab.value, 'activeTab')
+  if (activeTab.value === 'pending') searchParams.disposeStatus = '待处理'
+  if (activeTab.value === 'handled') searchParams.disposeStatus = '已处理'
+  const { code, data } = await getWarningLing(searchParams)
+  if (code === 200) {
+    pendingData.value = data.list
+    console.log(data, 'data=====')
+  }
+}
 // 统计数据
 const statsData = computed(() => {
-  const total = 128
-  const pending = pendingData.value.filter((item) => item.status === '待处理').length
-  const handled = 91
-  const rate = ((handled / total) * 100).toFixed(1)
-
+  const total = boardData.value.totalCount
+  const pending = boardData.value.pendingCount
+  const handled = boardData.value.handledCount
+  const rate = boardData.value.handleRate
+  console.log(boardData.value, '====')
+  console.log(total, '====')
   return [
     {
       title: '预警总数',
@@ -78,10 +108,29 @@ const getTypeTag = (type: string) => {
 }
 
 // 标记已处理
-const markAsHandled = (row: PendingWarning) => {
-  const index = pendingData.value.findIndex((item) => item.id === row.id)
-  if (index > -1) {
-    pendingData.value[index].status = '已处理'
+const markAsHandled = async (row: PendingWarning) => {
+  // const index = pendingData.value.findIndex((item) => item.id === row.id)
+  // if (index > -1) {
+  //   pendingData.value[index].status = '已处理'
+  // }
+  const { code, data } = await updateWarningStatus({ id: row.id })
+  if (code === 200) {
+    message.success('预警处理成功')
+    nextTick(() => {
+      handleGetWarning()
+    })
+  }
+}
+const getStatusText = (status) => {
+  switch (status) {
+    case 1:
+      return '草稿'
+    case 2:
+      return '已生效'
+    case 3:
+      return '已失效'
+    default:
+      return 'default'
   }
 }
 
@@ -89,24 +138,24 @@ const markAsHandled = (row: PendingWarning) => {
 const pendingColumns = [
   {
     title: '预警时间',
-    key: 'time',
+    key: 'warningTime',
     width: 180,
   },
   {
-    title: '患者姓名',
-    key: 'name',
+    title: '住院号',
+    key: 'patientName',
     width: 100,
   },
   {
     title: '风险类型',
-    key: 'type',
+    key: 'riskType',
     width: 120,
-    render: (row: PendingWarning) =>
-      h(NTag, { type: getTypeTag(row.type), size: 'small' }, { default: () => row.type }),
+    // render: (row: PendingWarning) =>
+    //   h(NTag, { type: getTypeTag(row.type), size: 'small' }, { default: () => row.type }),
   },
   {
     title: '预警内容',
-    key: 'content',
+    key: 'warningContent',
     ellipsis: { tooltip: true },
   },
   {
@@ -116,8 +165,8 @@ const pendingColumns = [
     render: (row: PendingWarning) =>
       h(
         NTag,
-        { type: row.status === '待处理' ? 'warning' : 'success', size: 'small' },
-        { default: () => row.status },
+        { type: row.disposeStatus === '待处理' ? 'warning' : 'success', size: 'small' },
+        { default: () => row.disposeStatus },
       ),
   },
   {
@@ -125,7 +174,7 @@ const pendingColumns = [
     key: 'actions',
     width: 120,
     render: (row: PendingWarning) =>
-      row.status === '待处理'
+      row.disposeStatus === '待处理'
         ? h(
             NButton,
             {
@@ -144,35 +193,41 @@ const pendingColumns = [
 const handledColumns = [
   {
     title: '预警时间',
-    key: 'time',
+    key: 'warningTime',
     width: 180,
   },
   {
-    title: '患者姓名',
-    key: 'name',
+    title: '住院号',
+    key: 'patientName',
     width: 100,
   },
   {
     title: '风险类型',
-    key: 'type',
+    key: 'riskType',
     width: 120,
-    render: (row: HandledWarning) =>
-      h(NTag, { type: getTypeTag(row.type), size: 'small' }, { default: () => row.type }),
+    // render: (row: PendingWarning) =>
+    //   h(NTag, { type: getTypeTag(row.type), size: 'small' }, { default: () => row.type }),
   },
   {
     title: '预警内容',
-    key: 'content',
+    key: 'warningContent',
     ellipsis: { tooltip: true },
   },
   {
-    title: '处置人',
-    key: 'handler',
-    width: 100,
+    title: '处置时间',
+    key: 'updateTime',
+    width: 180,
   },
   {
-    title: '处置时间',
-    key: 'handleTime',
-    width: 180,
+    title: '处置状态',
+    key: 'status',
+    width: 100,
+    render: (row: PendingWarning) =>
+      h(
+        NTag,
+        { type: row.disposeStatus === '待处理' ? 'warning' : 'success', size: 'small' },
+        { default: () => row.disposeStatus },
+      ),
   },
 ]
 
@@ -203,6 +258,11 @@ const handledPagination = reactive({
     handledPagination.pageSize = pageSize
     handledPagination.page = 1
   },
+})
+
+onMounted(() => {
+  getBoardData()
+  handleGetWarning()
 })
 </script>
 
@@ -253,6 +313,7 @@ const handledPagination = reactive({
         v-model:value="activeTab"
         type="line"
         animated
+        @update:value="handleGetWarning"
       >
         <NTabPane
           name="pending"
@@ -272,7 +333,7 @@ const handledPagination = reactive({
         >
           <NDataTable
             :columns="handledColumns"
-            :data="handledData"
+            :data="pendingData"
             :bordered="true"
             :scroll-x="1100"
             :pagination="handledPagination"

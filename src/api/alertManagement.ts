@@ -5,7 +5,21 @@ import { get, post } from '@/utils/request'
  * @param params
  * @returns
  */
-export const getDashboardData = () => get(`/api/guidance/stat`)
+export const getDashboardData = () => get(`/api/v1/patientwarn/stat`)
+
+/**
+ * 更新预警状态
+ * @param params
+ * @returns
+ */
+export const updateWarningStatus = (params) => get(`/api/v1/patientwarn/updatestatus`, params)
+
+/**
+ * 获取未制定方案列表患者列表
+ * @param params
+ * @returns
+ */
+export const getWarningLing = (params) => get('/api/v1/patientwarn/getall', params)
 
 /**
  * 新增生活方式指导
@@ -19,7 +33,7 @@ export const createLifestyleGuidance = (params) => post(`/api/guidance/add`, par
  * @param params
  * @returns
  */
-export const deletePlan = (id) => get(`/api/guidance/delete/${id}`)
+export const deletePlan = (params) => get(`/api/v1/patientwarn/updatestatus`, params)
 
 /**
  * 修改生活方式指导
@@ -41,10 +55,3 @@ export const getGuidancePlan = (params) => get('/api/guidance/list', params)
  * @returns
  */
 export const getLifestyleGuidanceDetail = (id) => get(`/api/guidance/get/${id}`)
-
-/**
- * 获取未制定方案列表患者列表
- * @param params
- * @returns
- */
-export const getUnplannedPatients = () => get('/api/guidance/PatientSwithoutAPlan')

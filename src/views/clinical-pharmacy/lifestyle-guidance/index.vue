@@ -22,6 +22,7 @@ import {
   NScrollbar,
   NDivider,
   NEmpty,
+  NDatePicker,
   useMessage,
   type SelectOption,
 } from 'naive-ui'
@@ -32,17 +33,17 @@ import {
   statCards,
   barChartData,
   pieChartData,
-  unplannedPatients,
-  lowExecutionPatients,
+  // unplannedPatients,
+  // lowExecutionPatients,
   // planList,
-  generatePlanDetail,
+  // generatePlanDetail,
   executionStatCards,
   executionRecords,
   generateFollowUpRecords,
   guidanceLibrary,
   // createNewPlan,
-  mockPatientsForSelect,
-  planStatusMap,
+  // mockPatientsForSelect,
+  // planStatusMap,
   stratificationList,
 } from './mock/data'
 import {
@@ -51,6 +52,7 @@ import {
   editPlan,
   getDashboardData,
   getGuidancePlan,
+  getUnplannedPatients,
 } from '@/api/lifestyleGuidance'
 import { getPatientList, type PatientQueryParams } from '@/api/patientRecords'
 import dayjs from 'dayjs'
@@ -97,6 +99,13 @@ function handleReset() {
   message.info('已重置筛选条件')
 }
 
+const unplannedPatients = ref()
+const handleGetUnplannedPatients = async () => {
+  const { code, data } = await getUnplannedPatients()
+  if (code === 200) {
+    unplannedPatients.value = data.list
+  }
+}
 // ============================================================
 // 2. 统计卡片
 // ============================================================
@@ -185,19 +194,19 @@ function initTab1Charts() {
 // Tab1: 未制定方案列表列
 // ============================================================
 const unplannedColumns: DataTableColumns<any> = [
-  { title: '患者姓名', key: 'patientName', width: 90 },
-  { title: '病历号', key: 'medicalRecordNo', width: 120 },
-  { title: '所属分层', key: 'stratification', width: 100 },
+  { title: '病历号', key: 'zyh', width: 120 },
+  { title: '患者姓名', key: 'name', width: 90 },
+  // { title: '所属分层', key: 'stratification', width: 100 },
   { title: '年龄', key: 'age', width: 60 },
-  { title: '性别', key: 'gender', width: 60 },
+  { title: '性别', key: 'sex', width: 60 },
   {
     title: '操作',
     key: 'actions',
     width: 100,
-    render() {
+    render(row: any) {
       return h(
         NButton,
-        { size: 'tiny', type: 'primary', onClick: () => message.info('新建方案（仅样式）') },
+        { size: 'tiny', type: 'primary', onClick: () => handleOpenNewPlan(row) },
         () => '新建方案',
       )
     },
@@ -390,11 +399,11 @@ async function handleGetDashboardData() {
 const drawerVisible = ref(false)
 const mode = ref('create')
 const newPlanForm = ref({
-  patientId: null,
+  patientId: null as string | null,
   patientName: '',
   patientStratum: '',
-  startDate: '',
-  endDate: '',
+  startDate: null as number | null,
+  endDate: null as number | null,
   doctorName: '',
   dietSuggestion: '低盐低脂饮食，每日碳水化合物摄入控制在150g以内，多吃绿叶蔬菜',
   exerciseSuggestion: '每周进行5次中等强度有氧运动，每次30分钟，如快走、慢跑',
@@ -404,34 +413,25 @@ const newPlanForm = ref({
   creator: 'admin',
 })
 
-function handleOpenNewPlan() {
+function handleOpenNewPlan(patient?: any) {
   mode.value = 'create'
-  newPlanForm.value =
-    // {
-    //   patientNo: '',
-    //   stratification: '',
-    //   planPeriodStart: '',
-    //   planPeriodEnd: '',
-    //   doctor: '',
-    //   dietAdvice: '',
-    //   exerciseAdvice: '',
-    //   weightAdvice: '',
-    //   personalizedNote: '',
-    // }
-    {
-      patientId: null,
-      patientName: '张三',
-      patientStratum: '中危',
-      startDate: '2026-04-24',
-      endDate: '2026-05-24',
-      doctorName: '李医生',
-      dietSuggestion: '低盐低脂饮食，每日碳水化合物摄入控制在150g以内，多吃绿叶蔬菜',
-      exerciseSuggestion: '每周进行5次中等强度有氧运动，每次30分钟，如快走、慢跑',
-      weightManagementSuggestion: '目标体重70kg，每周减重0.5kg，避免暴饮暴食',
-      personalizedSuggestion: '患者有高血压病史，建议监测血压，避免剧烈运动',
-      status: 2,
-      creator: 'admin',
-    }
+  newPlanForm.value = {
+    patientId: patient?.zyh || null,
+    patientName: patient?.name || '',
+    patientStratum: patient?.stratification || '',
+    startDate: dayjs().valueOf(),
+    endDate: dayjs().subtract(-1, 'months').valueOf(),
+    doctorName: '李医生',
+    dietSuggestion: '低盐低脂饮食，每日碳水化合物摄入控制在150g以内，多吃绿叶蔬菜',
+    exerciseSuggestion: '每周进行5次中等强度有氧运动，每次30分钟，如快走、慢跑',
+    weightManagementSuggestion: '目标体重70kg，每周减重0.5kg，避免暴饮暴食',
+    personalizedSuggestion: '患者有高血压病史，建议监测血压，避免剧烈运动',
+    status: 2,
+    creator: 'admin',
+  }
+  if (patient?.zyh) {
+    loadPatientList(patient.zyh)
+  }
   drawerVisible.value = true
 }
 
@@ -493,15 +493,23 @@ const getGuidancePlanList = async () => {
   }
 }
 const handleGeneratePlan = async () => {
+  const formData = {
+    ...newPlanForm.value,
+    startDate: newPlanForm.value.startDate
+      ? dayjs(newPlanForm.value.startDate).format('YYYY-MM-DD')
+      : '',
+    endDate: newPlanForm.value.endDate ? dayjs(newPlanForm.value.endDate).format('YYYY-MM-DD') : '',
+  }
   if (mode.value === 'create') {
-    const { code, data } = await createLifestyleGuidance(newPlanForm.value)
+    const { code, data } = await createLifestyleGuidance(formData)
     if (code === 200) {
       drawerVisible.value = false
       message.success('保存成功')
+      getGuidancePlanList()
     }
   }
   if (mode.value === 'edit') {
-    const { code, data } = await editPlan(newPlanForm.value)
+    const { code, data } = await editPlan(formData)
     if (code === 200) {
       drawerVisible.value = false
       message.success('修改方案成功')
@@ -653,6 +661,7 @@ onMounted(() => {
   window.addEventListener('resize', resizeHandler, { passive: true })
   handleGetDashboardData()
   getGuidancePlanList()
+  handleGetUnplannedPatients()
 })
 
 onUnmounted(() => {
@@ -1101,14 +1110,16 @@ onUnmounted(() => {
             <div class="form-item">
               <label>方案周期</label>
               <NSpace>
-                <NInput
+                <NDatePicker
                   v-model:value="newPlanForm.startDate"
+                  type="date"
                   placeholder="开始日期"
                   style="width: 150px"
                 />
                 <span>至</span>
-                <NInput
+                <NDatePicker
                   v-model:value="newPlanForm.endDate"
+                  type="date"
                   placeholder="结束日期"
                   style="width: 150px"
                 />
