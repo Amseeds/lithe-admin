@@ -154,6 +154,20 @@ const formatDateTime = (dateStr: string) => {
   }
 }
 
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return '-'
+  try {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    })
+  } catch {
+    return dateStr
+  }
+}
+
 // 表格列 - Tab1 并发症进展TOP20
 const top20Columns: DataTableColumns = [
   { title: '就诊编号', key: 'visitnumber', width: 90, ellipsis: { tooltip: true } },
@@ -319,6 +333,16 @@ function getTimelineType(type: string): 'success' | 'warning' | 'info' {
   if (type === 'stable') return 'info'
   if (type === 'progress') return 'warning'
   return 'success'
+}
+
+const getCPeptideClass = (value: string | number | null | undefined) => {
+  if (!value && value !== 0) return 'text-gray-400'
+  const num = parseFloat(String(value))
+  if (isNaN(num)) return 'text-gray-400'
+  if (num >= 1.0) return 'text-green-600 font-medium'
+  if (num >= 0.5) return 'text-cyan-600 font-medium'
+  if (num >= 0.2) return 'text-orange-500 font-medium'
+  return 'text-red-600 font-medium'
 }
 
 const overviewData = ref(null) as any
@@ -710,48 +734,126 @@ async function handleViewPatientDetail(patient: PatientRecord) {
         v-model:show="showPatientDetail"
         preset="card"
         title="病情进展明细"
-        style="width: 960px; max-width: 95vw"
+        style="width: 800px; max-width: 95vw"
         :mask-closable="true"
+        :bordered="false"
+        :segmented="{ content: true, footer: true }"
+        :header-style="{ paddingBottom: '8px' }"
       >
         <template v-if="currentPatientDetail">
-          <!-- 患者基本信息 -->
+          <!-- 患者信息卡片 -->
           <NCard
-            title="患者基本信息"
+            size="small"
             :bordered="false"
             class="mb-4"
+            :content-style="{ padding: '16px' }"
           >
-            <NDescriptions
-              :column="3"
-              label-placement="left"
-            >
-              <NDescriptionsItem label="姓名">{{
-                currentPatientDetail.basicInfo.name
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="性别">{{
-                currentPatientDetail.basicInfo.sex
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="年龄">{{
-                currentPatientDetail.basicInfo.age
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="住院号">{{
-                currentPatientDetail.basicInfo.zyh
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="最近C肽">{{
-                currentPatientDetail.basicInfo.latestCPeptide || '-'
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="最近检查日期">{{
-                currentPatientDetail.basicInfo.lastCheckDate || '-'
-              }}</NDescriptionsItem>
-            </NDescriptions>
+            <div class="patient-header">
+<div class="patient-avatar" :class="currentPatientDetail.basicInfo.sex === '女' ? 'female' : 'male'">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+              <div class="patient-main-info">
+                <div class="patient-name-row">
+                  <span class="patient-name">{{ currentPatientDetail.basicInfo.name }}</span>
+                  <NTag
+                    :type="currentPatientDetail.basicInfo.sex === '男' ? 'info' : 'warning'"
+                    size="small"
+                    round
+                  >
+                    {{ currentPatientDetail.basicInfo.sex }}
+                  </NTag>
+                  <NTag
+                    type="default"
+                    size="small"
+                    round
+                  >
+                    {{ currentPatientDetail.basicInfo.age }}
+                  </NTag>
+                </div>
+                <div class="patient-meta">
+                  <span class="meta-item">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <rect
+                        x="3"
+                        y="4"
+                        width="18"
+                        height="18"
+                        rx="2"
+                        ry="2"
+                      />
+                      <line
+                        x1="16"
+                        y1="2"
+                        x2="16"
+                        y2="6"
+                      />
+                      <line
+                        x1="8"
+                        y1="2"
+                        x2="8"
+                        y2="6"
+                      />
+                      <line
+                        x1="3"
+                        y1="10"
+                        x2="21"
+                        y2="10"
+                      />
+                    </svg>
+                    住院号: {{ currentPatientDetail.basicInfo.zyh }}
+                  </span>
+                </div>
+              </div>
+              <div class="patient-indicators">
+                <div class="indicator-item">
+                  <span class="indicator-label">最近C肽</span>
+                  <span
+                    class="indicator-value"
+                    :class="getCPeptideClass(currentPatientDetail.basicInfo.latestCPeptide)"
+                  >
+                    {{ currentPatientDetail.basicInfo.latestCPeptide || '--' }}
+                  </span>
+                </div>
+                <div class="indicator-item">
+                  <span class="indicator-label">入院日期</span>
+                  <span v-if="currentPatientDetail.basicInfo.admissionDate" class="indicator-value secondary">
+                    {{ formatDate(currentPatientDetail.basicInfo.admissionDate) }}
+                  </span>
+                  <span v-else class="indicator-empty">--</span>
+                </div>
+              </div>
+            </div>
           </NCard>
 
           <!-- 并发症进展时间轴 -->
           <NCard
             title="并发症进展时间轴"
+            size="small"
             :bordered="false"
             class="mb-4"
+            :content-style="{ padding: '0 12px 12px 12px' }"
           >
-            <NTimeline v-if="currentPatientDetail.complicationTimeline.length > 0">
+            <template #header-extra>
+              <NTag
+                type="info"
+                size="small"
+                >{{ currentPatientDetail.complicationTimeline.length }}条记录</NTag
+              >
+            </template>
+            <NTimeline
+              v-if="currentPatientDetail.complicationTimeline.length > 0"
+              size="small"
+            >
               <NTimelineItem
                 v-for="(event, idx) in currentPatientDetail.complicationTimeline"
                 :key="idx"
@@ -765,18 +867,22 @@ async function handleViewPatientDetail(patient: PatientRecord) {
             <NEmpty
               v-else
               description="暂无并发症进展记录"
+              size="small"
             />
           </NCard>
 
           <!-- 胰岛功能变化趋势 -->
           <NCard
             title="胰岛功能变化趋势（C肽）"
+            size="small"
             :bordered="false"
             class="mb-4"
+            :content-style="{ padding: '0 12px 12px 12px' }"
           >
             <NEmpty
               v-if="!currentPatientDetail.cPeptideTrend"
               description="暂无C肽变化趋势数据"
+              size="small"
             />
             <div
               v-else
@@ -788,29 +894,19 @@ async function handleViewPatientDetail(patient: PatientRecord) {
           <!-- 并发症历次检查结果对比表 -->
           <NCard
             title="历次检查结果对比"
+            size="small"
             :bordered="false"
-            class="mb-4"
+            :content-style="{ padding: '0 12px 12px 12px' }"
           >
             <NDataTable
               :columns="examResultColumns"
               :data="currentPatientDetail.examinationResults"
               :pagination="false"
-              :max-height="300"
+              :max-height="280"
+              size="small"
+              :row-class-name="() => 'exam-result-row'"
             />
           </NCard>
-
-          <!-- 随访进展评估记录 -->
-          <!-- <NCard
-            title="随访进展评估记录"
-            :bordered="false"
-          >
-            <NDataTable
-              :columns="followUpColumns"
-              :data="currentPatientDetail.followUpRecords"
-              :pagination="false"
-              :max-height="300"
-            />
-          </NCard> -->
         </template>
       </NModal>
     </div>
@@ -1105,5 +1201,109 @@ async function handleViewPatientDetail(patient: PatientRecord) {
   .complication-cards {
     grid-template-columns: 1fr;
   }
+}
+
+.patient-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.patient-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.patient-avatar.male {
+  background: linear-gradient(135deg, #0891b2 0%, #22d3ee 100%);
+}
+
+.patient-avatar.female {
+  background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
+}
+
+.patient-main-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.patient-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.patient-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.patient-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.patient-indicators {
+  display: flex;
+  gap: 24px;
+}
+
+.indicator-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 16px;
+  background: #f9fafb;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.indicator-label {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-bottom: 4px;
+}
+
+.indicator-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.indicator-value.secondary {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.indicator-empty {
+  font-size: 18px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.chart-container {
+  height: 200px;
+}
+
+:deep(.exam-result-row:hover) {
+  background-color: #f9fafb;
 }
 </style>

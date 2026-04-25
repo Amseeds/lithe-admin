@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, ref, nextTick, onMounted, onUnmounted, watch } from 'vue'
+import { h, ref, nextTick, onMounted, onUnmounted, watch, reactive } from 'vue'
 import type { ECharts } from 'echarts'
 import {
   NCard,
@@ -34,17 +34,27 @@ import {
   pieChartData,
   unplannedPatients,
   lowExecutionPatients,
-  planList,
+  // planList,
   generatePlanDetail,
   executionStatCards,
   executionRecords,
   generateFollowUpRecords,
   guidanceLibrary,
-  createNewPlan,
+  // createNewPlan,
   mockPatientsForSelect,
   planStatusMap,
   stratificationList,
 } from './mock/data'
+import {
+  createLifestyleGuidance,
+  deletePlan,
+  editPlan,
+  getDashboardData,
+  getGuidancePlan,
+} from '@/api/lifestyleGuidance'
+import { getPatientList, type PatientQueryParams } from '@/api/patientRecords'
+import dayjs from 'dayjs'
+import { getLifestyleGuidanceDetail } from '@/api/lifestyleGuidance'
 
 defineOptions({ name: 'LifestyleGuidance' })
 
@@ -55,7 +65,7 @@ const message = useMessage()
 // ============================================================
 const filters = ref({
   stratification: [] as string[],
-  planStatus: '',
+  status: '',
   timeRange: '近3个月',
   searchKeyword: '',
 })
@@ -83,7 +93,7 @@ function handleQuery() {
   message.success('查询成功')
 }
 function handleReset() {
-  filters.value = { stratification: [], planStatus: '', timeRange: '近3个月', searchKeyword: '' }
+  filters.value = { stratification: [], status: '', timeRange: '近3个月', searchKeyword: '' }
   message.info('已重置筛选条件')
 }
 
@@ -99,7 +109,7 @@ function cardChangeStyle(type: 'increase' | 'decrease' | 'neutral') {
 // ============================================================
 // Tab状态
 // ============================================================
-const activeTab = ref('overview')
+const activeTab = ref('library')
 
 // ============================================================
 // Tab1: 图表
@@ -233,46 +243,46 @@ const lowExecColumns: DataTableColumns<any> = [
 // Tab2: 方案列表
 // ============================================================
 const planColumns: DataTableColumns<LifestylePlan> = [
-  { title: '方案编号', key: 'planNo', width: 160 },
+  { title: '方案编号', key: 'id', width: 160 },
   { title: '患者姓名', key: 'patientName', width: 90 },
-  { title: '病历号', key: 'medicalRecordNo', width: 120 },
-  { title: '所属分层', key: 'stratification', width: 100 },
+  { title: '住院号', key: 'patientId', width: 120 },
+  { title: '所属分层', key: 'patientStratum', width: 100 },
   {
     title: '方案周期',
     width: 200,
     render(row) {
-      return `${row.planPeriodStart} 至 ${row.planPeriodEnd}`
+      return `${row.startDate} 至 ${row.endDate}`
     },
   },
-  { title: '制定医生', key: 'createDoctor', width: 90 },
-  {
-    title: '方案状态',
-    key: 'planStatus',
-    width: 90,
-    render(row) {
-      const map: Record<
-        string,
-        { type: 'default' | 'success' | 'warning' | 'error'; text: string }
-      > = {
-        not_created: { type: 'default', text: '未制定' },
-        created: { type: 'success', text: '已制定' },
-        archived: { type: 'warning', text: '已归档' },
-        expired: { type: 'error', text: '已过期' },
-      }
-      const s = map[row.planStatus] || map.created
-      return h(NTag, { type: s.type, size: 'small' }, () => s.text)
-    },
-  },
-  {
-    title: '执行率',
-    key: 'executionRate',
-    width: 80,
-    render(row) {
-      const type =
-        row.executionRate >= 80 ? 'success' : row.executionRate >= 50 ? 'warning' : 'error'
-      return h(NTag, { type, size: 'small' }, () => `${row.executionRate}%`)
-    },
-  },
+  { title: '制定医生', key: 'doctorName', width: 90 },
+  // {
+  //   title: '方案状态',
+  //   key: 'status',
+  //   width: 90,
+  //   render(row) {
+  //     const map: Record<
+  //       string,
+  //       { type: 'default' | 'success' | 'warning' | 'error'; text: string }
+  //     > = {
+  //       not_created: { type: 'default', text: '未制定' },
+  //       created: { type: 'success', text: '已制定' },
+  //       archived: { type: 'warning', text: '已归档' },
+  //       expired: { type: 'error', text: '已过期' },
+  //     }
+  //     const s = map[row.status] || map.created
+  //     return h(NTag, { type: s.type, size: 'small' }, () => s.text)
+  //   },
+  // },
+  // {
+  //   title: '执行率',
+  //   key: 'executionRate',
+  //   width: 80,
+  //   render(row) {
+  //     const type =
+  //       row.executionRate >= 80 ? 'success' : row.executionRate >= 50 ? 'warning' : 'error'
+  //     return h(NTag, { type, size: 'small' }, () => `${row.executionRate}%`)
+  //   },
+  // },
   {
     title: '操作',
     key: 'actions',
@@ -280,7 +290,7 @@ const planColumns: DataTableColumns<LifestylePlan> = [
     fixed: 'right',
     render(row) {
       const btns: any[] = []
-      if (row.planStatus === 'created') {
+      if (row.status === 2) {
         btns.push(
           h(
             NButton,
@@ -291,18 +301,25 @@ const planColumns: DataTableColumns<LifestylePlan> = [
         btns.push(
           h(
             NButton,
-            { size: 'tiny', type: 'default', onClick: () => message.info('编辑（仅样式）') },
+            { size: 'tiny', type: 'default', onClick: () => handleEditPlan(row) },
             () => '编辑',
           ),
         )
+        // btns.push(
+        //   h(
+        //     NButton,
+        //     { size: 'tiny', type: 'warning', onClick: () => message.info('归档（仅样式）') },
+        //     () => '归档',
+        //   ),
+        // )
         btns.push(
           h(
             NButton,
-            { size: 'tiny', type: 'warning', onClick: () => message.info('归档（仅样式）') },
-            () => '归档',
+            { size: 'tiny', type: 'error', onClick: () => handleDeletePlan(row) },
+            () => '删除',
           ),
         )
-      } else if (row.planStatus === 'archived') {
+      } else if (row.status === 'archived') {
         btns.push(
           h(
             NButton,
@@ -310,7 +327,7 @@ const planColumns: DataTableColumns<LifestylePlan> = [
             () => '查看详情',
           ),
         )
-      } else if (row.planStatus === 'expired') {
+      } else if (row.status === 'expired') {
         btns.push(
           h(
             NButton,
@@ -330,57 +347,166 @@ const planColumns: DataTableColumns<LifestylePlan> = [
 const detailModalVisible = ref(false)
 const currentPlanDetail = ref<PlanDetail | null>(null)
 
-function handleViewPlanDetail(plan: LifestylePlan) {
-  currentPlanDetail.value = generatePlanDetail(plan)
-  detailModalVisible.value = true
+async function handleViewPlanDetail(plan: LifestylePlan) {
+  // currentPlanDetail.value = generatePlanDetail(plan)
+  const { code, data } = await getLifestyleGuidanceDetail(plan.id)
+  if (code === 200) {
+    currentPlanDetail.value = data
+    detailModalVisible.value = true
+  }
+}
+async function handleEditPlan(plan: LifestylePlan) {
+  // currentPlanDetail.value = plan
+  newPlanForm.value = plan
+  mode.value = 'edit'
+  drawerVisible.value = true
+  // const { code, data } = await getLifestyleGuidanceDetail(plan.id)
+  // if (code === 200) {
+  //   currentPlanDetail.value = data
+  //   detailModalVisible.value = true
+  // }
+}
+async function handleDeletePlan(plan: LifestylePlan) {
+  const { code, data } = await deletePlan(plan.id)
+  if (code === 200) {
+    message.info('删除成功')
+    getGuidancePlanList()
+  }
+}
+const dashBoardData = ref({
+  totalCoverCount: 0,
+  monthPlanCount: 0,
+})
+async function handleGetDashboardData() {
+  const { code, data } = await getDashboardData()
+  if (code === 200) {
+    dashBoardData.value = data
+  }
 }
 
 // ============================================================
 // Tab2: 新建/编辑方案抽屉
 // ============================================================
 const drawerVisible = ref(false)
+const mode = ref('create')
 const newPlanForm = ref({
-  patientNo: '',
-  stratification: '',
-  planPeriodStart: '',
-  planPeriodEnd: '',
-  doctor: '',
-  dietAdvice: '',
-  exerciseAdvice: '',
-  weightAdvice: '',
-  personalizedNote: '',
+  patientId: null,
+  patientName: '',
+  patientStratum: '',
+  startDate: '',
+  endDate: '',
+  doctorName: '',
+  dietSuggestion: '低盐低脂饮食，每日碳水化合物摄入控制在150g以内，多吃绿叶蔬菜',
+  exerciseSuggestion: '每周进行5次中等强度有氧运动，每次30分钟，如快走、慢跑',
+  weightManagementSuggestion: '目标体重70kg，每周减重0.5kg，避免暴饮暴食',
+  personalizedSuggestion: '患者有高血压病史，建议监测血压，避免剧烈运动',
+  status: 2,
+  creator: 'admin',
 })
 
 function handleOpenNewPlan() {
-  newPlanForm.value = {
-    patientNo: '',
-    stratification: '',
-    planPeriodStart: '',
-    planPeriodEnd: '',
-    doctor: '',
-    dietAdvice: '',
-    exerciseAdvice: '',
-    weightAdvice: '',
-    personalizedNote: '',
-  }
+  mode.value = 'create'
+  newPlanForm.value =
+    // {
+    //   patientNo: '',
+    //   stratification: '',
+    //   planPeriodStart: '',
+    //   planPeriodEnd: '',
+    //   doctor: '',
+    //   dietAdvice: '',
+    //   exerciseAdvice: '',
+    //   weightAdvice: '',
+    //   personalizedNote: '',
+    // }
+    {
+      patientId: null,
+      patientName: '张三',
+      patientStratum: '中危',
+      startDate: '2026-04-24',
+      endDate: '2026-05-24',
+      doctorName: '李医生',
+      dietSuggestion: '低盐低脂饮食，每日碳水化合物摄入控制在150g以内，多吃绿叶蔬菜',
+      exerciseSuggestion: '每周进行5次中等强度有氧运动，每次30分钟，如快走、慢跑',
+      weightManagementSuggestion: '目标体重70kg，每周减重0.5kg，避免暴饮暴食',
+      personalizedSuggestion: '患者有高血压病史，建议监测血压，避免剧烈运动',
+      status: 2,
+      creator: 'admin',
+    }
   drawerVisible.value = true
 }
 
-function handleGeneratePlan() {
-  const patient = mockPatientsForSelect.find((p) => p.value === newPlanForm.value.patientNo)
-  if (!patient) {
-    message.warning('请选择患者')
-    return
+const patientOptions = ref<SelectOption[]>([])
+const patientLoading = ref(false)
+
+const loadPatientList = async (searchValue: string) => {
+  patientLoading.value = true
+  try {
+    const params: PatientQueryParams = {
+      zyh: searchValue,
+      pageNum: 1,
+      pageSize: 100,
+    }
+    const { data } = await getPatientList(params)
+    const list = data.list || []
+    patientOptions.value = list.map((item) => ({
+      label: `${item.name} (${item.zyh})`,
+      value: item.zyh,
+    }))
+  } catch (error) {
+    message.error('获取患者列表失败')
+    console.error(error)
+  } finally {
+    patientLoading.value = false
   }
-  const plan = createNewPlan(
-    patient.name,
-    patient.no,
-    newPlanForm.value.stratification || patient.stratification,
-    newPlanForm.value.doctor || '张晓明',
-  )
-  planList.unshift(plan)
-  drawerVisible.value = false
-  message.success('方案生成并生效成功')
+}
+
+const handlePatientSearch = (query: string) => {
+  loadPatientList(query)
+}
+
+watch(
+  () => newPlanForm.value.patientId,
+  (newVal) => {
+    if (newVal) {
+      const selected = patientOptions.value.find((opt) => opt.value === newVal)
+      if (selected) {
+        const match = selected.label?.match(/^(.+?)\s*\(/)
+        newPlanForm.value.patientName = match ? match[1] : ''
+      }
+    } else {
+      newPlanForm.value.patientName = ''
+    }
+  },
+)
+
+const searchParams = reactive({
+  // startDate: dayjs().subtract(1, 'day').format('YYYY-MM-DD'),
+  // endDate: dayjs().format('YYYY-MM-DD'),
+  pageNum: 1,
+  pageSize: 10,
+})
+const planList = ref([])
+const getGuidancePlanList = async () => {
+  const { code, data } = await getGuidancePlan(searchParams)
+  if (code === 200) {
+    planList.value = data.list
+  }
+}
+const handleGeneratePlan = async () => {
+  if (mode.value === 'create') {
+    const { code, data } = await createLifestyleGuidance(newPlanForm.value)
+    if (code === 200) {
+      drawerVisible.value = false
+      message.success('保存成功')
+    }
+  }
+  if (mode.value === 'edit') {
+    const { code, data } = await editPlan(newPlanForm.value)
+    if (code === 200) {
+      drawerVisible.value = false
+      message.success('修改方案成功')
+    }
+  }
 }
 
 // ============================================================
@@ -525,6 +651,8 @@ onMounted(() => {
     pieChart?.resize()
   }
   window.addEventListener('resize', resizeHandler, { passive: true })
+  handleGetDashboardData()
+  getGuidancePlanList()
 })
 
 onUnmounted(() => {
@@ -555,7 +683,7 @@ onUnmounted(() => {
             style="width: 200px"
           />
           <NSelect
-            v-model:value="filters.planStatus"
+            v-model:value="filters.status"
             :options="planStatusOptions"
             placeholder="方案状态"
             style="width: 130px"
@@ -590,7 +718,7 @@ onUnmounted(() => {
       <!-- 2. 核心统计卡片 -->
       <!-- ============================================================ -->
       <div class="stat-cards">
-        <NCard
+        <!-- <NCard
           v-for="card in statCards"
           :key="card.title"
           class="stat-card"
@@ -611,6 +739,20 @@ onUnmounted(() => {
               >
             </template>
           </NStatistic>
+        </NCard> -->
+        <NCard class="stat-card">
+          <NStatistic
+            label="方案覆盖总人数"
+            :value="dashBoardData.totalCoverCount ?? '-'"
+          >
+          </NStatistic>
+        </NCard>
+        <NCard class="stat-card">
+          <NStatistic
+            label="本月新建方案数"
+            :value="dashBoardData.monthPlanCount ?? '-'"
+          >
+          </NStatistic>
         </NCard>
       </div>
 
@@ -623,77 +765,6 @@ onUnmounted(() => {
           type="line"
           @update:value="initCharts"
         >
-          <!-- Tab1: 指导方案总览 -->
-          <NTabPane
-            name="overview"
-            tab="指导方案总览"
-          >
-            <div class="tab-content">
-              <!-- 图表行 -->
-              <div class="chart-row">
-                <NCard
-                  title="不同患者分层方案覆盖情况"
-                  class="chart-card"
-                >
-                  <div
-                    ref="barChartRef"
-                    class="chart-container"
-                  />
-                </NCard>
-                <NCard
-                  title="方案执行率分布"
-                  class="chart-card"
-                >
-                  <div
-                    ref="pieChartRef"
-                    class="chart-container"
-                  />
-                </NCard>
-              </div>
-              <!-- 表格行 -->
-              <div class="table-row">
-                <NCard
-                  title="未制定方案患者列表"
-                  class="table-card"
-                >
-                  <NDataTable
-                    :columns="unplannedColumns"
-                    :data="unplannedPatients"
-                    :pagination="{ pageSize: 8 }"
-                    size="small"
-                    :max-height="320"
-                  />
-                </NCard>
-                <NCard
-                  title="低执行率患者TOP20"
-                  class="table-card"
-                >
-                  <NDataTable
-                    :columns="lowExecColumns"
-                    :data="lowExecutionPatients"
-                    :pagination="{ pageSize: 8 }"
-                    size="small"
-                    :max-height="320"
-                  />
-                </NCard>
-              </div>
-            </div>
-          </NTabPane>
-
-          <!-- Tab2: 个体化方案管理 -->
-          <NTabPane
-            name="plans"
-            tab="个体化方案管理"
-          >
-            <NDataTable
-              :columns="planColumns"
-              :data="planList"
-              :pagination="{ pageSize: 10 }"
-              :scroll-x="1280"
-              size="small"
-            />
-          </NTabPane>
-
           <!-- Tab3: 标准化指导库 -->
           <NTabPane
             name="library"
@@ -720,6 +791,35 @@ onUnmounted(() => {
                 </div>
               </NCollapseItem>
             </NCollapse>
+          </NTabPane>
+          <!-- Tab1: 指导方案总览 -->
+          <NTabPane
+            name="overview"
+            tab="未制定方案患者列表"
+          >
+            <div class="tab-content">
+              <NDataTable
+                :columns="unplannedColumns"
+                :data="unplannedPatients"
+                :pagination="{ pageSize: 8 }"
+                size="small"
+                :max-height="320"
+              />
+            </div>
+          </NTabPane>
+
+          <!-- Tab2: 个体化方案管理 -->
+          <NTabPane
+            name="plans"
+            tab="个体化方案管理"
+          >
+            <NDataTable
+              :columns="planColumns"
+              :data="planList"
+              :pagination="{ pageSize: 10 }"
+              :scroll-x="1280"
+              size="small"
+            />
           </NTabPane>
 
           <!-- Tab4: 执行情况跟踪 -->
@@ -782,12 +882,11 @@ onUnmounted(() => {
       >
         <template #header>
           <div class="modal-header-centered">
-            <div class="modal-title">{{ currentPlanDetail?.planNo }} 方案详情</div>
+            <div class="modal-title">{{ currentPlanDetail?.id }} 方案详情</div>
           </div>
         </template>
         <template #footer>
           <div class="detail-footer">
-            <NButton @click="message.info('打印（仅样式）')">打印</NButton>
             <NButton
               type="primary"
               @click="detailModalVisible = false"
@@ -811,19 +910,19 @@ onUnmounted(() => {
                 currentPlanDetail.patientName
               }}</NDescriptionsItem>
               <NDescriptionsItem label="病历号">{{
-                currentPlanDetail.medicalRecordNo
+                currentPlanDetail.patientId
               }}</NDescriptionsItem>
-              <NDescriptionsItem label="性别">{{ currentPlanDetail.gender }}</NDescriptionsItem>
-              <NDescriptionsItem label="年龄">{{ currentPlanDetail.age }}岁</NDescriptionsItem>
+              <!-- <NDescriptionsItem label="性别">{{ currentPlanDetail.gender }}</NDescriptionsItem> -->
+              <!-- <NDescriptionsItem label="年龄">{{ currentPlanDetail.age }}岁</NDescriptionsItem> -->
               <NDescriptionsItem label="所属分层">
-                <NTag size="small">{{ currentPlanDetail.stratification }}</NTag>
+                <NTag size="small">{{ currentPlanDetail.patientStratum }}</NTag>
               </NDescriptionsItem>
               <NDescriptionsItem label="方案周期"
-                >{{ currentPlanDetail.planPeriodStart }} 至
-                {{ currentPlanDetail.planPeriodEnd }}</NDescriptionsItem
+                >{{ currentPlanDetail.startDate }} 至
+                {{ currentPlanDetail.endDate }}</NDescriptionsItem
               >
               <NDescriptionsItem label="制定医生">{{
-                currentPlanDetail.createDoctor
+                currentPlanDetail.doctorName
               }}</NDescriptionsItem>
               <NDescriptionsItem label="制定时间">{{
                 currentPlanDetail.createTime
@@ -835,7 +934,7 @@ onUnmounted(() => {
           <!-- 饮食方案 -->
           <div class="detail-section">
             <h3 class="section-title">饮食方案</h3>
-            <NDescriptions
+            <!-- <NDescriptions
               bordered
               :column="3"
               size="small"
@@ -857,15 +956,15 @@ onUnmounted(() => {
                 :span="2"
                 >{{ currentPlanDetail.dietPlan.mealDistribution }}</NDescriptionsItem
               >
-            </NDescriptions>
-            <p class="section-note">{{ currentPlanDetail.dietPlan.dietNotes }}</p>
+            </NDescriptions> -->
+            <p class="section-note">{{ currentPlanDetail.dietSuggestion }}</p>
           </div>
           <NDivider style="margin: 12px 0" />
 
           <!-- 运动方案 -->
           <div class="detail-section">
             <h3 class="section-title">运动方案</h3>
-            <NDescriptions
+            <!-- <NDescriptions
               bordered
               :column="3"
               size="small"
@@ -886,15 +985,15 @@ onUnmounted(() => {
                 :span="2"
                 >{{ currentPlanDetail.exercisePlan.intensity }}</NDescriptionsItem
               >
-            </NDescriptions>
-            <p class="section-note">{{ currentPlanDetail.exercisePlan.exerciseNotes }}</p>
+            </NDescriptions> -->
+            <p class="section-note">{{ currentPlanDetail.exerciseSuggestion }}</p>
           </div>
           <NDivider style="margin: 12px 0" />
 
           <!-- 体重管理 -->
           <div class="detail-section">
             <h3 class="section-title">体重管理</h3>
-            <NDescriptions
+            <!-- <NDescriptions
               bordered
               :column="4"
               size="small"
@@ -911,12 +1010,13 @@ onUnmounted(() => {
               <NDescriptionsItem label="体重目标">{{
                 currentPlanDetail.weightManagement.weightGoal
               }}</NDescriptionsItem>
-            </NDescriptions>
+            </NDescriptions> -->
+            <p class="section-note">{{ currentPlanDetail.weightManagementSuggestion }}</p>
           </div>
           <NDivider style="margin: 12px 0" />
 
           <!-- 作息管理 -->
-          <div class="detail-section">
+          <!-- <div class="detail-section">
             <h3 class="section-title">作息与睡眠管理</h3>
             <NDescriptions
               bordered
@@ -935,10 +1035,10 @@ onUnmounted(() => {
             </NDescriptions>
             <p class="section-note">{{ currentPlanDetail.sleepManagement.sleepNotes }}</p>
           </div>
-          <NDivider style="margin: 12px 0" />
+          <NDivider style="margin: 12px 0" /> -->
 
           <!-- 戒烟限酒 -->
-          <div class="detail-section">
+          <!-- <div class="detail-section">
             <h3 class="section-title">戒烟限酒</h3>
             <NDescriptions
               bordered
@@ -954,12 +1054,12 @@ onUnmounted(() => {
             </NDescriptions>
             <p class="section-note">{{ currentPlanDetail.habitManagement.habitAdvice }}</p>
           </div>
-          <NDivider style="margin: 12px 0" />
+          <NDivider style="margin: 12px 0" /> -->
 
           <!-- 个性化建议 -->
           <div class="detail-section">
             <h3 class="section-title">个性化建议</h3>
-            <p class="advice-text">{{ currentPlanDetail.personalizedAdvice }}</p>
+            <p class="advice-text">{{ currentPlanDetail.personalizedSuggestion }}</p>
           </div>
         </div>
         <NEmpty v-else />
@@ -974,23 +1074,26 @@ onUnmounted(() => {
         :width="520"
       >
         <NDrawerContent
-          title="新建指导方案"
+          :title="`${mode === 'create' ? '新建' : '修改'}指导方案`"
           closable
         >
           <div class="drawer-form">
             <div class="form-item">
               <label>患者选择</label>
               <NSelect
-                v-model:value="newPlanForm.patientNo"
-                :options="mockPatientsForSelect"
-                placeholder="请选择患者"
+                v-model:value="newPlanForm.patientId"
                 filterable
+                placeholder="输入住院号搜索患者"
+                :options="patientOptions"
+                :loading="patientLoading"
+                remote
+                @search="handlePatientSearch"
               />
             </div>
             <div class="form-item">
               <label>患者分层</label>
               <NSelect
-                v-model:value="newPlanForm.stratification"
+                v-model:value="newPlanForm.patientStratum"
                 :options="stratificationOptions"
                 placeholder="请选择分层"
               />
@@ -999,13 +1102,13 @@ onUnmounted(() => {
               <label>方案周期</label>
               <NSpace>
                 <NInput
-                  v-model:value="newPlanForm.planPeriodStart"
+                  v-model:value="newPlanForm.startDate"
                   placeholder="开始日期"
                   style="width: 150px"
                 />
                 <span>至</span>
                 <NInput
-                  v-model:value="newPlanForm.planPeriodEnd"
+                  v-model:value="newPlanForm.endDate"
                   placeholder="结束日期"
                   style="width: 150px"
                 />
@@ -1014,7 +1117,7 @@ onUnmounted(() => {
             <div class="form-item">
               <label>制定医生</label>
               <NInput
-                v-model:value="newPlanForm.doctor"
+                v-model:value="newPlanForm.doctorName"
                 placeholder="请输入医生姓名"
               />
             </div>
@@ -1022,7 +1125,7 @@ onUnmounted(() => {
             <div class="form-item">
               <label>饮食建议</label>
               <NInput
-                v-model:value="newPlanForm.dietAdvice"
+                v-model:value="newPlanForm.dietSuggestion"
                 type="textarea"
                 :rows="3"
                 placeholder="请输入饮食指导建议"
@@ -1031,7 +1134,7 @@ onUnmounted(() => {
             <div class="form-item">
               <label>运动建议</label>
               <NInput
-                v-model:value="newPlanForm.exerciseAdvice"
+                v-model:value="newPlanForm.exerciseSuggestion"
                 type="textarea"
                 :rows="3"
                 placeholder="请输入运动指导建议"
@@ -1040,7 +1143,7 @@ onUnmounted(() => {
             <div class="form-item">
               <label>体重管理建议</label>
               <NInput
-                v-model:value="newPlanForm.weightAdvice"
+                v-model:value="newPlanForm.weightManagementSuggestion"
                 type="textarea"
                 :rows="3"
                 placeholder="请输入体重管理建议"
@@ -1049,7 +1152,7 @@ onUnmounted(() => {
             <div class="form-item">
               <label>个性化建议</label>
               <NInput
-                v-model:value="newPlanForm.personalizedNote"
+                v-model:value="newPlanForm.personalizedSuggestion"
                 type="textarea"
                 :rows="3"
                 placeholder="请输入个性化建议"
@@ -1059,7 +1162,6 @@ onUnmounted(() => {
           <template #footer>
             <NSpace>
               <NButton @click="drawerVisible = false">取消</NButton>
-              <NButton @click="message.info('已保存草稿')">保存草稿</NButton>
               <NButton
                 type="primary"
                 @click="handleGeneratePlan"
@@ -1301,7 +1403,7 @@ onUnmounted(() => {
    ================================================================ */
 .table-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 16px;
 }
 

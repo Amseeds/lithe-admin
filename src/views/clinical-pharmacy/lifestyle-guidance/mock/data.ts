@@ -43,8 +43,8 @@ export const executionLevelMap: Record<string, string> = {
 export const statCards: StatCard[] = [
   { title: '方案覆盖总人数', value: 76, change: '+5', changeType: 'increase' },
   { title: '本月新建方案数', value: 12, change: '+3', changeType: 'increase' },
-  { title: '方案平均执行率', value: '72.5%', change: '+2.1%', changeType: 'increase' },
-  { title: '未制定方案患者数', value: 24, change: '-2', changeType: 'decrease' },
+  // { title: '方案平均执行率', value: '72.5%', change: '+2.1%', changeType: 'increase' },
+  // { title: '未制定方案患者数', value: 24, change: '-2', changeType: 'decrease' },
 ]
 
 // ============================================================

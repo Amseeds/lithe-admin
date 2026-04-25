@@ -413,6 +413,17 @@ const handleResize = () => {
   bloodGlucoseChart?.resize()
 }
 
+// HbA1c数值颜色分类
+const getHba1cClass = (value: string | number | null | undefined) => {
+  if (!value && value !== 0) return ''
+  const num = parseFloat(String(value))
+  if (isNaN(num)) return ''
+  if (num < 6.5) return 'text-green-600 font-medium'
+  if (num <= 7.0) return 'text-cyan-600 font-medium'
+  if (num <= 8.0) return 'text-orange-500 font-medium'
+  return 'text-red-600 font-medium'
+}
+
 // 监听弹窗打开，初始化血糖图表
 watch(showDetailModal, (val) => {
   if (val) {
@@ -715,66 +726,169 @@ onMounted(() => {
   <NModal
     v-model:show="showDetailModal"
     preset="card"
-    style="width: 960px; max-width: 95vw"
-    title="患者详情"
+    style="width: 720px; max-width: 95vw"
     :bordered="false"
     :segmented="{ content: true, footer: true }"
+    :header-style="{ paddingBottom: '8px' }"
   >
     <template v-if="selectedPatient">
-      <!-- 患者基本信息 -->
-      <NDescriptions
-        label-placement="left"
-        :column="2"
-        bordered
+      <!-- 患者信息卡片 -->
+      <NCard
+        size="small"
         class="mb-4"
-        :label-style="{ width: '120px', fontWeight: 500 }"
-        :content-style="{ whiteSpace: 'nowrap' }"
+        :content-style="{ padding: '16px' }"
       >
-        <NDescriptionsItem label="姓名">
-          {{ selectedPatient.name }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="住院号">
-          {{ selectedPatient.zyh }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="性别">
-          {{ selectedPatient.sex }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="年龄"> {{ selectedPatient.age }}岁 </NDescriptionsItem>
-        <!-- <NDescriptionsItem label="糖尿病类型">
-          {{ selectedPatient.diabetesType }}
-        </NDescriptionsItem> -->
-        <!-- <NDescriptionsItem label="病程">
-          {{ selectedPatient.diseaseCourse }}
-        </NDescriptionsItem> -->
-        <!-- <NDescriptionsItem label="所属分层">
-          {{ selectedPatient.categoryName }}
-        </NDescriptionsItem> -->
-        <NDescriptionsItem label="最近HbA1c">
-          {{ selectedPatient.lasthba1c }}
-        </NDescriptionsItem>
-      </NDescriptions>
+        <div class="patient-header">
+          <div class="patient-avatar">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div class="patient-main-info">
+            <div class="patient-name-row">
+              <span class="patient-name">{{ selectedPatient.name }}</span>
+              <NTag :type="selectedPatient.sex === '男' ? 'info' : 'warning'" size="small" round>
+                {{ selectedPatient.sex }}
+              </NTag>
+              <NTag type="default" size="small" round>
+                {{ selectedPatient.age }}岁
+              </NTag>
+            </div>
+            <div class="patient-meta">
+              <span class="meta-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                住院号: {{ selectedPatient.zyh }}
+              </span>
+            </div>
+          </div>
+          <div class="patient-hba1c-indicator" :class="{ 'is-empty': !selectedPatient.lasthba1c }">
+            <span class="hba1c-label">最新HbA1c</span>
+            <span v-if="selectedPatient.lasthba1c" class="hba1c-value" :class="getHba1cClass(selectedPatient.lasthba1c)">
+              {{ selectedPatient.lasthba1c }}%
+            </span>
+            <span v-else class="hba1c-empty">--</span>
+          </div>
+        </div>
+      </NCard>
 
       <!-- 历史HbA1c检查记录 -->
       <NCard
-        title="历史HbA1c检查记录"
+        title="历史检查记录"
         size="small"
-        class="mb-4"
+        :content-style="{ padding: '0 12px 12px 12px' }"
       >
+        <template #header-extra>
+          <span class="text-xs text-gray-500">共 {{ selectedPatient.bvoList?.length || 0 }} 条记录</span>
+        </template>
         <NDataTable
-          v-if="selectedPatient.bvoList"
+          v-if="selectedPatient.bvoList?.length"
           :columns="[
             { title: '检查日期', key: 'adate', width: 120 },
-            { title: 'HbA1c结果', key: 'avolume', width: 100 },
-            { title: '是否达标', key: 'targetAchieved', width: 100 },
-            // { title: '医生备注', key: 'note' },
+            { title: 'HbA1c结果', key: 'avolume', width: 100,
+              render: (row) => h('span', { class: getHba1cClass(row.avolume) }, row.avolume + '%') },
+            { title: '是否达标', key: 'targetAchieved', width: 100,
+              render: (row) => h(NTag, { type: row.targetAchieved === '是' ? 'success' : 'error', size: 'small' }, () => row.targetAchieved) },
           ]"
           :data="selectedPatient.bvoList"
           :bordered="false"
-          :max-height="200"
+          :max-height="220"
+          size="small"
           :row-key="(row: (typeof selectedPatient.bvoList)[0]) => row.adate"
         />
+        <NEmpty v-else description="暂无检查记录" size="small" />
       </NCard>
     </template>
-    <NEmpty v-else />
+    <NEmpty v-else description="暂无患者数据" />
   </NModal>
 </template>
+
+<style scoped>
+.patient-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.patient-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0891b2 0%, #22d3ee 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.patient-main-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.patient-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.patient-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.patient-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.patient-hba1c-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 20px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  min-width: 100px;
+}
+
+.patient-hba1c-indicator.is-empty {
+  background: #f3f4f6;
+  border-style: dashed;
+}
+
+.hba1c-label {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-bottom: 4px;
+}
+
+.hba1c-value {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.hba1c-empty {
+  font-size: 24px;
+  font-weight: 700;
+  color: #d1d5db;
+}
+</style>

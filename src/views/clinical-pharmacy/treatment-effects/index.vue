@@ -286,12 +286,32 @@ const tab2AbnormalColumns = [
 
 // 表格列定义 - 患者详情指标
 const indicatorColumns = [
-  { title: '指标名称', key: 'indicatorName', width: 150, render: (row) => row.indicatorName || '-' },
-  { title: '个人目标值', key: 'personalTarget', width: 110, render: (row) => row.personalTarget || '-' },
+  {
+    title: '指标名称',
+    key: 'indicatorName',
+    width: 150,
+    render: (row) => row.indicatorName || '-',
+  },
+  {
+    title: '个人目标值',
+    key: 'personalTarget',
+    width: 110,
+    render: (row) => row.personalTarget || '-',
+  },
   { title: '最近检测值', key: 'latestValue', width: 120, render: (row) => row.latestValue || '-' },
-  { title: '最近检测时间', key: 'latestTestTime', width: 120, render: (row) => row.latestTestTime || '-' },
-  { title: '单位', key: 'unit', width: 80, render: (row) => row.unit || '-' },
-  { title: '参考值', key: 'referenceRange', width: 100, render: (row) => row.referenceRange || '-' },
+  {
+    title: '最近检测时间',
+    key: 'latestTestTime',
+    width: 180,
+    render: (row) => row.latestTestTime || '-',
+  },
+  { title: '单位', key: 'unit', width: 100, render: (row) => row.unit || '-' },
+  {
+    title: '参考值',
+    key: 'referenceRange',
+    width: 100,
+    render: (row) => row.referenceRange || '-',
+  },
   {
     title: '是否达标',
     key: 'isStandard',
@@ -570,6 +590,17 @@ function getSafetyCardClass(index: number): string {
   return classMap[index] || ''
 }
 
+// HbA1c数值颜色分类
+function getHba1cClass(value: string | number | null | undefined): string {
+  if (!value && value !== 0) return ''
+  const num = parseFloat(String(value))
+  if (isNaN(num)) return ''
+  if (num < 6.5) return 'text-green-600 font-medium'
+  if (num <= 7.0) return 'text-cyan-600 font-medium'
+  if (num <= 8.0) return 'text-orange-500 font-medium'
+  return 'text-red-600 font-medium'
+}
+
 // 生成Tab2分布图数据
 function getDistributionChartData(index: any) {
   return generateDistributionData(index.normalRange, index.target)
@@ -691,96 +722,153 @@ function getTrendChartData(index: any) {
         v-model:show="showPatientDetail"
         preset="card"
         title="患者治疗效果详情"
-        style="width: 960px; max-width: 95vw"
+        style="width: 1080px; max-width: 95vw"
         :mask-closable="true"
+        :bordered="false"
+        :segmented="{ content: true, footer: true }"
+        :header-style="{ paddingBottom: '8px' }"
       >
         <template v-if="currentPatientDetail">
-          <!-- 患者基本信息 -->
+          <!-- 患者信息卡片 -->
           <NCard
-            title="患者基本信息"
+            size="small"
             :bordered="false"
             class="mb-4"
+            :content-style="{ padding: '16px' }"
           >
-            <NDescriptions
-              :column="3"
-              label-placement="left"
-            >
-              <NDescriptionsItem label="姓名">{{
-                currentPatientDetail.patientName
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="性别">{{ currentPatientDetail.gender }}</NDescriptionsItem>
-              <NDescriptionsItem label="年龄">{{ currentPatientDetail.age }}</NDescriptionsItem>
-              <NDescriptionsItem label="住院号">{{
-                currentPatientDetail.userId
-              }}</NDescriptionsItem>
-              <NDescriptionsItem
-                label="最近HbA1c"
-                :span="2"
-                >{{ currentPatientDetail.latestHba1c }}</NDescriptionsItem
+            <div class="patient-header">
+              <div
+                class="patient-avatar"
+                :class="currentPatientDetail.gender === '女' ? 'female' : 'male'"
               >
-              <NDescriptionsItem
-                label="病情"
-                :span="3"
+                <svg
+                  width="40"
+                  height="40"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <circle
+                    cx="12"
+                    cy="7"
+                    r="4"
+                  />
+                </svg>
+              </div>
+              <div class="patient-main-info">
+                <div class="patient-name-row">
+                  <span class="patient-name">{{ currentPatientDetail.patientName }}</span>
+                  <NTag
+                    :type="currentPatientDetail.gender === '男' ? 'info' : 'warning'"
+                    size="small"
+                    round
+                  >
+                    {{ currentPatientDetail.gender }}
+                  </NTag>
+                  <NTag
+                    type="default"
+                    size="small"
+                    round
+                  >
+                    {{ currentPatientDetail.age }}
+                  </NTag>
+                </div>
+                <div class="patient-meta">
+                  <span class="meta-item">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <rect
+                        x="3"
+                        y="4"
+                        width="18"
+                        height="18"
+                        rx="2"
+                        ry="2"
+                      />
+                      <line
+                        x1="16"
+                        y1="2"
+                        x2="16"
+                        y2="6"
+                      />
+                      <line
+                        x1="8"
+                        y1="2"
+                        x2="8"
+                        y2="6"
+                      />
+                      <line
+                        x1="3"
+                        y1="10"
+                        x2="21"
+                        y2="10"
+                      />
+                    </svg>
+                    住院号: {{ currentPatientDetail.userId }}
+                  </span>
+                  <!-- <span v-if="currentPatientDetail.diabetesType" class="meta-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                    </svg>
+                    {{ currentPatientDetail.diabetesType }}
+                  </span> -->
+                </div>
+              </div>
+              <div
+                class="patient-hba1c-indicator"
+                :class="{ 'is-empty': !currentPatientDetail.latestHba1c }"
               >
-                {{ currentPatientDetail?.diabetesType || '-' }}
-              </NDescriptionsItem>
-              <!-- <NDescriptionsItem label="糖尿病类型">
-                currentPatientDetail.basicInfo.diabetesType
-              </NDescriptionsItem>
-              <NDescriptionsItem label="病程">
-                currentPatientDetail.basicInfo.diseaseDuration
-              </NDescriptionsItem>
-              <NDescriptionsItem label="所属分层">
-                currentPatientDetail.basicInfo.category
-              </NDescriptionsItem>
-
-              <NDescriptionsItem label="综合疗效评级">
-                <NTag
-                  :type="
-                    currentPatientDetail.basicInfo.comprehensiveEfficacyLevel === '优秀达标'
-                      ? 'success'
-                      : currentPatientDetail.basicInfo.comprehensiveEfficacyLevel === '高风险异常'
-                        ? 'error'
-                        : 'info'
-                  "
+                <span class="hba1c-label">最新HbA1c</span>
+                <span
+                  v-if="currentPatientDetail.latestHba1c"
+                  class="hba1c-value"
+                  :class="getHba1cClass(currentPatientDetail.latestHba1c)"
                 >
-                  {{ currentPatientDetail.basicInfo.comprehensiveEfficacyLevel }}
-                </NTag>
-              </NDescriptionsItem>
-              <NDescriptionsItem label="整体达标情况">
-                <NTag
-                  :type="
-                    currentPatientDetail.basicInfo.overallStandardStatus === '达标'
-                      ? 'success'
-                      : 'warning'
-                  "
+                  {{ currentPatientDetail.latestHba1c }}%
+                </span>
+                <span
+                  v-else
+                  class="hba1c-empty"
+                  >--</span
                 >
-                  {{ currentPatientDetail.basicInfo.overallStandardStatus }}
-                </NTag>
-              </NDescriptionsItem> -->
-            </NDescriptions>
+              </div>
+            </div>
           </NCard>
 
           <!-- 核心指标达标对比 -->
           <NCard
             title="核心指标达标对比总表"
+            size="small"
             :bordered="false"
-            class="mb-4"
+            :content-style="{ padding: '0 12px 12px 12px' }"
           >
             <NDataTable
               :columns="indicatorColumns"
               :data="indicatorComparisonList"
               :loading="indicatorLoading"
               :pagination="false"
+              size="small"
             />
-            <!-- :max-height="400" -->
           </NCard>
 
           <!-- 治疗效果趋势 -->
           <NCard
             title="HbA1c变化趋势"
+            size="small"
             :bordered="false"
-            class="mb-4"
+            :content-style="{ padding: '0 12px 12px 12px' }"
           >
             <NGrid
               :cols="1"
@@ -790,6 +878,7 @@ function getTrendChartData(index: any) {
                 <NEmpty
                   v-if="!currentPatientDetail.lsxt || currentPatientDetail.lsxt.length === 0"
                   description="暂无HbA1c趋势数据"
+                  size="small"
                 />
                 <template v-else>
                   <div
@@ -798,74 +887,13 @@ function getTrendChartData(index: any) {
                   ></div>
                 </template>
               </NGi>
-              <!-- <NGi>
-                <div class="chart-title">近3个月血糖波动趋势</div>
-                <div
-                  ref="glucoseTrendRef"
-                  class="chart-container"
-                ></div>
-              </NGi> -->
             </NGrid>
           </NCard>
-
-          <!-- 用药安全性 -->
-          <!-- <NCard
-            title="用药安全性专项评估"
-            :bordered="false"
-            class="mb-4"
-          >
-            <NDescriptions
-              :column="2"
-              label-placement="left"
-            >
-              <NDescriptionsItem label="当前用药方案">{{
-                currentPatientDetail.currentMedication.medicationPlan
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="用药时长">{{
-                currentPatientDetail.currentMedication.medicationDuration
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="用药依从性">{{
-                currentPatientDetail.currentMedication.medicationCompliance
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="历史不良反应">{{
-                currentPatientDetail.currentMedication.historicalAdverseReactions
-              }}</NDescriptionsItem>
-              <NDescriptionsItem
-                label="用药风险提示"
-                :span="2"
-                >{{
-                  currentPatientDetail.currentMedication.medicationRiskWarning
-                }}</NDescriptionsItem
-              >
-            </NDescriptions>
-          </NCard> -->
-
-          <!-- 随访记录 -->
-          <!-- <NCard
-            title="历次随访评估记录"
-            :bordered="false"
-            class="mb-4"
-          >
-            <NDataTable
-              :columns="followUpColumns"
-              :data="currentPatientDetail.followUpRecords"
-              :pagination="false"
-              :max-height="300"
-            />
-          </NCard> -->
-
-          <!-- 历史报告 -->
-          <!-- <NCard
-            title="历史疗效报告"
-            :bordered="false"
-          >
-            <NDataTable
-              :columns="reportColumns"
-              :data="currentPatientDetail.efficacyReports"
-              :pagination="false"
-            />
-          </NCard> -->
         </template>
+        <NEmpty
+          v-else
+          description="暂无患者数据"
+        />
       </NModal>
     </div>
   </ScrollContainer>
@@ -1338,5 +1366,95 @@ export default {}
   .efficacy-cards {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+.patient-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.patient-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.patient-avatar.male {
+  background: linear-gradient(135deg, #0891b2 0%, #22d3ee 100%);
+}
+
+.patient-avatar.female {
+  background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
+}
+
+.patient-main-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.patient-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.patient-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.patient-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.patient-hba1c-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 20px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  min-width: 100px;
+}
+
+.patient-hba1c-indicator.is-empty {
+  background: #f3f4f6;
+  border-style: dashed;
+}
+
+.hba1c-label {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-bottom: 4px;
+}
+
+.hba1c-value {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.hba1c-empty {
+  font-size: 24px;
+  font-weight: 700;
+  color: #d1d5db;
 }
 </style>
