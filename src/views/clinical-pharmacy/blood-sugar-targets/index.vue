@@ -26,7 +26,6 @@ import {
   categoryStatistics,
   hba1cDistribution,
   generalIndicatorCards,
-  // patientList,
   patientDetails,
   getPatientCategoryPieData,
   isLeafNode,
@@ -34,7 +33,27 @@ import {
   type PatientDetail,
   type PatientData,
 } from './mock/data'
-import { getDashboardData } from '@/api/bloodSugarTargets'
+import { getDashboardData, getPlanDetail } from '@/api/bloodSugarTargets'
+
+interface GroupedPatient {
+  patientId: string
+  name: string
+  age: number
+  gender: string | null
+  medicalRecordNo: string | null
+  mainCategory: string
+  subCategory: string
+  categoryKey: string
+  categoryName: string
+  riskLevel: string
+  controlStatus: string
+  hypoglycemiaRisk: boolean
+  hba1cTarget: string | null
+  fastingTarget: string
+  postprandialTarget: string
+}
+
+type GroupByMenu = Record<string, Record<string, GroupedPatient[]>>
 
 // 当前选中的分类
 const currentCategory = ref('overview')
@@ -64,18 +83,29 @@ const searchKeyword = ref('')
 // 详情弹窗
 const showDetailModal = ref(false)
 const selectedPatient = ref<PatientDetail | null>(null)
+const tableLoading = ref(false)
 
 const getData = async (val) => {
   if (val) {
     searchParams.startDate = dayjs(val[0]).format('YYYY-MM-DD')
     searchParams.endDate = dayjs(val[1]).format('YYYY-MM-DD')
   }
+  tableLoading.value = true
   console.log(searchParams, 'searchParams==')
   const { code, data } = await getDashboardData(searchParams)
   console.log(code, 'code===')
   console.log(data, 'data===')
   if (code === 200) {
-    patientList.value = data.patientList
+    if (data.groupByMenu) {
+      groupByMenu.value = data.groupByMenu
+      const allPatients: GroupedPatient[] = []
+      Object.values(data.groupByMenu).forEach((subCategories) => {
+        Object.values(subCategories).forEach((patients) => {
+          allPatients.push(...patients)
+        })
+      })
+      patientList.value = allPatients
+    }
     if (data.categoryPie && categoryPieChart) {
       categoryPieChart.hideLoading()
       categoryPieChart.setOption({
@@ -154,6 +184,7 @@ const getData = async (val) => {
       })
     }
   }
+  tableLoading.value = false
 }
 
 // 将 MenuCategory 转换为 NMenu 的 MenuOption
@@ -173,18 +204,22 @@ const convertToMenuOptions = (categories: typeof menuCategories): MenuOption[] =
 // 左侧菜单选项
 const menuOptions: MenuOption[] = convertToMenuOptions(menuCategories)
 
+// 分组患者数据
+const groupByMenu = ref<GroupByMenu>({})
+
+// 扁平化的患者列表（用于筛选）
+const patientList = ref<GroupedPatient[]>([])
+
 // 过滤后的患者列表
-// const filteredPatientList = computed(() => {
-//   if (currentCategory.value === 'overview') {
-//     return patientList
-//   }
-//   // 只有叶子节点才过滤患者
-//   if (!isLeafNode(currentCategory.value, menuCategories)) {
-//     return []
-//   }
-//   return patientList.filter((p) => p.category === currentCategory.value)
-// })
-const patientList = ref([])
+const filteredPatientList = computed(() => {
+  if (currentCategory.value === 'overview') {
+    return patientList.value
+  }
+  if (!isLeafNode(currentCategory.value, menuCategories)) {
+    return []
+  }
+  return patientList.value.filter((p) => p.categoryKey === currentCategory.value)
+})
 
 // 当前分类的统计数据
 const currentCategoryStats = computed(() => {
@@ -211,13 +246,22 @@ const isCurrentLeaf = computed(() => {
 })
 
 // 查看详情
-const handleViewDetail = (patientId: number) => {
-  selectedPatient.value = patientDetails[patientId]
+const handleViewDetail = async (patientId: string) => {
+  // selectedPatient.value = patientDetails[patientId]
+  const { code, data } = await getPlanDetail({ patientId: patientId })
+  console.log(code, 'code===')
+  console.log(data, 'data===')
+  if (code === 200) {
+    if (!data.bvoList) {
+      data.bvoList = []
+    }
+    selectedPatient.value = data
+  }
   showDetailModal.value = true
 }
 
 // 表格列定义
-const tableColumns: DataTableColumns<PatientData> = [
+const tableColumns: DataTableColumns<GroupedPatient> = [
   { title: '患者姓名', key: 'name', width: 100 },
   { title: '病历号', key: 'patientId', width: 140 },
   { title: '年龄', key: 'age', width: 80 },
@@ -231,36 +275,24 @@ const tableColumns: DataTableColumns<PatientData> = [
     title: '最近HbA1c结果',
     key: 'hba1cTarget',
     width: 120,
-    render: (row) => row.hba1cTarget,
+    render: (row) => row.hba1cTarget || '-',
   },
-  // {
-  //   title: '空腹血糖达标情况',
-  //   key: 'fastingStatus',
-  //   width: 140,
-  //   render: (row) => {
-  //     const isControlled = row.fastingStatus === '达标'
-  //     return h(
-  //       NTag,
-  //       { type: isControlled ? 'success' : 'warning', size: 'small' },
-  //       { default: () => row.fastingStatus },
-  //     )
-  //   },
-  // },
   {
     title: '空腹血糖',
     key: 'fastingTarget',
     width: 140,
+    render: (row) => row.fastingTarget || '-',
   },
   {
-    title: '控糖目标状态',
-    key: 'targetStatus',
-    width: 120,
+    title: '控糖状态',
+    key: 'controlStatus',
+    width: 100,
     render: (row) => {
-      const isActive = row.targetStatus === '生效中'
+      const isControlled = row.controlStatus === '达标'
       return h(
         NTag,
-        { type: isActive ? 'success' : 'default', size: 'small' },
-        { default: () => row.targetStatus },
+        { type: isControlled ? 'success' : 'warning', size: 'small' },
+        () => row.controlStatus,
       )
     },
   },
@@ -271,7 +303,7 @@ const tableColumns: DataTableColumns<PatientData> = [
     render: (row) => {
       return h(
         NButton,
-        { text: true, type: 'primary', onClick: () => handleViewDetail(row.id) },
+        { text: true, type: 'primary', onClick: () => handleViewDetail(row.patientId) },
         { default: () => '查看详情' },
       )
     },
@@ -499,12 +531,12 @@ onMounted(() => {
 
         <!-- 通用控糖指标卡片 -->
         <NGrid
-          :cols="4"
+          :cols="3"
           :x-gap="16"
           class="mb-4"
         >
           <NGi
-            v-for="card in generalIndicatorCards"
+            v-for="card in generalIndicatorCards.filter((c) => c.title !== '整体达标率')"
             :key="card.title"
           >
             <NCard size="small">
@@ -520,7 +552,6 @@ onMounted(() => {
               <div class="text-lg font-semibold">
                 {{ card.average }}
               </div>
-              <div class="mt-1 text-xs text-gray-400">达标率：{{ card.rate }}</div>
               <div
                 v-if="card.change"
                 class="mt-1 text-xs text-green-500"
@@ -535,9 +566,10 @@ onMounted(() => {
         <NCard title="全院患者列表">
           <NDataTable
             :columns="tableColumns"
-            :data="patientList"
+            :data="filteredPatientList"
             :bordered="false"
-            :row-key="(row: PatientData) => row.id"
+            :loading="tableLoading"
+            :row-key="(row: GroupedPatient) => row.patientId"
           />
         </NCard>
       </template>
@@ -588,12 +620,6 @@ onMounted(() => {
                 </div>
                 <div class="text-xs text-gray-400">占全院比例</div>
               </div>
-              <div>
-                <div class="text-2xl font-bold text-orange-500">
-                  {{ currentCategoryStats?.rate }}
-                </div>
-                <div class="text-xs text-gray-400">整体达标率</div>
-              </div>
             </div>
           </div>
         </NCard>
@@ -620,7 +646,7 @@ onMounted(() => {
         </NCard>
 
         <!-- 统计卡片区 -->
-        <NGrid
+        <!-- <NGrid
           :cols="4"
           :x-gap="16"
           class="mb-4"
@@ -657,15 +683,28 @@ onMounted(() => {
               </div>
             </NCard>
           </NGi>
-        </NGrid>
+        </NGrid> -->
 
         <!-- 患者列表 -->
-        <NCard title="该分类患者列表">
+        <NCard>
+          <template #header>
+            <div class="flex items-center gap-4">
+              <span>该分类患者列表</span>
+              <NDatePicker
+                v-model:value="range"
+                type="daterange"
+                clearable
+                size="small"
+                @confirm="(val) => getData(val)"
+              />
+            </div>
+          </template>
           <NDataTable
             :columns="tableColumns"
             :data="filteredPatientList"
             :bordered="false"
-            :row-key="(row: PatientData) => row.id"
+            :loading="tableLoading"
+            :row-key="(row: GroupedPatient) => row.patientId"
           />
         </NCard>
       </template>
@@ -694,60 +733,26 @@ onMounted(() => {
         <NDescriptionsItem label="姓名">
           {{ selectedPatient.name }}
         </NDescriptionsItem>
-        <NDescriptionsItem label="病历号">
-          {{ selectedPatient.medicalRecordNo }}
+        <NDescriptionsItem label="住院号">
+          {{ selectedPatient.zyh }}
         </NDescriptionsItem>
         <NDescriptionsItem label="性别">
-          {{ selectedPatient.gender }}
+          {{ selectedPatient.sex }}
         </NDescriptionsItem>
         <NDescriptionsItem label="年龄"> {{ selectedPatient.age }}岁 </NDescriptionsItem>
-        <NDescriptionsItem label="糖尿病类型">
+        <!-- <NDescriptionsItem label="糖尿病类型">
           {{ selectedPatient.diabetesType }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="病程">
+        </NDescriptionsItem> -->
+        <!-- <NDescriptionsItem label="病程">
           {{ selectedPatient.diseaseCourse }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="所属分层">
+        </NDescriptionsItem> -->
+        <!-- <NDescriptionsItem label="所属分层">
           {{ selectedPatient.categoryName }}
-        </NDescriptionsItem>
+        </NDescriptionsItem> -->
         <NDescriptionsItem label="最近HbA1c">
-          {{ selectedPatient.latestHba1c }}
+          {{ selectedPatient.lasthba1c }}
         </NDescriptionsItem>
       </NDescriptions>
-
-      <!-- 患者专属控糖目标 - 横向滚动 -->
-      <NCard
-        title="专属控糖目标"
-        size="small"
-        class="mb-4"
-      >
-        <div class="flex gap-3 overflow-x-auto pb-2">
-          <div
-            v-for="target in categoryDefinitions[selectedPatient.category]?.targets"
-            :key="target.name"
-            class="min-w-[110px] flex-shrink-0 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-center dark:border-slate-700 dark:bg-slate-800"
-          >
-            <div class="mb-1 text-xs text-slate-500">
-              {{ target.name }}
-            </div>
-            <div class="text-sm font-semibold whitespace-nowrap text-blue-600 dark:text-blue-400">
-              {{ target.value || '-' }}
-            </div>
-          </div>
-        </div>
-      </NCard>
-
-      <!-- 血糖波动折线图 -->
-      <NCard
-        title="血糖波动趋势（近14天）"
-        size="small"
-        class="mb-4"
-      >
-        <div
-          id="blood-glucose-chart"
-          style="height: 250px"
-        />
-      </NCard>
 
       <!-- 历史HbA1c检查记录 -->
       <NCard
@@ -756,36 +761,17 @@ onMounted(() => {
         class="mb-4"
       >
         <NDataTable
+          v-if="selectedPatient.bvoList"
           :columns="[
-            { title: '检查日期', key: 'date', width: 120 },
-            { title: 'HbA1c结果', key: 'result', width: 100 },
-            { title: '是否达标', key: 'isControlled', width: 100 },
-            { title: '医生备注', key: 'note' },
+            { title: '检查日期', key: 'adate', width: 120 },
+            { title: 'HbA1c结果', key: 'avolume', width: 100 },
+            { title: '是否达标', key: 'targetAchieved', width: 100 },
+            // { title: '医生备注', key: 'note' },
           ]"
-          :data="selectedPatient.hba1cHistory"
+          :data="selectedPatient.bvoList"
           :bordered="false"
           :max-height="200"
-          :row-key="(row: (typeof selectedPatient.hba1cHistory)[0]) => row.date"
-        />
-      </NCard>
-
-      <!-- 控糖目标调整历史 -->
-      <NCard
-        title="控糖目标调整历史"
-        size="small"
-      >
-        <NDataTable
-          :columns="[
-            { title: '调整时间', key: 'date', width: 120 },
-            { title: '调整前目标', key: 'beforeTarget', width: 160 },
-            { title: '调整后目标', key: 'afterTarget', width: 160 },
-            { title: '调整原因', key: 'reason' },
-            { title: '调整医生', key: 'doctor', width: 100 },
-          ]"
-          :data="selectedPatient.targetAdjustHistory"
-          :bordered="false"
-          :max-height="150"
-          :row-key="(row: (typeof selectedPatient.targetAdjustHistory)[0]) => row.date"
+          :row-key="(row: (typeof selectedPatient.bvoList)[0]) => row.adate"
         />
       </NCard>
     </template>

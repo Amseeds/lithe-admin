@@ -11,11 +11,10 @@ export const getDashboardData = (params) => post(`/api/diabetes/dashboard`, para
 // 查询
 // export const getEfficacyReport = (reportId) => get(`/api/diabetes/report/detail/${reportId}`)
 
-// /**
-//  * 获取随访计划详情
-//  */
-// export const getPlanDetail = (planId: string) =>
-//   get<FollowUpPlanDetail>(`/api/followup-execution/record/${planId}`)
+/**
+ * 获取随访计划详情
+ */
+export const getPlanDetail = (params) => post(`/api/diabetes/getdetail`, params)
 
 // /**
 //  * 执行随访

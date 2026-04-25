@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, nextTick, h, reactive } from 'vue'
 import type { ECharts } from 'echarts'
 import {
   NCard,
@@ -16,10 +16,14 @@ import {
   NInput,
   NButton,
   NDivider,
+  NPagination,
+  NEmpty,
   type DataTableColumns,
+  type PaginationProps,
 } from 'naive-ui'
 import * as echarts from 'echarts'
 import { ScrollContainer } from '@/components'
+import { getPatientList, type PatientRecord, type PatientQueryParams } from '@/api/patientRecords'
 import {
   efficacyCards,
   efficacyFactorsChart,
@@ -43,12 +47,7 @@ import {
   drugAdverseReactions,
   highRiskMedicationPatients,
 } from './mock/tab3'
-import {
-  generatePatientList,
-  generatePatientDetail,
-  generateHba1cTrend,
-  generateGlucoseTrend,
-} from './mock/tab4'
+import { generatePatientDetail, generateHba1cTrend, generateGlucoseTrend } from './mock/tab4'
 import type { Patient, PatientDetail } from './mock/types'
 
 defineOptions({
@@ -86,7 +85,7 @@ const efficacyGradeOptions = [
 ]
 
 // Tab状态
-const activeTab = ref('tab1')
+const activeTab = ref('tab4')
 const activeTab2Sub = ref('glucose')
 
 // Tab2子Tab选项
@@ -122,8 +121,64 @@ const currentTab2AbnormalPatients = computed(() => {
 const showPatientDetail = ref(false)
 const currentPatientDetail = ref<PatientDetail | null>(null)
 
-// 患者列表数据
-const patientList = ref<Patient[]>(generatePatientList())
+// 患者列表数据 - Tab4
+const patientList = ref<PatientRecord[]>([])
+const patientListLoading = ref(false)
+const patientQueryParams = reactive<PatientQueryParams>({
+  zyh: '',
+  name: '',
+  pageNum: 1,
+  pageSize: 10,
+})
+const patientPagination = reactive<PaginationProps>({
+  page: 1,
+  pageSize: 10,
+  itemCount: 0,
+  showSizePicker: true,
+  pageSizes: [10, 15, 20],
+  showQuickJumper: true,
+  onUpdatePage: (page: number) => {
+    patientPagination.page = page
+    patientQueryParams.pageNum = page
+    getPatientListData()
+  },
+  onUpdatePageSize: (pageSize: number) => {
+    patientPagination.pageSize = pageSize
+    patientPagination.page = 1
+    patientQueryParams.pageSize = pageSize
+    patientQueryParams.pageNum = 1
+    getPatientListData()
+  },
+})
+
+const getPatientListData = async () => {
+  patientListLoading.value = true
+  try {
+    const { data } = await getPatientList(patientQueryParams)
+    patientList.value = data.list || []
+    patientPagination.itemCount = data.total || 0
+  } catch (error) {
+    console.error(error)
+  } finally {
+    patientListLoading.value = false
+  }
+}
+
+const formatDateTime = (dateStr: string) => {
+  if (!dateStr) return '-'
+  try {
+    const date = new Date(dateStr)
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return dateStr
+  }
+}
 
 // 表格列定义 - Tab1未达标患者
 const unachievedColumns = [
@@ -168,34 +223,52 @@ const highRiskMedColumns = [
 ]
 
 // 表格列定义 - Tab4患者列表
-const patientListColumns = [
-  { title: '患者姓名', key: 'name', width: 100 },
-  { title: '病历号', key: 'medicalRecordNo', width: 130 },
-  { title: '年龄', key: 'age', width: 80 },
-  { title: '所属分层', key: 'categoryName', width: 120 },
-  { title: '最近HbA1c结果', key: 'latestHba1c', width: 130 },
-  { title: '综合疗效评级', key: 'efficacyLevel', width: 120 },
-  { title: '整体达标情况', key: 'overallStatus', width: 120 },
-  { title: '最近随访时间', key: 'lastFollowUpDate', width: 130 },
-  { title: '主诊医生', key: 'mainDoctor', width: 100 },
+const patientListColumns: DataTableColumns<PatientRecord> = [
+  {
+    title: '住院号',
+    key: 'zyh',
+    width: 140,
+  },
+  {
+    title: '姓名',
+    key: 'name',
+    width: 100,
+  },
+  {
+    title: '性别',
+    key: 'sex',
+    width: 80,
+  },
+  {
+    title: '年龄',
+    key: 'age',
+    width: 80,
+  },
+  {
+    title: '入院时间',
+    key: 'admissionDate',
+    width: 180,
+    render: (row) => formatDateTime(row.admissionDate),
+  },
   {
     title: '操作',
     key: 'actions',
-    width: 100,
-    fixed: 'right',
-    render(row: Patient) {
-      return h(
-        NButton,
-        {
-          size: 'small',
-          type: 'primary',
-          onClick: () => handleViewPatientDetail(row),
-        },
-        { default: () => '查看详情' },
-      )
-    },
+    width: 120,
+    render: (row) =>
+      h('div', { class: 'flex gap-2' }, [
+        h(
+          NButton,
+          {
+            type: 'primary',
+            size: 'small',
+            text: true,
+            onClick: () => handleViewPatientDetail(row as any),
+          },
+          { default: () => '查看详情' },
+        ),
+      ]),
   },
-] as DataTableColumns<Patient>
+]
 
 // 表格列定义 - Tab2异常患者
 const tab2AbnormalColumns = [
@@ -213,13 +286,19 @@ const tab2AbnormalColumns = [
 
 // 表格列定义 - 患者详情指标
 const indicatorColumns = [
-  { title: '指标名称', key: 'indicatorName', width: 150 },
-  { title: '个人目标值', key: 'personalTarget', width: 110 },
-  { title: '最近检测值', key: 'latestValue', width: 120 },
-  { title: '上次检测值', key: 'previousValue', width: 120 },
-  { title: '变化幅度', key: 'changeRate', width: 100 },
-  { title: '是否达标', key: 'isStandard', width: 100 },
-  { title: '异常等级', key: 'abnormalLevel', width: 100 },
+  { title: '指标名称', key: 'indicatorName', width: 150, render: (row) => row.indicatorName || '-' },
+  { title: '个人目标值', key: 'personalTarget', width: 110, render: (row) => row.personalTarget || '-' },
+  { title: '最近检测值', key: 'latestValue', width: 120, render: (row) => row.latestValue || '-' },
+  { title: '最近检测时间', key: 'latestTestTime', width: 120, render: (row) => row.latestTestTime || '-' },
+  { title: '单位', key: 'unit', width: 80, render: (row) => row.unit || '-' },
+  { title: '参考值', key: 'referenceRange', width: 100, render: (row) => row.referenceRange || '-' },
+  {
+    title: '是否达标',
+    key: 'isStandard',
+    width: 100,
+    render: (row) => (row.isStandard ? '是' : row.isStandard === false ? '否' : '-'),
+  },
+  { title: '异常等级', key: 'riskLevel', width: 100, render: (row) => row.riskLevel || '-' },
 ]
 
 // 表格列定义 - 随访记录
@@ -351,90 +430,35 @@ function initTab3Charts() {
 
 // 初始化患者详情弹窗中的图表
 function initDetailCharts() {
-  if (currentPatientDetail.value && hba1cTrendRef.value && glucoseTrendRef.value) {
-    const hba1cTrend = generateHba1cTrend(
-      currentPatientDetail.value.basicInfo.latestHbA1c.replace('%', ''),
-    )
-    const glucoseTrend = generateGlucoseTrend()
+  if (!currentPatientDetail.value) return
+  if (currentPatientDetail.value && hba1cTrendRef.value) {
+    const hba1cTrendData = currentPatientDetail.value.lsxt
+    if (!hba1cTrendData || hba1cTrendData.length === 0) {
+      if (hba1cTrendChart) {
+        hba1cTrendChart.dispose()
+        hba1cTrendChart = null
+      }
+      return
+    }
+    const months = hba1cTrendData.map((item: { adate: string }) => item.adate?.split(' ')[0] || '')
+    const values = hba1cTrendData.map((item: { avolume: string }) => item.avolume)
+    const target = currentPatientDetail.value.basicInfo?.latestHbA1c?.replace('%', '') || '7.0'
 
     if (!hba1cTrendChart) {
       hba1cTrendChart = echarts.init(hba1cTrendRef.value)
     }
     hba1cTrendChart.setOption({
       tooltip: { trigger: 'axis' },
-      xAxis: { type: 'category', data: hba1cTrend.months },
+      xAxis: { type: 'category', data: months },
       yAxis: { type: 'value', name: 'HbA1c(%)' },
       series: [
         {
           name: 'HbA1c检测值',
           type: 'line',
-          data: hba1cTrend.values,
+          data: values,
           smooth: true,
           itemStyle: { color: '#5470C6' },
           label: { show: true, formatter: '{c}%' },
-        },
-        {
-          name: '个人目标值',
-          type: 'line',
-          data: hba1cTrend.months.map(() => hba1cTrend.target.toString()),
-          lineStyle: { type: 'dashed' },
-          itemStyle: { color: '#67C23A' },
-        },
-      ],
-    })
-
-    if (!glucoseTrendChart) {
-      glucoseTrendChart = echarts.init(glucoseTrendRef.value)
-    }
-    glucoseTrendChart.setOption({
-      tooltip: { trigger: 'axis' },
-      legend: { data: ['空腹血糖', '餐后2小时血糖'] },
-      xAxis: { type: 'category', data: glucoseTrend.months },
-      yAxis: { type: 'value', name: '血糖(mmol/L)' },
-      series: [
-        {
-          name: '空腹血糖',
-          type: 'line',
-          data: glucoseTrend.fastingValues,
-          smooth: true,
-          itemStyle: { color: '#5470C6' },
-          markLine: {
-            silent: true,
-            data: [
-              {
-                yAxis: glucoseTrend.fastingTarget[0],
-                lineStyle: { type: 'dashed', color: '#67C23A' },
-                name: '目标下限',
-              },
-              {
-                yAxis: glucoseTrend.fastingTarget[1],
-                lineStyle: { type: 'dashed', color: '#E6A23C' },
-                name: '目标上限',
-              },
-            ],
-          },
-        },
-        {
-          name: '餐后2小时血糖',
-          type: 'line',
-          data: glucoseTrend.postprandialValues,
-          smooth: true,
-          itemStyle: { color: '#F56C6C' },
-          markLine: {
-            silent: true,
-            data: [
-              {
-                yAxis: glucoseTrend.postprandialTarget[0],
-                lineStyle: { type: 'dashed', color: '#67C23A' },
-                name: '目标下限',
-              },
-              {
-                yAxis: glucoseTrend.postprandialTarget[1],
-                lineStyle: { type: 'dashed', color: '#E6A23C' },
-                name: '目标上限',
-              },
-            ],
-          },
         },
       ],
     })
@@ -456,6 +480,8 @@ watch(activeTab, async (newTab) => {
     complianceChart?.dispose()
     complianceChart = null
     initTab3Charts()
+  } else if (newTab === 'tab4') {
+    getPatientListData()
   }
 })
 
@@ -477,6 +503,7 @@ watch(showPatientDetail, async (show) => {
 onMounted(() => {
   window.addEventListener('resize', handleResize)
   initCharts()
+  getPatientListData()
 })
 
 function handleResize() {
@@ -495,11 +522,30 @@ function handleViewDetail() {
   }
 }
 
-function handleViewPatientDetail(patient: Patient) {
-  currentPatientDetail.value = generatePatientDetail(patient)
+async function handleViewPatientDetail(patient: Patient) {
+  // currentPatientDetail.value = generatePatientDetail(patient)
+  const { code, data } = await getTreatmentEffectsDetail({ zyh: patient.zyh })
+  console.log(code, 'code====')
+  console.log(data, 'data====')
+  currentPatientDetail.value = data
+
+  getCompareData(patient)
   hba1cTrendChart = null
   glucoseTrendChart = null
   showPatientDetail.value = true
+}
+
+const indicatorComparisonList = ref()
+const indicatorLoading = ref(false)
+const getCompareData = async (patient) => {
+  indicatorLoading.value = true
+  const { code, data } = await getIndicatorComparisonData({ zyh: patient.zyh })
+  console.log(code, 'code1====')
+  console.log(data, 'data2====')
+  if (code === 200) {
+    indicatorComparisonList.value = data
+  }
+  indicatorLoading.value = false
 }
 
 function handleViewReport() {
@@ -539,7 +585,7 @@ function getTrendChartData(index: any) {
   <ScrollContainer wrapper-class="flex flex-col gap-y-4 max-sm:gap-y-2">
     <div class="treatment-effects">
       <!-- 顶部全局筛选栏 -->
-      <NCard
+      <!-- <NCard
         class="filter-bar"
         size="small"
       >
@@ -580,27 +626,17 @@ function getTrendChartData(index: any) {
                 size="small"
               />
             </div>
-            <div class="filter-item">
-              <span class="filter-label">患者姓名/病历号</span>
-              <NInput
-                v-model:value="searchText"
-                placeholder="请输入"
-                clearable
-                style="width: 160px"
-                size="small"
-              />
-            </div>
             <div class="filter-buttons">
               <NButton
                 size="small"
                 type="primary"
-              >查询</NButton
+                >查询</NButton
               >
               <NButton size="small">重置</NButton>
             </div>
           </div>
         </div>
-      </NCard>
+      </NCard> -->
 
       <!-- 核心主导航Tab -->
       <NCard class="main-content">
@@ -610,317 +646,40 @@ function getTrendChartData(index: any) {
           animated
           @update:value="initCharts"
         >
-          <!-- Tab1: 综合疗效总览 -->
-          <NTabPane
-            name="tab1"
-            tab="综合疗效总览"
-          >
-            <!-- 疗效分级卡片 -->
-            <div class="efficacy-cards">
-              <NCard
-                v-for="card in efficacyCards"
-                :key="card.level"
-                :class="['efficacy-card', getEfficacyCardClass(card.level)]"
-                :bordered="false"
-                hoverable
-              >
-                <div class="card-header">
-                  <span class="card-title">{{ card.level }}</span>
-                  <span class="card-count"
-                    >{{ card.count }}<span style="font-size: 14px; font-weight: 400">人</span></span
-                  >
-                </div>
-                <div class="card-content">
-                  <span class="card-proportion">占全院 {{ card.proportion }}</span>
-                  <span
-                    class="card-change"
-                    :class="{
-                      positive: card.change.startsWith('+'),
-                      negative: card.change.startsWith('-'),
-                    }"
-                  >
-                    {{ card.change.startsWith('+') ? '↑' : '↓' }} {{ card.change }} 较上月
-                  </span>
-                </div>
-              </NCard>
-            </div>
-
-            <!-- 核心分析图表区 -->
-            <NGrid
-              :cols="2"
-              :x-gap="16"
-              class="charts-row"
-            >
-              <NGi>
-                <NCard
-                  title="疗效影响因素对比"
-                  :bordered="false"
-                >
-                  <div
-                    ref="factorsChartRef"
-                    class="chart-container"
-                  ></div>
-                </NCard>
-              </NGi>
-              <NGi>
-                <NCard
-                  title="近6个月疗效趋势"
-                  :bordered="false"
-                >
-                  <div
-                    ref="trendChartRef"
-                    class="chart-container"
-                  ></div>
-                </NCard>
-              </NGi>
-            </NGrid>
-
-            <!-- 重点关注患者列表 -->
-            <NGrid
-              :cols="2"
-              :x-gap="16"
-            >
-              <NGi>
-                <NCard
-                  title="未达标患者TOP20"
-                  :bordered="false"
-                >
-                  <NDataTable
-                    :columns="unachievedColumns"
-                    :data="unachievedTop20"
-                    :pagination="false"
-                    :max-height="400"
-                  />
-                </NCard>
-              </NGi>
-              <NGi>
-                <NCard
-                  title="高风险异常患者列表"
-                  :bordered="false"
-                >
-                  <NDataTable
-                    :columns="highRiskColumns"
-                    :data="highRiskPatients"
-                    :pagination="false"
-                    :max-height="400"
-                  />
-                </NCard>
-              </NGi>
-            </NGrid>
-          </NTabPane>
-
-          <!-- Tab2: 核心代谢指标评估 -->
-          <NTabPane
-            name="tab2"
-            tab="核心代谢指标评估"
-          >
-            <!-- 二级Tab -->
-            <NTabs
-              type="line"
-              v-model:value="activeTab2Sub"
-              tab-style="margin-bottom: 0px"
-            >
-              <NTabPane
-                v-for="sub in tab2SubOptions"
-                :key="sub.name"
-                :name="sub.name"
-                :tab="sub.label"
-              >
-                <!-- 指标达标情况统计卡片 -->
-                <NGrid
-                  :cols="4"
-                  :x-gap="16"
-                  class="index-cards"
-                >
-                  <NGi
-                    v-for="(idx, i) in currentTab2Indices"
-                    :key="idx.name"
-                  >
-                    <NCard
-                      class="index-card"
-                      :bordered="false"
-                      :class="{ active: currentSelectedIndex === i }"
-                      hoverable
-                      @click="currentSelectedIndex = i"
-                    >
-                      <div class="index-name">
-                        <span class="index-name-text">{{ idx.name }}</span>
-                        <span class="index-unit">{{ idx.unit }}</span>
-                      </div>
-                      <NGrid
-                        :cols="2"
-                        :x-gap="8"
-                      >
-                        <NGi>
-                          <div class="index-stat">
-                            <span class="stat-label">达标</span>
-                            <span class="stat-value">{{ idx.standardCount }}人</span>
-                            <div class="stat-rate-row">
-                              <span class="stat-rate">{{ idx.standardRate }}</span>
-                              <span
-                                class="stat-change"
-                                :class="{
-                                  positive: idx.standardRateChange.startsWith('+'),
-                                  negative: idx.standardRateChange.startsWith('-'),
-                                }"
-                              >
-                                {{ idx.standardRateChange.startsWith('+') ? '↑' : '↓' }}{{ idx.standardRateChange }}
-                              </span>
-                            </div>
-                          </div>
-                        </NGi>
-                        <NGi>
-                          <div class="index-stat">
-                            <span class="stat-label">异常</span>
-                            <span class="stat-value">{{ idx.abnormalCount }}人</span>
-                            <div class="stat-rate-row">
-                              <span class="stat-rate danger">{{ idx.abnormalRate }}</span>
-                              <span
-                                class="stat-change"
-                                :class="{
-                                  positive: idx.abnormalRateChange.startsWith('+'),
-                                  negative: idx.abnormalRateChange.startsWith('-'),
-                                }"
-                              >
-                                {{ idx.abnormalRateChange.startsWith('+') ? '↑' : '↓' }}{{ idx.abnormalRateChange }}
-                              </span>
-                            </div>
-                          </div>
-                        </NGi>
-                      </NGrid>
-                    </NCard>
-                  </NGi>
-                </NGrid>
-
-                <!-- 异常患者明细 -->
-                <NDivider>异常患者明细</NDivider>
-                <NCard :bordered="false">
-                  <NDataTable
-                    :columns="tab2AbnormalColumns"
-                    :data="currentTab2AbnormalPatients"
-                    :pagination="false"
-                    :max-height="400"
-                  />
-                </NCard>
-              </NTabPane>
-            </NTabs>
-          </NTabPane>
-
-          <!-- Tab3: 用药安全性评估 -->
-          <NTabPane
-            name="tab3"
-            tab="用药安全性评估"
-          >
-            <!-- 用药安全统计卡片 -->
-            <NGrid
-              :cols="4"
-              :x-gap="16"
-              class="safety-cards"
-            >
-              <NGi
-                v-for="(card, index) in medicationSafetyCards"
-                :key="card.title"
-              >
-                <NCard
-                  :class="['safety-card', getSafetyCardClass(index)]"
-                  :bordered="false"
-                  hoverable
-                >
-                  <div class="safety-title">{{ card.title }}</div>
-                  <div class="safety-content">
-                    <span class="safety-value">{{ card.value }}</span>
-                    <span class="safety-unit">{{ card.unit }}</span>
-                    <span class="safety-rate">{{ card.rate }}</span>
-                  </div>
-                  <div
-                    class="safety-change"
-                    :class="{
-                      positive: card.change.startsWith('+'),
-                      negative: card.change.startsWith('-'),
-                    }"
-                  >
-                    {{ card.change.startsWith('+') ? '↑' : '↓' }} {{ card.change }} 较上月
-                  </div>
-                  <div class="safety-subtitle">{{ card.subTitle }}</div>
-                </NCard>
-              </NGi>
-            </NGrid>
-
-            <!-- 核心分析图表 -->
-            <NGrid
-              :cols="2"
-              :x-gap="16"
-              class="charts-row"
-            >
-              <NGi>
-                <NCard
-                  title="不同降糖药不良反应发生率对比"
-                  :bordered="false"
-                >
-                  <div
-                    ref="adverseChartRef"
-                    class="chart-container"
-                  ></div>
-                </NCard>
-              </NGi>
-              <NGi>
-                <NCard
-                  title="用药依从性与疗效达标率相关性"
-                  :bordered="false"
-                >
-                  <div
-                    ref="complianceChartRef"
-                    class="chart-container"
-                  ></div>
-                </NCard>
-              </NGi>
-            </NGrid>
-
-            <!-- 用药安全异常明细 -->
-            <NGrid
-              :cols="2"
-              :x-gap="16"
-            >
-              <NGi>
-                <NCard
-                  title="药物不良反应记录列表"
-                  :bordered="false"
-                >
-                  <NDataTable
-                    :columns="drugAdverseColumns"
-                    :data="drugAdverseReactions"
-                    :pagination="false"
-                    :max-height="400"
-                  />
-                </NCard>
-              </NGi>
-              <NGi>
-                <NCard
-                  title="用药高风险患者列表"
-                  :bordered="false"
-                >
-                  <NDataTable
-                    :columns="highRiskMedColumns"
-                    :data="highRiskMedicationPatients"
-                    :pagination="false"
-                    :max-height="400"
-                  />
-                </NCard>
-              </NGi>
-            </NGrid>
-          </NTabPane>
-
           <!-- Tab4: 患者疗效明细列表 -->
           <NTabPane
             name="tab4"
             tab="患者疗效明细列表"
           >
             <NCard :bordered="false">
+              <div class="mb-4 flex gap-4">
+                <NInput
+                  v-model:value="patientQueryParams.zyh"
+                  placeholder="住院号"
+                  clearable
+                  style="width: 160px"
+                  @keyup.enter="getPatientListData"
+                />
+                <NInput
+                  v-model:value="patientQueryParams.name"
+                  placeholder="姓名"
+                  clearable
+                  style="width: 160px"
+                  @keyup.enter="getPatientListData"
+                />
+                <NButton
+                  type="primary"
+                  @click="getPatientListData"
+                  >查询</NButton
+                >
+              </div>
               <NDataTable
                 :columns="patientListColumns"
                 :data="patientList"
-                :pagination="{ pageSize: 10 }"
+                :loading="patientListLoading"
+                :pagination="patientPagination"
                 :max-height="600"
+                :remote="true"
               />
             </NCard>
           </NTabPane>
@@ -931,7 +690,7 @@ function getTrendChartData(index: any) {
       <NModal
         v-model:show="showPatientDetail"
         preset="card"
-        title="患者详情"
+        title="患者治疗效果详情"
         style="width: 960px; max-width: 95vw"
         :mask-closable="true"
       >
@@ -947,29 +706,34 @@ function getTrendChartData(index: any) {
               label-placement="left"
             >
               <NDescriptionsItem label="姓名">{{
-                currentPatientDetail.basicInfo.name
+                currentPatientDetail.patientName
               }}</NDescriptionsItem>
-              <NDescriptionsItem label="性别">{{
-                currentPatientDetail.basicInfo.gender
+              <NDescriptionsItem label="性别">{{ currentPatientDetail.gender }}</NDescriptionsItem>
+              <NDescriptionsItem label="年龄">{{ currentPatientDetail.age }}</NDescriptionsItem>
+              <NDescriptionsItem label="住院号">{{
+                currentPatientDetail.userId
               }}</NDescriptionsItem>
-              <NDescriptionsItem label="年龄"
-                >{{ currentPatientDetail.basicInfo.age }}岁</NDescriptionsItem
+              <NDescriptionsItem
+                label="最近HbA1c"
+                :span="2"
+                >{{ currentPatientDetail.latestHba1c }}</NDescriptionsItem
               >
-              <NDescriptionsItem label="病历号">{{
-                currentPatientDetail.basicInfo.medicalRecordNo
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="糖尿病类型">{{
+              <NDescriptionsItem
+                label="病情"
+                :span="3"
+              >
+                {{ currentPatientDetail?.diabetesType || '-' }}
+              </NDescriptionsItem>
+              <!-- <NDescriptionsItem label="糖尿病类型">
                 currentPatientDetail.basicInfo.diabetesType
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="病程">{{
+              </NDescriptionsItem>
+              <NDescriptionsItem label="病程">
                 currentPatientDetail.basicInfo.diseaseDuration
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="所属分层">{{
+              </NDescriptionsItem>
+              <NDescriptionsItem label="所属分层">
                 currentPatientDetail.basicInfo.category
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="最近HbA1c">{{
-                currentPatientDetail.basicInfo.latestHbA1c
-              }}</NDescriptionsItem>
+              </NDescriptionsItem>
+
               <NDescriptionsItem label="综合疗效评级">
                 <NTag
                   :type="
@@ -986,12 +750,14 @@ function getTrendChartData(index: any) {
               <NDescriptionsItem label="整体达标情况">
                 <NTag
                   :type="
-                    currentPatientDetail.basicInfo.overallStandardStatus === '达标' ? 'success' : 'warning'
+                    currentPatientDetail.basicInfo.overallStandardStatus === '达标'
+                      ? 'success'
+                      : 'warning'
                   "
                 >
                   {{ currentPatientDetail.basicInfo.overallStandardStatus }}
                 </NTag>
-              </NDescriptionsItem>
+              </NDescriptionsItem> -->
             </NDescriptions>
           </NCard>
 
@@ -1003,41 +769,47 @@ function getTrendChartData(index: any) {
           >
             <NDataTable
               :columns="indicatorColumns"
-              :data="currentPatientDetail.indicators"
+              :data="indicatorComparisonList"
+              :loading="indicatorLoading"
               :pagination="false"
-              :max-height="400"
             />
+            <!-- :max-height="400" -->
           </NCard>
 
           <!-- 治疗效果趋势 -->
           <NCard
-            title="治疗效果趋势"
+            title="HbA1c变化趋势"
             :bordered="false"
             class="mb-4"
           >
             <NGrid
-              :cols="2"
+              :cols="1"
               :x-gap="16"
             >
               <NGi>
-                <div class="chart-title">近12个月HbA1c变化趋势</div>
-                <div
-                  ref="hba1cTrendRef"
-                  class="chart-container"
-                ></div>
+                <NEmpty
+                  v-if="!currentPatientDetail.lsxt || currentPatientDetail.lsxt.length === 0"
+                  description="暂无HbA1c趋势数据"
+                />
+                <template v-else>
+                  <div
+                    ref="hba1cTrendRef"
+                    class="chart-container"
+                  ></div>
+                </template>
               </NGi>
-              <NGi>
+              <!-- <NGi>
                 <div class="chart-title">近3个月血糖波动趋势</div>
                 <div
                   ref="glucoseTrendRef"
                   class="chart-container"
                 ></div>
-              </NGi>
+              </NGi> -->
             </NGrid>
           </NCard>
 
           <!-- 用药安全性 -->
-          <NCard
+          <!-- <NCard
             title="用药安全性专项评估"
             :bordered="false"
             class="mb-4"
@@ -1061,13 +833,15 @@ function getTrendChartData(index: any) {
               <NDescriptionsItem
                 label="用药风险提示"
                 :span="2"
-                >{{ currentPatientDetail.currentMedication.medicationRiskWarning }}</NDescriptionsItem
+                >{{
+                  currentPatientDetail.currentMedication.medicationRiskWarning
+                }}</NDescriptionsItem
               >
             </NDescriptions>
-          </NCard>
+          </NCard> -->
 
           <!-- 随访记录 -->
-          <NCard
+          <!-- <NCard
             title="历次随访评估记录"
             :bordered="false"
             class="mb-4"
@@ -1078,10 +852,10 @@ function getTrendChartData(index: any) {
               :pagination="false"
               :max-height="300"
             />
-          </NCard>
+          </NCard> -->
 
           <!-- 历史报告 -->
-          <NCard
+          <!-- <NCard
             title="历史疗效报告"
             :bordered="false"
           >
@@ -1090,7 +864,7 @@ function getTrendChartData(index: any) {
               :data="currentPatientDetail.efficacyReports"
               :pagination="false"
             />
-          </NCard>
+          </NCard> -->
         </template>
       </NModal>
     </div>
@@ -1099,6 +873,7 @@ function getTrendChartData(index: any) {
 
 <script lang="ts">
 import { h } from 'vue'
+import { getIndicatorComparisonData, getTreatmentEffectsDetail } from '@/api/treatmentEffects'
 export default {}
 </script>
 

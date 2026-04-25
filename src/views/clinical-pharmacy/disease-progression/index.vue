@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick, h } from 'vue'
+import dayjs from 'dayjs'
+import { ref, computed, onMounted, watch, nextTick, h, reactive } from 'vue'
 import { ScrollContainer } from '@/components'
 import type { ECharts } from 'echarts'
 import {
@@ -19,12 +20,15 @@ import {
   NTooltip,
   NTimeline,
   NTimelineItem,
+  NDatePicker,
+  NPagination,
+  NEmpty,
   type DataTableColumns,
+  type PaginationProps,
 } from 'naive-ui'
 import * as echarts from 'echarts'
+import { getPatientList, type PatientRecord, type PatientQueryParams } from '@/api/patientRecords'
 import {
-  complicationCards,
-  complicationDistribution,
   complicationTrendChart,
   complicationProgressTop20,
   highRiskProgressPatients,
@@ -42,15 +46,22 @@ import {
   microvascularProgressPatients,
   macrovascularProgressPatients,
 } from './mock/tab3'
-import { generatePatientList, generatePatientProgressDetail } from './mock/tab4'
+import { generatePatientProgressDetail } from './mock/tab4'
 import type { Patient, PatientProgressDetail } from './mock/types'
+import {
+  getDiseaseProgressionDetail,
+  getDiseaseProgressionOverview,
+} from '@/api/diseaseProgression'
 
 defineOptions({
   name: 'DiseaseProgression',
 })
 
 // 筛选条件
-const timeRange = ref<string | null>('近3个月')
+const range = ref<[number, number]>([
+  dayjs().subtract(1, 'day').startOf('day').valueOf(),
+  dayjs().endOf('day').valueOf(),
+])
 const patientStratification = ref<string[]>([])
 const complicationType = ref<string[]>([])
 const searchText = ref('')
@@ -84,18 +95,74 @@ const activeTab3Sub = ref('microvascular')
 const showPatientDetail = ref(false)
 const currentPatientDetail = ref<PatientProgressDetail | null>(null)
 
-// 患者列表数据
-const patientList = ref<Patient[]>(generatePatientList())
+// 患者列表数据 - Tab4
+const patientList = ref<PatientRecord[]>([])
+const patientListLoading = ref(false)
+const patientQueryParams = reactive<PatientQueryParams>({
+  zyh: '',
+  name: '',
+  pageNum: 1,
+  pageSize: 10,
+})
+const patientPagination = reactive<PaginationProps>({
+  page: 1,
+  pageSize: 10,
+  itemCount: 0,
+  showSizePicker: true,
+  pageSizes: [10, 15, 20],
+  showQuickJumper: true,
+  onUpdatePage: (page: number) => {
+    patientPagination.page = page
+    patientQueryParams.pageNum = page
+    getPatientListData()
+  },
+  onUpdatePageSize: (pageSize: number) => {
+    patientPagination.pageSize = pageSize
+    patientPagination.page = 1
+    patientQueryParams.pageSize = pageSize
+    patientQueryParams.pageNum = 1
+    getPatientListData()
+  },
+})
+
+const getPatientListData = async () => {
+  patientListLoading.value = true
+  try {
+    const { data } = await getPatientList(patientQueryParams)
+    patientList.value = data.list || []
+    patientPagination.itemCount = data.total || 0
+  } catch (error) {
+    console.error(error)
+  } finally {
+    patientListLoading.value = false
+  }
+}
+
+const formatDateTime = (dateStr: string) => {
+  if (!dateStr) return '-'
+  try {
+    const date = new Date(dateStr)
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return dateStr
+  }
+}
 
 // 表格列 - Tab1 并发症进展TOP20
-const top20Columns = [
-  { title: '患者姓名', key: 'name', width: 80 },
-  { title: '病历号', key: 'medicalRecordNo', width: 110 },
-  { title: '年龄', key: 'age', width: 50 },
-  { title: '所属分层', key: 'category', width: 100 },
-  { title: '并发症类型', key: 'complicationType', width: 120 },
-  { title: '进展情况', key: 'progressStatus', width: 100 },
-  { title: '发现日期', key: 'discoveryDate', width: 100 },
+const top20Columns: DataTableColumns = [
+  { title: '就诊编号', key: 'visitnumber', width: 90, ellipsis: { tooltip: true } },
+  { title: '患者ID', key: 'patientid', width: 80, ellipsis: { tooltip: true } },
+  // { title: '患者姓名', key: 'patientname', width: 70, ellipsis: { tooltip: true } },
+  { title: '性别', key: 'sex', width: 50 },
+  { title: '入院科室', key: 'admissiondept', width: 90, ellipsis: { tooltip: true } },
+  { title: '住院天数', key: 'los', width: 60 },
+  { title: '入院日期', key: 'admissiondate', width: 90 },
 ]
 
 // 表格列 - Tab1 高进展风险
@@ -135,39 +202,67 @@ const complicationDetailColumns = [
 ]
 
 // 表格列 - Tab4 患者列表
-const patientListColumns = [
-  { title: '患者姓名', key: 'name', width: 100 },
-  { title: '病历号', key: 'medicalRecordNo', width: 130 },
-  { title: '年龄', key: 'age', width: 80 },
-  { title: '所属分层', key: 'categoryName', width: 120 },
-  { title: '并发症类型', key: 'complicationType', width: 140 },
-  { title: '胰岛功能', key: 'pancreaticFunction', width: 120 },
-  { title: '最近C肽', key: 'cPeptideLevel', width: 100 },
-  { title: '最近检查日期', key: 'lastCheckDate', width: 130 },
-  { title: '主诊医生', key: 'mainDoctor', width: 100 },
+const patientListColumns: DataTableColumns<PatientRecord> = [
+  {
+    title: '住院号',
+    key: 'zyh',
+    width: 140,
+  },
+  {
+    title: '姓名',
+    key: 'name',
+    width: 100,
+  },
+  {
+    title: '性别',
+    key: 'sex',
+    width: 80,
+  },
+  {
+    title: '年龄',
+    key: 'age',
+    width: 80,
+  },
+  {
+    title: '入院时间',
+    key: 'admissionDate',
+    width: 180,
+    render: (row) => formatDateTime(row.admissionDate),
+  },
   {
     title: '操作',
     key: 'actions',
-    width: 100,
-    fixed: 'right',
-    render(row: Patient) {
-      return h(
-        NButton,
-        { size: 'small', type: 'primary', onClick: () => handleViewPatientDetail(row) },
-        { default: () => '查看详情' },
-      )
-    },
+    width: 120,
+    render: (row) =>
+      h('div', { class: 'flex gap-2' }, [
+        h(
+          NButton,
+          {
+            type: 'primary',
+            size: 'small',
+            text: true,
+            onClick: () => handleViewPatientDetail(row),
+          },
+          { default: () => '查看详情' },
+        ),
+      ]),
   },
-] as DataTableColumns<Patient>
+]
 
 // 表格列 - 弹窗检查对比
 const examResultColumns = [
-  { title: '检查项目', key: 'examItem', width: 160 },
-  { title: '检查日期', key: 'examDate', width: 120 },
-  { title: '本次结果', key: 'currentResult', width: 180 },
-  { title: '上次结果', key: 'previousResult', width: 140 },
-  { title: '变化趋势', key: 'changeTrend', width: 100 },
-  { title: '异常等级', key: 'abnormityLevel', width: 120 },
+  // { title: '检查项目', key: 'examItem', width: 160 },
+  // { title: '检查日期', key: 'examDate', width: 120 },
+  // { title: '本次结果', key: 'currentResult', width: 180 },
+  // { title: '上次结果', key: 'previousResult', width: 140 },
+  // { title: '变化趋势', key: 'changeTrend', width: 100 },
+  // { title: '异常等级', key: 'abnormityLevel', width: 120 },
+  { title: '检查项目', key: 'testSubitemChineseName', width: 160 },
+  // { title: '检查日期', key: 'examDate', width: 120 },
+  { title: '本次结果', key: 'newValue', width: 120 },
+  { title: '上次结果', key: 'oldValue', width: 120 },
+  { title: '变化趋势', key: 'treatmentStatus', width: 100 },
+  { title: '异常等级', key: 'treatmentEffect', width: 120 },
 ]
 
 // 表格列 - 弹窗随访记录
@@ -226,6 +321,72 @@ function getTimelineType(type: string): 'success' | 'warning' | 'info' {
   return 'success'
 }
 
+const overviewData = ref(null) as any
+const loading = ref(false)
+
+const getOverviewData = async (val?: [string, string]) => {
+  const params: { startDate?: string; endDate?: string } = {}
+  if (val) {
+    params.startDate = val[0]
+    params.endDate = val[1]
+  } else {
+    params.startDate = dayjs(range.value[0]).format('YYYY-MM-DD')
+    params.endDate = dayjs(range.value[1]).format('YYYY-MM-DD')
+  }
+  loading.value = true
+  overviewData.value = await getDiseaseProgressionOverview(params)
+  loading.value = false
+  if (activeTab.value === 'tab1') {
+    pieChart = null
+    initTab1Charts()
+    if (pieChart && complicationDistributionData.value.length > 0) {
+      pieChart.hideLoading()
+      pieChart.setOption({
+        tooltip: { trigger: 'item', formatter: '{b}: {c}人 ({d}%)' },
+        legend: { bottom: 0 },
+        series: [
+          {
+            type: 'pie',
+            radius: ['35%', '65%'],
+            center: ['50%', '45%'],
+            data: complicationDistributionData.value,
+            label: { formatter: '{b}\n{d}%' },
+            emphasis: {
+              itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.3)' },
+            },
+          },
+        ],
+      })
+    } else if (pieChart) {
+      pieChart.hideLoading()
+    }
+  }
+}
+
+const complicationCards = computed(() => {
+  if (!overviewData.value?.data?.complicationStatCardVOList) return []
+  return overviewData.value.data.complicationStatCardVOList
+})
+
+const complicationDistributionData = computed(() => {
+  if (!overviewData.value?.data?.complicationStatCardVOList) return []
+  return overviewData.value.data.complicationStatCardVOList
+    .filter((item: { count: number }) => item.count > 0)
+    .map((item: { name: string; count: number }) => ({
+      name: item.name,
+      value: item.count,
+    }))
+})
+
+const top20PatientList = computed(() => {
+  if (!overviewData.value?.data?.top20PatientList) return []
+  return overviewData.value.data.top20PatientList.map((item: any) => ({
+    ...item,
+    admissiondate: item.admissiondate?.split(' ')[0] || '-',
+    dischargedate: item.dischargedate?.split(' ')[0] || '-',
+  }))
+})
+
 // 初始化图表
 function initCharts() {
   if (activeTab.value === 'tab1') initTab1Charts()
@@ -234,40 +395,21 @@ function initCharts() {
 }
 
 function initTab1Charts() {
-  if (pieChartRef.value && !pieChart) {
+  if (pieChartRef.value) {
+    if (pieChart) {
+      pieChart.dispose()
+      pieChart = null
+    }
     pieChart = echarts.init(pieChartRef.value)
-    pieChart.setOption({
-      tooltip: { trigger: 'item', formatter: '{b}: {c}人 ({d}%)' },
-      legend: { bottom: 0 },
-      series: [
-        {
-          type: 'pie',
-          radius: ['35%', '65%'],
-          center: ['50%', '45%'],
-          data: complicationDistribution.data,
-          label: { formatter: '{b}\n{d}%' },
-          emphasis: {
-            itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.3)' },
-          },
-        },
-      ],
-    })
+    pieChart.showLoading()
   }
-  if (trendLineChartRef.value && !trendLineChart) {
+  if (trendLineChartRef.value) {
+    if (trendLineChart) {
+      trendLineChart.dispose()
+      trendLineChart = null
+    }
     trendLineChart = echarts.init(trendLineChartRef.value)
-    trendLineChart.setOption({
-      tooltip: { trigger: 'axis' },
-      legend: { data: complicationTrendChart.series.map((s) => s.name) },
-      xAxis: { type: 'category', data: complicationTrendChart.xAxis, axisLabel: { rotate: 30 } },
-      yAxis: { type: 'value', name: '人次' },
-      series: complicationTrendChart.series.map((s) => ({
-        name: s.name,
-        type: 'line',
-        data: s.data,
-        smooth: true,
-        label: { show: true, position: 'top' },
-      })),
-    })
+    trendLineChart.showLoading()
   }
 }
 
@@ -306,7 +448,11 @@ function initTab3Charts() {
     stageBarChart.setOption({
       tooltip: { trigger: 'axis' },
       legend: { data: ['early', 'mid', 'late'] },
-      xAxis: { type: 'category', data: dist.map((d) => d.complicationName), axisLabel: { interval: 0 } },
+      xAxis: {
+        type: 'category',
+        data: dist.map((d) => d.complicationName),
+        axisLabel: { interval: 0 },
+      },
       yAxis: { type: 'value', name: '人数' },
       series: [
         {
@@ -336,8 +482,16 @@ function initTab3Charts() {
 }
 
 function initDetailCharts() {
+  if (!currentPatientDetail.value) return
   if (currentPatientDetail.value && detailCPeptideRef.value) {
     const trend = currentPatientDetail.value.cPeptideTrend
+    if (!trend) {
+      if (detailCPeptideChart) {
+        detailCPeptideChart.dispose()
+        detailCPeptideChart = null
+      }
+      return
+    }
     if (!detailCPeptideChart) {
       detailCPeptideChart = echarts.init(detailCPeptideRef.value)
     }
@@ -379,6 +533,9 @@ watch(activeTab, async () => {
   stageBarChart?.dispose()
   stageBarChart = null
   initCharts()
+  if (activeTab.value === 'tab4') {
+    getPatientListData()
+  }
 })
 
 watch(activeTab3Sub, async () => {
@@ -398,6 +555,7 @@ watch(showPatientDetail, async (show) => {
 onMounted(() => {
   window.addEventListener('resize', handleResize)
   initCharts()
+  getOverviewData()
 })
 
 function handleResize() {
@@ -408,8 +566,12 @@ function handleResize() {
   detailCPeptideChart?.resize()
 }
 
-function handleViewPatientDetail(patient: Patient) {
-  currentPatientDetail.value = generatePatientProgressDetail(patient)
+async function handleViewPatientDetail(patient: PatientRecord) {
+  // currentPatientDetail.value = generatePatientProgressDetail(patient as any)
+  const { code, data } = await getDiseaseProgressionDetail({ zyh: patient.zyh })
+  console.log(code, 'code===')
+  console.log(data, 'data===')
+  currentPatientDetail.value = data
   detailCPeptideChart = null
   showPatientDetail.value = true
 }
@@ -418,52 +580,6 @@ function handleViewPatientDetail(patient: Patient) {
 <template>
   <ScrollContainer wrapper-class="flex flex-col gap-y-4 max-sm:gap-y-2">
     <div class="disease-progression">
-      <!-- 顶部全局筛选栏 -->
-      <div class="filter-bar">
-        <div class="filter-item">
-          <span class="filter-label">时间范围</span>
-          <NSelect
-            v-model:value="timeRange"
-            :options="timeRangeOptions"
-            placeholder="请选择"
-            clearable
-            style="width: 140px"
-          />
-        </div>
-        <div class="filter-item">
-          <span class="filter-label">患者分层</span>
-          <NSelect
-            v-model:value="patientStratification"
-            :options="patientStratificationOptions"
-            placeholder="请选择"
-            multiple
-            clearable
-            style="width: 180px"
-          />
-        </div>
-        <div class="filter-item">
-          <span class="filter-label">并发症类型</span>
-          <NSelect
-            v-model:value="complicationType"
-            :options="complicationTypeOptions"
-            placeholder="请选择"
-            multiple
-            clearable
-            style="width: 180px"
-          />
-        </div>
-        <div class="filter-item">
-          <span class="filter-label">患者姓名/病历号</span>
-          <NInput
-            v-model:value="searchText"
-            placeholder="请输入"
-            clearable
-            style="width: 160px"
-          />
-        </div>
-        <NButton type="primary">查询</NButton>
-      </div>
-
       <!-- 核心主导航Tab -->
       <NCard class="main-content">
         <NTabs
@@ -477,6 +593,17 @@ function handleViewPatientDetail(patient: Patient) {
             name="tab1"
             tab="综合进展总览"
           >
+            <div class="filter-bar mb-4">
+              <div class="filter-item">
+                <span class="filter-label">时间范围</span>
+                <NDatePicker
+                  v-model:value="range"
+                  type="daterange"
+                  clearable
+                  @confirm="(val) => getOverviewData(val)"
+                />
+              </div>
+            </div>
             <!-- 6张并发症统计卡片 -->
             <div class="complication-cards">
               <NCard
@@ -487,22 +614,15 @@ function handleViewPatientDetail(patient: Patient) {
                 hoverable
               >
                 <div class="card-header">
-                  <span class="card-title">
-                    {{ card.name }}
-                    <NTooltip trigger="hover">
-                      <template #trigger>
-                        <span class="info-icon">ⓘ</span>
-                      </template>
-                      {{ card.definition }}
-                    </NTooltip>
-                  </span>
+                  <span class="card-title">{{ card.name }}</span>
                   <span class="card-count"
                     >{{ card.count }}<span style="font-size: 14px; font-weight: 400">人</span></span
                   >
                 </div>
                 <div class="card-content">
-                  <span class="card-proportion">占全院 {{ card.percentage }}</span>
+                  <span class="card-proportion">占全院 {{ card.percentage }}%</span>
                   <span
+                    v-if="card.change"
                     class="card-change"
                     :class="{
                       positive: card.change.startsWith('+'),
@@ -516,12 +636,8 @@ function handleViewPatientDetail(patient: Patient) {
             </div>
 
             <!-- 2个并排图表 -->
-            <NGrid
-              :cols="2"
-              :x-gap="16"
-              class="charts-row"
-            >
-              <NGi>
+            <div class="charts-row grid grid-cols-1 gap-4 lg:grid-cols-3">
+              <div>
                 <NCard
                   title="并发症类型分布"
                   :bordered="false"
@@ -531,250 +647,22 @@ function handleViewPatientDetail(patient: Patient) {
                     class="chart-container"
                   ></div>
                 </NCard>
-              </NGi>
-              <NGi>
-                <NCard
-                  title="近1年并发症新发/进展趋势"
-                  :bordered="false"
-                >
-                  <div
-                    ref="trendLineChartRef"
-                    class="chart-container"
-                  ></div>
-                </NCard>
-              </NGi>
-            </NGrid>
-
-            <!-- 2个并排表格 -->
-            <NGrid
-              :cols="2"
-              :x-gap="16"
-            >
-              <NGi>
+              </div>
+              <div class="lg:col-span-2">
                 <NCard
                   title="并发症新发/进展患者TOP20"
                   :bordered="false"
                 >
                   <NDataTable
                     :columns="top20Columns"
-                    :data="complicationProgressTop20"
+                    :data="top20PatientList"
+                    :loading="loading"
                     :pagination="false"
                     :max-height="400"
                   />
                 </NCard>
-              </NGi>
-              <NGi>
-                <NCard
-                  title="高进展风险患者列表"
-                  :bordered="false"
-                >
-                  <NDataTable
-                    :columns="highRiskColumns"
-                    :data="highRiskProgressPatients"
-                    :pagination="false"
-                    :max-height="400"
-                  />
-                </NCard>
-              </NGi>
-            </NGrid>
-          </NTabPane>
-
-          <!-- Tab2: 胰岛功能变化跟踪 -->
-          <NTabPane
-            name="tab2"
-            tab="胰岛功能变化跟踪"
-          >
-            <!-- 4张胰岛功能统计卡片 -->
-            <NGrid
-              :cols="4"
-              :x-gap="16"
-              class="index-cards"
-            >
-              <NGi
-                v-for="(card, index) in pancreaticFunctionCards"
-                :key="card.name"
-              >
-                <NCard
-                  :class="['safety-card', getSafetyCardClass(index)]"
-                  :bordered="false"
-                  hoverable
-                >
-                  <div class="safety-title">{{ card.name }}</div>
-                  <div class="safety-content">
-                    <span class="safety-value">{{ card.count }}</span>
-                    <span class="safety-unit">人</span>
-                    <span class="safety-rate">{{ card.percentage }}</span>
-                  </div>
-                  <div
-                    class="safety-change"
-                    :class="{
-                      positive: card.change.startsWith('-'),
-                      negative: card.change.startsWith('+'),
-                    }"
-                  >
-                    {{ card.change.startsWith('+') ? '↑' : '↓' }} {{ card.change.slice(1) }} 较上月
-                  </div>
-                </NCard>
-              </NGi>
-            </NGrid>
-
-            <!-- C肽趋势图 -->
-            <NCard
-              title="近2年全院平均C肽水平变化趋势"
-              :bordered="false"
-              class="mb-4"
-            >
-              <div
-                ref="cPeptideChartRef"
-                class="chart-container"
-              ></div>
-            </NCard>
-
-            <!-- 胰岛功能明细列表 -->
-            <NCard
-              title="患者胰岛功能明细列表"
-              :bordered="false"
-            >
-              <NDataTable
-                :columns="pancreaticColumns"
-                :data="pancreaticFunctionPatients"
-                :pagination="false"
-                :max-height="400"
-              />
-            </NCard>
-          </NTabPane>
-
-          <!-- Tab3: 慢性并发症进展跟踪 -->
-          <NTabPane
-            name="tab3"
-            tab="慢性并发症进展跟踪"
-          >
-            <NTabs
-              v-model:value="activeTab3Sub"
-              type="line"
-              tab-style="margin-bottom: 0px"
-            >
-              <NTabPane
-                name="microvascular"
-                tab="微血管并发症"
-              >
-                <NGrid
-                  :cols="4"
-                  :x-gap="16"
-                  class="safety-cards"
-                >
-                  <NGi
-                    v-for="(card, index) in currentTab3Cards"
-                    :key="card.title"
-                  >
-                    <NCard
-                      :class="['safety-card', getSafetyCardClass(index)]"
-                      :bordered="false"
-                      hoverable
-                    >
-                      <div class="safety-title">{{ card.title }}</div>
-                      <div class="safety-content">
-                        <span class="safety-value">{{ card.value }}</span>
-                        <span class="safety-unit">{{ card.unit }}</span>
-                        <span class="safety-rate">{{ card.rate }}</span>
-                      </div>
-                      <div
-                        class="safety-change"
-                        :class="{
-                          positive: card.change.startsWith('-'),
-                          negative: card.change.startsWith('+'),
-                        }"
-                      >
-                        {{ card.change.startsWith('+') ? '↑' : '↓' }}
-                        {{ card.change.slice(1) }} 较上月
-                      </div>
-                      <div class="safety-subtitle">{{ card.subTitle }}</div>
-                    </NCard>
-                  </NGi>
-                </NGrid>
-                <NCard
-                  title="并发症分期分布"
-                  :bordered="false"
-                  class="mb-4"
-                >
-                  <div
-                    ref="stageBarChartRef"
-                    class="chart-container"
-                  ></div>
-                </NCard>
-                <NCard
-                  title="并发症进展患者明细列表"
-                  :bordered="false"
-                >
-                  <NDataTable
-                    :columns="complicationDetailColumns"
-                    :data="currentTab3Patients"
-                    :pagination="false"
-                    :max-height="400"
-                  />
-                </NCard>
-              </NTabPane>
-              <NTabPane
-                name="macrovascular"
-                tab="大血管并发症"
-              >
-                <NGrid
-                  :cols="4"
-                  :x-gap="16"
-                  class="safety-cards"
-                >
-                  <NGi
-                    v-for="(card, index) in currentTab3Cards"
-                    :key="card.title"
-                  >
-                    <NCard
-                      :class="['safety-card', getSafetyCardClass(index)]"
-                      :bordered="false"
-                      hoverable
-                    >
-                      <div class="safety-title">{{ card.title }}</div>
-                      <div class="safety-content">
-                        <span class="safety-value">{{ card.value }}</span>
-                        <span class="safety-unit">{{ card.unit }}</span>
-                        <span class="safety-rate">{{ card.rate }}</span>
-                      </div>
-                      <div
-                        class="safety-change"
-                        :class="{
-                          positive: card.change.startsWith('-'),
-                          negative: card.change.startsWith('+'),
-                        }"
-                      >
-                        {{ card.change.startsWith('+') ? '↑' : '↓' }}
-                        {{ card.change.slice(1) }} 较上月
-                      </div>
-                      <div class="safety-subtitle">{{ card.subTitle }}</div>
-                    </NCard>
-                  </NGi>
-                </NGrid>
-                <NCard
-                  title="并发症分期分布"
-                  :bordered="false"
-                  class="mb-4"
-                >
-                  <div
-                    ref="stageBarChartRef"
-                    class="chart-container"
-                  ></div>
-                </NCard>
-                <NCard
-                  title="并发症进展患者明细列表"
-                  :bordered="false"
-                >
-                  <NDataTable
-                    :columns="complicationDetailColumns"
-                    :data="currentTab3Patients"
-                    :pagination="false"
-                    :max-height="400"
-                  />
-                </NCard>
-              </NTabPane>
-            </NTabs>
+              </div>
+            </div>
           </NTabPane>
 
           <!-- Tab4: 患者进展明细档案 -->
@@ -783,11 +671,34 @@ function handleViewPatientDetail(patient: Patient) {
             tab="患者进展明细档案"
           >
             <NCard :bordered="false">
+              <div class="mb-4 flex gap-4">
+                <NInput
+                  v-model:value="patientQueryParams.zyh"
+                  placeholder="住院号"
+                  clearable
+                  style="width: 160px"
+                  @keyup.enter="getPatientListData"
+                />
+                <NInput
+                  v-model:value="patientQueryParams.name"
+                  placeholder="姓名"
+                  clearable
+                  style="width: 160px"
+                  @keyup.enter="getPatientListData"
+                />
+                <NButton
+                  type="primary"
+                  @click="getPatientListData"
+                  >查询</NButton
+                >
+              </div>
               <NDataTable
                 :columns="patientListColumns"
                 :data="patientList"
-                :pagination="{ pageSize: 10 }"
+                :loading="patientListLoading"
+                :pagination="patientPagination"
                 :max-height="600"
+                :remote="true"
               />
             </NCard>
           </NTabPane>
@@ -798,7 +709,7 @@ function handleViewPatientDetail(patient: Patient) {
       <NModal
         v-model:show="showPatientDetail"
         preset="card"
-        title="患者进展明细"
+        title="病情进展明细"
         style="width: 960px; max-width: 95vw"
         :mask-closable="true"
       >
@@ -817,50 +728,19 @@ function handleViewPatientDetail(patient: Patient) {
                 currentPatientDetail.basicInfo.name
               }}</NDescriptionsItem>
               <NDescriptionsItem label="性别">{{
-                currentPatientDetail.basicInfo.gender
+                currentPatientDetail.basicInfo.sex
               }}</NDescriptionsItem>
-              <NDescriptionsItem label="年龄"
-                >{{ currentPatientDetail.basicInfo.age }}岁</NDescriptionsItem
-              >
-              <NDescriptionsItem label="病历号">{{
-                currentPatientDetail.basicInfo.medicalRecordNo
+              <NDescriptionsItem label="年龄">{{
+                currentPatientDetail.basicInfo.age
               }}</NDescriptionsItem>
-              <NDescriptionsItem label="糖尿病类型">{{
-                currentPatientDetail.basicInfo.diabetesType
+              <NDescriptionsItem label="住院号">{{
+                currentPatientDetail.basicInfo.zyh
               }}</NDescriptionsItem>
-              <NDescriptionsItem label="病程">{{
-                currentPatientDetail.basicInfo.diseaseDuration
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="所属分层">{{
-                currentPatientDetail.basicInfo.category
-              }}</NDescriptionsItem>
-              <NDescriptionsItem label="并发症类型">
-                <NTag
-                  :type="
-                    currentPatientDetail.basicInfo.complicationType === '无并发症' ? 'success' : 'warning'
-                  "
-                >
-                  {{ currentPatientDetail.basicInfo.complicationType }}
-                </NTag>
-              </NDescriptionsItem>
-              <NDescriptionsItem label="胰岛功能">
-                <NTag
-                  :type="
-                    currentPatientDetail.basicInfo.pancreaticFunction === '正常'
-                      ? 'success'
-                      : currentPatientDetail.basicInfo.pancreaticFunction === '重度减退'
-                        ? 'error'
-                        : 'warning'
-                  "
-                >
-                  {{ currentPatientDetail.basicInfo.pancreaticFunction }}
-                </NTag>
-              </NDescriptionsItem>
               <NDescriptionsItem label="最近C肽">{{
-                currentPatientDetail.basicInfo.latestCPeptide
+                currentPatientDetail.basicInfo.latestCPeptide || '-'
               }}</NDescriptionsItem>
               <NDescriptionsItem label="最近检查日期">{{
-                currentPatientDetail.basicInfo.lastCheckDate
+                currentPatientDetail.basicInfo.lastCheckDate || '-'
               }}</NDescriptionsItem>
             </NDescriptions>
           </NCard>
@@ -882,12 +762,10 @@ function handleViewPatientDetail(patient: Patient) {
                 {{ event.content }}
               </NTimelineItem>
             </NTimeline>
-            <div
+            <NEmpty
               v-else
-              class="empty-tip"
-            >
-              暂无并发症进展记录
-            </div>
+              description="暂无并发症进展记录"
+            />
           </NCard>
 
           <!-- 胰岛功能变化趋势 -->
@@ -896,7 +774,12 @@ function handleViewPatientDetail(patient: Patient) {
             :bordered="false"
             class="mb-4"
           >
+            <NEmpty
+              v-if="!currentPatientDetail.cPeptideTrend"
+              description="暂无C肽变化趋势数据"
+            />
             <div
+              v-else
               ref="detailCPeptideRef"
               class="chart-container"
             ></div>
@@ -904,7 +787,7 @@ function handleViewPatientDetail(patient: Patient) {
 
           <!-- 并发症历次检查结果对比表 -->
           <NCard
-            title="并发症历次检查结果对比"
+            title="历次检查结果对比"
             :bordered="false"
             class="mb-4"
           >
@@ -917,7 +800,7 @@ function handleViewPatientDetail(patient: Patient) {
           </NCard>
 
           <!-- 随访进展评估记录 -->
-          <NCard
+          <!-- <NCard
             title="随访进展评估记录"
             :bordered="false"
           >
@@ -927,7 +810,7 @@ function handleViewPatientDetail(patient: Patient) {
               :pagination="false"
               :max-height="300"
             />
-          </NCard>
+          </NCard> -->
         </template>
       </NModal>
     </div>
@@ -978,7 +861,7 @@ function handleViewPatientDetail(patient: Patient) {
 
 .complication-cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   margin-bottom: 24px;
 }

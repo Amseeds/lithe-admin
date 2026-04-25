@@ -123,7 +123,7 @@ const columns: DataTableColumns<Report> = [
   {
     title: '报告编号',
     key: 'reportNo',
-    width: 150,
+    width: 180,
   },
   {
     title: '患者姓名',
@@ -138,7 +138,7 @@ const columns: DataTableColumns<Report> = [
   {
     title: '报告类型',
     key: 'reportType',
-    width: 100,
+    width: 130,
     render(row: Report) {
       return reportTypeMap[row.reportType] || row.reportType
     },
@@ -154,7 +154,7 @@ const columns: DataTableColumns<Report> = [
   {
     title: '生成医生',
     key: 'generateDoctor',
-    width: 90,
+    width: 100,
   },
   {
     title: '生成时间',
@@ -509,7 +509,7 @@ onMounted(() => {
     <!-- ============================================================ -->
     <!-- 2. 统计卡片组 -->
     <!-- ============================================================ -->
-    <div class="stat-cards">
+    <!-- <div class="stat-cards">
       <NCard
         v-for="card in statCards"
         :key="card.title"
@@ -527,7 +527,7 @@ onMounted(() => {
           </template>
         </NStatistic>
       </NCard>
-    </div>
+    </div> -->
 
     <!-- ============================================================ -->
     <!-- 3. 报告主列表 -->
@@ -539,6 +539,7 @@ onMounted(() => {
       <NDataTable
         :columns="columns"
         :data="tableData"
+        :loading="loading"
         :pagination="{ pageSize: 10 }"
         :scroll-x="1200"
       />
@@ -712,8 +713,8 @@ onMounted(() => {
 
       <template #footer>
         <div class="modal-footer">
-          <NButton @click="handleExportFromModal">导出PDF</NButton>
-          <NButton @click="handlePrintFromModal">打印</NButton>
+          <!-- <NButton @click="handleExportFromModal">导出PDF</NButton>
+          <NButton @click="handlePrintFromModal">打印</NButton> -->
           <NButton
             type="primary"
             @click="closeDetailModal"

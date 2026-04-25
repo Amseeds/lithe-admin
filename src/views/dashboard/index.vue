@@ -18,6 +18,12 @@ import { ScrollContainer } from '@/components'
 import { toRefsPreferencesStore } from '@/stores'
 import { twColor } from '@/utils/colors'
 
+const isHighResScreen = ref(false)
+
+onMounted(() => {
+  isHighResScreen.value = window.innerWidth >= 1920 || window.devicePixelRatio >= 1.5
+})
+
 import type { BarSeriesOption, LineSeriesOption } from 'echarts/charts'
 import type {
   AxisPointerComponentOption,
@@ -1159,6 +1165,10 @@ watchDebounced([() => sidebarMenu.value, () => navigationMode.value], resizeAllC
   deep: true,
 })
 
+watch(isHighResScreen, () => {
+  setTimeout(resizeAllCharts, 100)
+})
+
 watch([isDark, themeColor], () => {
   if (revenueChartInstance) {
     if (revenueChartResizeHandler) {
@@ -1213,7 +1223,7 @@ watch([isDark, themeColor], () => {
 })
 </script>
 <template>
-  <ScrollContainer wrapper-class="flex flex-col gap-y-4 max-sm:gap-y-2">
+  <ScrollContainer :wrapper-class="['flex', 'flex-col', 'gap-y-4', 'max-sm:gap-y-2', { 'dashboard-high-res': isHighResScreen }]">
     <div class="grid grid-cols-1 gap-4 max-sm:gap-2 md:grid-cols-2 lg:grid-cols-4">
       <div
         v-for="{
@@ -1322,3 +1332,12 @@ watch([isDark, themeColor], () => {
     </div>
   </ScrollContainer>
 </template>
+
+<style>
+.dashboard-high-res {
+  transform-origin: top left;
+  transform: scale(0.85);
+  width: calc(100% / 0.85);
+  height: calc(100% / 0.85);
+}
+</style>
