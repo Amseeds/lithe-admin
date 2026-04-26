@@ -478,7 +478,7 @@ function initDetailCharts() {
           data: values,
           smooth: true,
           itemStyle: { color: '#5470C6' },
-          label: { show: true, formatter: '{c}%' },
+          label: { show: true, formatter: '{c}' },
         },
       ],
     })

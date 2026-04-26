@@ -42,33 +42,26 @@ const message = useMessage()
 // ============================================================
 // 筛选栏状态
 // ============================================================
-const filters = ref<ReportFilters>({
-  dateRange: '近3个月',
+const filters = ref({
   reportType: '',
   reportStatus: '',
   searchKeyword: '',
 })
 
-const dateRangeOptions: SelectOption[] = [
-  { label: '近1个月', value: '近1个月' },
-  { label: '近3个月', value: '近3个月' },
-  { label: '近6个月', value: '近6个月' },
-  { label: '近1年', value: '近1年' },
-]
-
 const reportTypeOptions: SelectOption[] = [
   { label: '全部', value: '' },
-  { label: '月度随访', value: '月度随访' },
-  { label: '季度评估', value: '季度评估' },
-  { label: '年度全面', value: '年度全面' },
-  { label: '复诊专项', value: '复诊专项' },
+  { label: '治疗效果评估报告', value: '治疗效果评估报告' },
+  // { label: '季度评估', value: '季度评估' },
+  // { label: '年度全面', value: '年度全面' },
+  // { label: '复诊专项', value: '复诊专项' },
 ]
 
 const reportStatusOptions: SelectOption[] = [
   { label: '全部', value: '' },
-  { label: '草稿', value: '草稿' },
-  { label: '已归档', value: '已归档' },
-  { label: '已作废', value: '已作废' },
+  // { label: '草稿', value: '草稿' },
+  { label: '未归档', value: '未归档' },
+  // { label: '已归档', value: '已归档' },
+  // { label: '已作废', value: '已作废' },
 ]
 
 // 过滤后的报告列表
@@ -80,7 +73,7 @@ const loading = ref(false)
 const getList = async () => {
   loading.value = true
   try {
-    const { data } = await getReportList(filters)
+    const { data } = await getReportList(filters.value)
     filteredReports.value = data.list || []
     // pagination.itemCount = data.total || 0
   } catch (error) {
@@ -99,7 +92,6 @@ function handleQuery() {
 // 重置按钮点击
 function handleReset() {
   filters.value = {
-    dateRange: '近3个月',
     reportType: '',
     reportStatus: '',
     searchKeyword: '',
@@ -123,12 +115,12 @@ const columns: DataTableColumns<Report> = [
   {
     title: '报告编号',
     key: 'reportNo',
-    width: 180,
+    width: 200,
   },
   {
     title: '患者姓名',
     key: 'patientName',
-    width: 80,
+    width: 100,
   },
   {
     title: '住院号',
@@ -138,7 +130,7 @@ const columns: DataTableColumns<Report> = [
   {
     title: '报告类型',
     key: 'reportType',
-    width: 130,
+    width: 140,
     render(row: Report) {
       return reportTypeMap[row.reportType] || row.reportType
     },
@@ -146,7 +138,7 @@ const columns: DataTableColumns<Report> = [
   {
     title: '报告周期',
     key: 'reportPeriod',
-    width: 200,
+    width: 220,
     render(row: Report) {
       return `${row.reportPeriodStart} 至 ${row.reportPeriodEnd}`
     },
@@ -154,7 +146,7 @@ const columns: DataTableColumns<Report> = [
   {
     title: '生成医生',
     key: 'generateDoctor',
-    width: 100,
+    width: 120,
   },
   {
     title: '生成时间',
@@ -445,20 +437,11 @@ onMounted(() => {
       <div class="filter-bar-inner">
         <div class="filter-controls">
           <div class="filter-item">
-            <span class="filter-label">报告生成时间：</span>
-            <NSelect
-              v-model:value="filters.dateRange"
-              :options="dateRangeOptions"
-              style="width: 140px"
-              size="small"
-            />
-          </div>
-          <div class="filter-item">
             <span class="filter-label">报告类型：</span>
             <NSelect
               v-model:value="filters.reportType"
               :options="reportTypeOptions"
-              style="width: 130px"
+              style="width: 160px"
               size="small"
             />
           </div>
@@ -471,7 +454,7 @@ onMounted(() => {
               size="small"
             />
           </div>
-          <div class="filter-item">
+          <!-- <div class="filter-item">
             <span class="filter-label">患者姓名/病历号：</span>
             <NInput
               v-model:value="filters.searchKeyword"
@@ -480,7 +463,7 @@ onMounted(() => {
               size="small"
               clearable
             />
-          </div>
+          </div> -->
           <div class="filter-buttons">
             <NButton
               size="small"

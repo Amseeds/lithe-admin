@@ -1,5 +1,15 @@
 <script setup lang="ts">
-import { NButton, NTabPane, NTabs, NDataTable, NTag, NNumberAnimation, useMessage } from 'naive-ui'
+import {
+  NButton,
+  NTabPane,
+  NTabs,
+  NDataTable,
+  NTag,
+  NNumberAnimation,
+  NPagination,
+  useMessage,
+  type PaginationProps,
+} from 'naive-ui'
 import { ref, computed, h, reactive, onMounted, nextTick } from 'vue'
 
 import { ScrollContainer } from '@/components'
@@ -13,6 +23,7 @@ defineOptions({
 const message = useMessage()
 // 当前Tab
 const activeTab = ref('pending')
+const loading = ref(false)
 
 // 待处理预警数据（响应式）
 const pendingData = ref<PendingWarning[]>([...pendingWarnings])
@@ -39,14 +50,21 @@ const searchParams = reactive({
   disposeStatus: '待处理',
 })
 const handleGetWarning = async () => {
+  loading.value = true
   console.log(activeTab.value, 'activeTab')
   if (activeTab.value === 'pending') searchParams.disposeStatus = '待处理'
   if (activeTab.value === 'handled') searchParams.disposeStatus = '已处理'
   const { code, data } = await getWarningLing(searchParams)
   if (code === 200) {
-    pendingData.value = data.list
+    pendingData.value = data.list || []
+    if (activeTab.value === 'pending') {
+      pendingPagination.itemCount = data.total || 0
+    } else {
+      handledPagination.itemCount = data.total || 0
+    }
     console.log(data, 'data=====')
   }
+  loading.value = false
 }
 // 统计数据
 const statsData = computed(() => {
@@ -118,6 +136,7 @@ const markAsHandled = async (row: PendingWarning) => {
     message.success('预警处理成功')
     nextTick(() => {
       handleGetWarning()
+      getBoardData()
     })
   }
 }
@@ -149,9 +168,8 @@ const pendingColumns = [
   {
     title: '风险类型',
     key: 'riskType',
-    width: 120,
-    // render: (row: PendingWarning) =>
-    //   h(NTag, { type: getTypeTag(row.type), size: 'small' }, { default: () => row.type }),
+    width: 200,
+    ellipsis: { tooltip: true },
   },
   {
     title: '预警内容',
@@ -204,9 +222,8 @@ const handledColumns = [
   {
     title: '风险类型',
     key: 'riskType',
-    width: 120,
-    // render: (row: PendingWarning) =>
-    //   h(NTag, { type: getTypeTag(row.type), size: 'small' }, { default: () => row.type }),
+    width: 200,
+    ellipsis: { tooltip: true },
   },
   {
     title: '预警内容',
@@ -232,31 +249,45 @@ const handledColumns = [
 ]
 
 // 分页配置
-const pendingPagination = reactive({
+const pendingPagination = reactive<PaginationProps>({
   page: 1,
   pageSize: 10,
+  itemCount: 0,
   showSizePicker: true,
   pageSizes: [10, 20, 50],
-  onChange: (page: number) => {
+  showQuickJumper: true,
+  onUpdatePage: (page: number) => {
     pendingPagination.page = page
+    searchParams.pageNum = page
+    handleGetWarning()
   },
   onUpdatePageSize: (pageSize: number) => {
     pendingPagination.pageSize = pageSize
     pendingPagination.page = 1
+    searchParams.pageSize = pageSize
+    searchParams.pageNum = 1
+    handleGetWarning()
   },
 })
 
-const handledPagination = reactive({
+const handledPagination = reactive<PaginationProps>({
   page: 1,
   pageSize: 10,
+  itemCount: 0,
   showSizePicker: true,
   pageSizes: [10, 20, 50],
-  onChange: (page: number) => {
+  showQuickJumper: true,
+  onUpdatePage: (page: number) => {
     handledPagination.page = page
+    searchParams.pageNum = page
+    handleGetWarning()
   },
   onUpdatePageSize: (pageSize: number) => {
     handledPagination.pageSize = pageSize
     handledPagination.page = 1
+    searchParams.pageSize = pageSize
+    searchParams.pageNum = 1
+    handleGetWarning()
   },
 })
 
@@ -284,14 +315,14 @@ onMounted(() => {
             />
             <span v-if="isPercent">%</span>
           </div>
-          <div class="flex items-center">
+          <!-- <div class="flex items-center">
             <NTag
               :type="tagType"
               size="small"
             >
               {{ tag }}
             </NTag>
-          </div>
+          </div> -->
         </div>
         <div>
           <div
@@ -322,9 +353,11 @@ onMounted(() => {
           <NDataTable
             :columns="pendingColumns"
             :data="pendingData"
+            :loading="loading"
             :bordered="true"
             :scroll-x="1000"
             :pagination="pendingPagination"
+            :remote="true"
           />
         </NTabPane>
         <NTabPane
@@ -334,9 +367,11 @@ onMounted(() => {
           <NDataTable
             :columns="handledColumns"
             :data="pendingData"
+            :loading="loading"
             :bordered="true"
             :scroll-x="1100"
             :pagination="handledPagination"
+            :remote="true"
           />
         </NTabPane>
       </NTabs>

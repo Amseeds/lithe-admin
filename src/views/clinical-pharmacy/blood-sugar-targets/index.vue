@@ -556,13 +556,13 @@ onMounted(() => {
               </div>
               <div
                 v-if="card.target"
-                class="mb-1 text-xs text-gray-400"
+                class="text-lg font-semibold"
               >
                 通用目标：{{ card.target }}
               </div>
-              <div class="text-lg font-semibold">
+              <!-- <div class="text-lg font-semibold">
                 {{ card.average }}
-              </div>
+              </div> -->
               <div
                 v-if="card.change"
                 class="mt-1 text-xs text-green-500"
@@ -740,39 +740,102 @@ onMounted(() => {
       >
         <div class="patient-header">
           <div class="patient-avatar">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="12" cy="7" r="4"/>
+            <svg
+              width="40"
+              height="40"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path
+                d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle
+                cx="12"
+                cy="7"
+                r="4"
+              />
             </svg>
           </div>
           <div class="patient-main-info">
             <div class="patient-name-row">
               <span class="patient-name">{{ selectedPatient.name }}</span>
-              <NTag :type="selectedPatient.sex === '男' ? 'info' : 'warning'" size="small" round>
+              <NTag
+                :type="selectedPatient.sex === '男' ? 'info' : 'warning'"
+                size="small"
+                round
+              >
                 {{ selectedPatient.sex }}
               </NTag>
-              <NTag type="default" size="small" round>
+              <NTag
+                type="default"
+                size="small"
+                round
+              >
                 {{ selectedPatient.age }}岁
               </NTag>
             </div>
             <div class="patient-meta">
               <span class="meta-item">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                  <line x1="16" y1="2" x2="16" y2="6"/>
-                  <line x1="8" y1="2" x2="8" y2="6"/>
-                  <line x1="3" y1="10" x2="21" y2="10"/>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect
+                    x="3"
+                    y="4"
+                    width="18"
+                    height="18"
+                    rx="2"
+                    ry="2"
+                  />
+                  <line
+                    x1="16"
+                    y1="2"
+                    x2="16"
+                    y2="6"
+                  />
+                  <line
+                    x1="8"
+                    y1="2"
+                    x2="8"
+                    y2="6"
+                  />
+                  <line
+                    x1="3"
+                    y1="10"
+                    x2="21"
+                    y2="10"
+                  />
                 </svg>
                 住院号: {{ selectedPatient.zyh }}
               </span>
             </div>
           </div>
-          <div class="patient-hba1c-indicator" :class="{ 'is-empty': !selectedPatient.lasthba1c }">
+          <div
+            class="patient-hba1c-indicator"
+            :class="{ 'is-empty': !selectedPatient.lasthba1c }"
+          >
             <span class="hba1c-label">最新HbA1c</span>
-            <span v-if="selectedPatient.lasthba1c" class="hba1c-value" :class="getHba1cClass(selectedPatient.lasthba1c)">
+            <span
+              v-if="selectedPatient.lasthba1c"
+              class="hba1c-value"
+              :class="getHba1cClass(selectedPatient.lasthba1c)"
+            >
               {{ selectedPatient.lasthba1c }}%
             </span>
-            <span v-else class="hba1c-empty">--</span>
+            <span
+              v-else
+              class="hba1c-empty"
+              >--</span
+            >
           </div>
         </div>
       </NCard>
@@ -784,16 +847,31 @@ onMounted(() => {
         :content-style="{ padding: '0 12px 12px 12px' }"
       >
         <template #header-extra>
-          <span class="text-xs text-gray-500">共 {{ selectedPatient.bvoList?.length || 0 }} 条记录</span>
+          <span class="text-xs text-gray-500"
+            >共 {{ selectedPatient.bvoList?.length || 0 }} 条记录</span
+          >
         </template>
         <NDataTable
           v-if="selectedPatient.bvoList?.length"
           :columns="[
             { title: '检查日期', key: 'adate', width: 120 },
-            { title: 'HbA1c结果', key: 'avolume', width: 100,
-              render: (row) => h('span', { class: getHba1cClass(row.avolume) }, row.avolume + '%') },
-            { title: '是否达标', key: 'targetAchieved', width: 100,
-              render: (row) => h(NTag, { type: row.targetAchieved === '是' ? 'success' : 'error', size: 'small' }, () => row.targetAchieved) },
+            {
+              title: 'HbA1c结果',
+              key: 'avolume',
+              width: 100,
+              render: (row) => h('span', { class: getHba1cClass(row.avolume) }, row.avolume + '%'),
+            },
+            {
+              title: '是否达标',
+              key: 'targetAchieved',
+              width: 100,
+              render: (row) =>
+                h(
+                  NTag,
+                  { type: row.targetAchieved === '是' ? 'success' : 'error', size: 'small' },
+                  () => row.targetAchieved,
+                ),
+            },
           ]"
           :data="selectedPatient.bvoList"
           :bordered="false"
@@ -801,10 +879,17 @@ onMounted(() => {
           size="small"
           :row-key="(row: (typeof selectedPatient.bvoList)[0]) => row.adate"
         />
-        <NEmpty v-else description="暂无检查记录" size="small" />
+        <NEmpty
+          v-else
+          description="暂无检查记录"
+          size="small"
+        />
       </NCard>
     </template>
-    <NEmpty v-else description="暂无患者数据" />
+    <NEmpty
+      v-else
+      description="暂无患者数据"
+    />
   </NModal>
 </template>
 

@@ -47,4 +47,4 @@ export const getLifestyleGuidanceDetail = (id) => get(`/api/guidance/get/${id}`)
  * @param params
  * @returns
  */
-export const getUnplannedPatients = () => get('/api/guidance/PatientSwithoutAPlan')
+export const getUnplannedPatients = (params) => get('/api/guidance/PatientSwithoutAPlan', params)

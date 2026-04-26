@@ -23,6 +23,7 @@ import {
   NDivider,
   NEmpty,
   NDatePicker,
+  NPopconfirm,
   useMessage,
   type SelectOption,
 } from 'naive-ui'
@@ -67,9 +68,10 @@ const message = useMessage()
 // ============================================================
 const filters = ref({
   stratification: [] as string[],
-  status: '',
+  status: '' as string,
   timeRange: '近3个月',
-  searchKeyword: '',
+  patientId: '',
+  patientName: '',
 })
 
 const stratificationOptions: SelectOption[] = stratificationList.map((s) => ({
@@ -79,10 +81,10 @@ const stratificationOptions: SelectOption[] = stratificationList.map((s) => ({
 
 const planStatusOptions: SelectOption[] = [
   { label: '全部', value: '' },
-  { label: '未制定', value: 'not_created' },
-  { label: '已制定', value: 'created' },
-  { label: '已归档', value: 'archived' },
-  { label: '已过期', value: 'expired' },
+  { label: '草稿', value: '1' },
+  { label: '已生效', value: '2' },
+  { label: '已失效', value: '3' },
+  // { label: '已过期', value: 'expired' },
 ]
 
 const timeRangeOptions: SelectOption[] = [
@@ -92,19 +94,35 @@ const timeRangeOptions: SelectOption[] = [
 ]
 
 function handleQuery() {
-  message.success('查询成功')
+  searchParams.status = filters.value.status || undefined
+  searchParams.patientId = filters.value.patientId || undefined
+  searchParams.patientName = filters.value.patientName || undefined
+  getGuidancePlanList()
 }
+
 function handleReset() {
-  filters.value = { stratification: [], status: '', timeRange: '近3个月', searchKeyword: '' }
-  message.info('已重置筛选条件')
+  filters.value = {
+    stratification: [],
+    status: '',
+    timeRange: '近3个月',
+    patientId: '',
+    patientName: '',
+  }
+  searchParams.status = undefined
+  searchParams.patientId = undefined
+  searchParams.patientName = undefined
+  getGuidancePlanList()
 }
 
 const unplannedPatients = ref()
+const unplannedLoading = ref(false)
 const handleGetUnplannedPatients = async () => {
+  unplannedLoading.value = true
   const { code, data } = await getUnplannedPatients()
   if (code === 200) {
     unplannedPatients.value = data.list
   }
+  unplannedLoading.value = false
 }
 // ============================================================
 // 2. 统计卡片
@@ -323,9 +341,14 @@ const planColumns: DataTableColumns<LifestylePlan> = [
         // )
         btns.push(
           h(
-            NButton,
-            { size: 'tiny', type: 'error', onClick: () => handleDeletePlan(row) },
-            () => '删除',
+            NPopconfirm,
+            {
+              onPositiveClick: () => handleDeletePlan(row),
+            },
+            {
+              trigger: () => h(NButton, { size: 'tiny', type: 'error' }, { default: () => '删除' }),
+              default: () => '确认删除该方案吗？',
+            },
           ),
         )
       } else if (row.status === 'archived') {
@@ -480,16 +503,38 @@ watch(
 )
 
 const searchParams = reactive({
-  // startDate: dayjs().subtract(1, 'day').format('YYYY-MM-DD'),
-  // endDate: dayjs().format('YYYY-MM-DD'),
   pageNum: 1,
   pageSize: 10,
+  status: undefined as string | undefined,
+  patientId: undefined as string | undefined,
+  patientName: undefined as string | undefined,
 })
 const planList = ref([])
+const planPagination = reactive({
+  page: 1,
+  pageSize: 10,
+  itemCount: 0,
+  showSizePicker: true,
+  pageSizes: [10, 20, 50],
+  showQuickJumper: true,
+  onUpdatePage: (page) => {
+    planPagination.page = page
+    searchParams.pageNum = page
+    getGuidancePlanList()
+  },
+  onUpdatePageSize: (pageSize) => {
+    planPagination.pageSize = pageSize
+    planPagination.page = 1
+    searchParams.pageSize = pageSize
+    searchParams.pageNum = 1
+    getGuidancePlanList()
+  },
+})
 const getGuidancePlanList = async () => {
   const { code, data } = await getGuidancePlan(searchParams)
   if (code === 200) {
-    planList.value = data.list
+    planList.value = data.list || []
+    planPagination.itemCount = data.total || 0
   }
 }
 const handleGeneratePlan = async () => {
@@ -675,56 +720,7 @@ onUnmounted(() => {
   <ScrollContainer wrapper-class="flex flex-col gap-y-4 max-sm:gap-y-2">
     <div class="lifestyle-page">
       <!-- ============================================================ -->
-      <!-- 1. 顶部筛选栏 -->
-      <!-- ============================================================ -->
-      <NCard class="filter-card">
-        <NSpace
-          align="center"
-          :size="16"
-          :wrap="false"
-        >
-          <NSelect
-            v-model:value="filters.stratification"
-            :options="stratificationOptions"
-            placeholder="患者分层"
-            multiple
-            :max-tag-count="1"
-            style="width: 200px"
-          />
-          <NSelect
-            v-model:value="filters.status"
-            :options="planStatusOptions"
-            placeholder="方案状态"
-            style="width: 130px"
-          />
-          <NSelect
-            v-model:value="filters.timeRange"
-            :options="timeRangeOptions"
-            style="width: 120px"
-          />
-          <NInput
-            v-model:value="filters.searchKeyword"
-            placeholder="患者姓名/病历号"
-            style="width: 170px"
-            clearable
-          />
-          <NButton
-            type="primary"
-            @click="handleQuery"
-            >查询</NButton
-          >
-          <NButton @click="handleReset">重置</NButton>
-          <div style="flex: 1" />
-          <NButton
-            type="primary"
-            @click="handleOpenNewPlan"
-            >新建指导方案</NButton
-          >
-        </NSpace>
-      </NCard>
-
-      <!-- ============================================================ -->
-      <!-- 2. 核心统计卡片 -->
+      <!-- 1. 核心统计卡片 -->
       <!-- ============================================================ -->
       <div class="stat-cards">
         <!-- <NCard
@@ -810,6 +806,7 @@ onUnmounted(() => {
               <NDataTable
                 :columns="unplannedColumns"
                 :data="unplannedPatients"
+                :loading="unplannedLoading"
                 :pagination="{ pageSize: 8 }"
                 size="small"
                 :max-height="320"
@@ -817,15 +814,74 @@ onUnmounted(() => {
             </div>
           </NTabPane>
 
-          <!-- Tab2: 个体化方案管理 -->
+          <!-- Tab2: 个性化方案管理 -->
           <NTabPane
             name="plans"
-            tab="个体化方案管理"
+            tab="个性化方案管理"
           >
+            <NCard
+              class="filter-card mb-3"
+              :bordered="false"
+              content-style="padding: 12px 16px;"
+            >
+              <NSpace
+                align="center"
+                :size="16"
+                :wrap="true"
+              >
+                <!-- <NSelect
+                  v-model:value="filters.stratification"
+                  :options="stratificationOptions"
+                  placeholder="患者分层"
+                  multiple
+                  :max-tag-count="1"
+                  style="width: 200px"
+                /> -->
+                <span class="filter-label">方案状态</span>
+                <NSelect
+                  v-model:value="filters.status"
+                  :options="planStatusOptions"
+                  placeholder="方案状态"
+                  style="width: 130px"
+                />
+                <!-- <NSelect
+                  v-model:value="filters.timeRange"
+                  :options="timeRangeOptions"
+                  style="width: 120px"
+                /> -->
+                <span class="filter-label">住院号</span>
+                <NInput
+                  v-model:value="filters.patientId"
+                  placeholder="输入住院号"
+                  style="width: 130px"
+                  clearable
+                />
+                <span class="filter-label">患者姓名</span>
+                <NInput
+                  v-model:value="filters.patientName"
+                  placeholder="输入患者姓名"
+                  style="width: 130px"
+                  clearable
+                />
+                <NButton
+                  type="primary"
+                  @click="handleQuery"
+                  >查询</NButton
+                >
+                <NButton @click="handleReset">重置</NButton>
+                <div style="flex: 1" />
+                <NButton
+                  type="primary"
+                  @click="handleOpenNewPlan"
+                  >新建指导方案</NButton
+                >
+              </NSpace>
+            </NCard>
             <NDataTable
               :columns="planColumns"
               :data="planList"
-              :pagination="{ pageSize: 10 }"
+              :pagination="planPagination"
+              :remote="true"
               :scroll-x="1280"
               size="small"
             />

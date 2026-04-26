@@ -21,7 +21,10 @@ import {
   NGrid,
   NGi,
   NDivider,
+  NPagination,
+  NPopconfirm,
   type DataTableColumns,
+  type PaginationProps,
 } from 'naive-ui'
 import { useMessage } from 'naive-ui'
 import * as echarts from 'echarts'
@@ -46,6 +49,7 @@ import {
   getPlanDetail,
   getPlanList,
   getUnplannedPatients,
+  deletePlan,
 } from '@/api/personalizedMedication'
 import MedicationDrawer from './MedicationDrawer.vue'
 
@@ -60,21 +64,38 @@ const activeTab = ref('overview')
 const stratificationFilter = ref<string[]>([])
 const statusFilter = ref<string | null>(null)
 const timeRangeFilter = ref<string | null>('近3个月')
-const searchText = ref('')
+const patientIdFilter = ref('')
+const patientNameFilter = ref('')
 
 const stratificationOptions = patientCategories.map((c) => ({ label: c, value: c }))
 const statusOptions = [
-  { label: '全部', value: '全部' },
-  { label: '未制定', value: '未制定' },
-  { label: '生效中', value: '生效中' },
-  { label: '已过期', value: '已过期' },
-  { label: '已归档', value: '已归档' },
+  { label: '全部', value: null },
+  { label: '草稿', value: '1' },
+  { label: '已生效', value: '2' },
+  { label: '已失效', value: '3' },
 ]
 const timeRangeOptions = [
   { label: '近1个月', value: '近1个月' },
   { label: '近3个月', value: '近3个月' },
   { label: '近6个月', value: '近6个月' },
 ]
+
+function handleQuery() {
+  searchParams.status = statusFilter.value
+  searchParams.patientId = patientIdFilter.value
+  searchParams.patientName = patientNameFilter.value
+  getMedicationPlanList()
+}
+
+function handleReset() {
+  statusFilter.value = null
+  patientIdFilter.value = ''
+  patientNameFilter.value = ''
+  searchParams.status = undefined
+  searchParams.patientId = undefined
+  searchParams.patientName = undefined
+  getMedicationPlanList()
+}
 
 // ============================================================
 // Tab2 方案主列表
@@ -93,15 +114,37 @@ const handleGetDashboardData = async () => {
 
 const tableData = ref([])
 const searchParams = reactive({
-  // startDate: dayjs().subtract(1, 'day').format('YYYY-MM-DD'),
-  // endDate: dayjs().format('YYYY-MM-DD'),
   pageNum: 1,
   pageSize: 10,
+  status: undefined as string | undefined,
+  patientId: undefined as string | undefined,
+  patientName: undefined as string | undefined,
+})
+const planPagination = reactive<PaginationProps>({
+  page: 1,
+  pageSize: 10,
+  itemCount: 0,
+  showSizePicker: true,
+  pageSizes: [10, 20, 50],
+  showQuickJumper: true,
+  onUpdatePage: (page) => {
+    planPagination.page = page
+    searchParams.pageNum = page
+    getMedicationPlanList()
+  },
+  onUpdatePageSize: (pageSize) => {
+    planPagination.pageSize = pageSize
+    planPagination.page = 1
+    searchParams.pageSize = pageSize
+    searchParams.pageNum = 1
+    getMedicationPlanList()
+  },
 })
 const getMedicationPlanList = async () => {
   const { code, data } = await getPlanList(searchParams)
   if (code === 200) {
-    tableData.value = data.list
+    tableData.value = data.list || []
+    planPagination.itemCount = data.total || 0
   }
 }
 function getStatusType(status: string) {
@@ -117,12 +160,38 @@ function getStatusType(status: string) {
   }
 }
 
-const unplannedPatients = ref()
+const unplannedPatients = ref<any[]>([])
+const unplannedLoading = ref(false)
+const unplannedPagination = reactive<PaginationProps>({
+  page: 1,
+  pageSize: 10,
+  showSizePicker: true,
+  pageSizes: [10, 20, 50],
+  itemCount: 0,
+  showQuickJumper: true,
+  onUpdatePage: (page) => {
+    unplannedPagination.page = page
+    handleGetUnplannedPatients()
+  },
+  onUpdatePageSize: (pageSize) => {
+    unplannedPagination.pageSize = pageSize
+    unplannedPagination.page = 1
+    handleGetUnplannedPatients()
+  },
+})
+
 const handleGetUnplannedPatients = async () => {
-  const { code, data } = await getUnplannedPatients()
-  if (code === 200) {
-    unplannedPatients.value = data.list
+  unplannedLoading.value = true
+  const params = {
+    pageNum: unplannedPagination.page,
+    pageSize: unplannedPagination.pageSize,
   }
+  const { code, data } = await getUnplannedPatients(params)
+  if (code === 200) {
+    unplannedPatients.value = data.list || []
+    unplannedPagination.itemCount = data.total || 0
+  }
+  unplannedLoading.value = false
 }
 
 function getGradeType(grade: string) {
@@ -206,10 +275,25 @@ const columns: DataTableColumns<MedicationPlan> = [
             { default: () => '编辑' },
           ),
           h(
-            NButton,
-            { type: 'warning', size: 'tiny', text: true, onClick: () => {} },
-            { default: () => '归档' },
+            NPopconfirm,
+            {
+              onPositiveClick: () => handleDelete(row),
+            },
+            {
+              trigger: () =>
+                h(
+                  NButton,
+                  { type: 'error', size: 'tiny', text: true },
+                  { default: () => '删除' },
+                ),
+              default: () => '确认删除该方案吗？',
+            },
           ),
+          // h(
+          //   NButton,
+          //   { type: 'warning', size: 'tiny', text: true, onClick: () => {} },
+          //   { default: () => '归档' },
+          // ),
         )
       } else if (row.方案状态 === '已归档') {
         btns.push(
@@ -276,6 +360,14 @@ async function openEditDrawer(plan: MedicationPlan) {
   if (code === 200) {
     currentEditPlan.value = data
     drawerVisible.value = true
+  }
+}
+const handleDelete = async (row) => {
+  const { code, data } = await deletePlan(row.id)
+  if (code === 200) {
+    nextTick(() => {
+      getMedicationPlanList()
+    })
   }
 }
 
@@ -482,80 +574,7 @@ onUnmounted(() => {
   <ScrollContainer wrapper-class="flex flex-col gap-y-4 max-sm:gap-y-2 personalized-medication">
     <div class="">
       <!-- ============================================================ -->
-      <!-- 1. 顶部筛选栏 -->
-      <!-- ============================================================ -->
-      <NCard
-        class="filter-card"
-        :bordered="false"
-      >
-        <NSpace
-          align="center"
-          :wrap="true"
-          :size="16"
-        >
-          <NSpace
-            align="center"
-            :size="8"
-          >
-            <span class="filter-label">患者分层</span>
-            <NSelect
-              v-model:value="stratificationFilter"
-              :options="stratificationOptions"
-              multiple
-              placeholder="全部"
-              style="width: 240px"
-              size="small"
-            />
-          </NSpace>
-          <NSpace
-            align="center"
-            :size="8"
-          >
-            <span class="filter-label">方案状态</span>
-            <NSelect
-              v-model:value="statusFilter"
-              :options="statusOptions"
-              placeholder="全部"
-              style="width: 120px"
-              size="small"
-            />
-          </NSpace>
-          <NSpace
-            align="center"
-            :size="8"
-          >
-            <span class="filter-label">时间范围</span>
-            <NSelect
-              v-model:value="timeRangeFilter"
-              :options="timeRangeOptions"
-              style="width: 120px"
-              size="small"
-            />
-          </NSpace>
-          <NInput
-            v-model:value="searchText"
-            placeholder="患者姓名/病历号"
-            style="width: 160px"
-            size="small"
-            clearable
-          />
-          <NButton
-            type="primary"
-            size="small"
-            >查询</NButton
-          >
-          <NButton size="small">重置</NButton>
-          <NButton
-            type="primary"
-            size="small"
-            @click="openCreateDrawer"
-            >新建用药方案</NButton
-          >
-        </NSpace>
-      </NCard>
-
-      <!-- ============================================================ -->
-      <!-- 2. 核心统计卡片组 -->
+      <!-- 1. 核心统计卡片组 -->
       <!-- ============================================================ -->
       <div class="stat-cards">
         <!-- <NCard
@@ -650,24 +669,125 @@ onUnmounted(() => {
                 },
               ]"
               :data="unplannedPatients"
-              :pagination="{ pageSize: 5 }"
+              :loading="unplannedLoading"
               size="small"
-              :max-height="320"
+              :max-height="450"
             />
+            <div class="mt-3 flex justify-end">
+              <NPagination
+                v-bind="unplannedPagination"
+                :disabled="unplannedLoading"
+              />
+            </div>
           </NTabPane>
 
-          <!-- Tab2: 个体化方案管理 -->
+          <!-- Tab2: 个性化方案管理 -->
           <NTabPane
             name="management"
-            tab="个体化方案管理"
+            tab="个性化方案管理"
           >
+            <NCard
+              class="filter-card"
+              :bordered="false"
+              content-style="padding: 12px 16px;"
+            >
+              <NSpace
+                align="center"
+                :wrap="true"
+                :size="16"
+              >
+                <!-- <NSpace
+                  align="center"
+                  :size="8"
+                >
+                  <span class="filter-label">患者分层</span>
+                  <NSelect
+                    v-model:value="stratificationFilter"
+                    :options="stratificationOptions"
+                    multiple
+                    placeholder="全部"
+                    style="width: 240px"
+                    size="small"
+                  />
+                </NSpace> -->
+                <NSpace
+                  align="center"
+                  :size="8"
+                >
+                  <span class="filter-label">方案状态</span>
+                  <NSelect
+                    v-model:value="statusFilter"
+                    :options="statusOptions"
+                    placeholder="全部"
+                    style="width: 120px"
+                    size="small"
+                  />
+                </NSpace>
+                <!-- <NSpace
+                  align="center"
+                  :size="8"
+                >
+                  <span class="filter-label">时间范围</span>
+                  <NSelect
+                    v-model:value="timeRangeFilter"
+                    :options="timeRangeOptions"
+                    style="width: 120px"
+                    size="small"
+                  />
+                </NSpace> -->
+                <NSpace
+                  align="center"
+                  :size="8"
+                >
+                  <span class="filter-label">住院号</span>
+                  <NInput
+                    v-model:value="patientIdFilter"
+                    placeholder="住院号"
+                    style="width: 160px"
+                    size="small"
+                    clearable
+                  />
+                </NSpace>
+                <NSpace
+                  align="center"
+                  :size="8"
+                >
+                  <span class="filter-label">患者姓名</span>
+                  <NInput
+                    v-model:value="patientNameFilter"
+                    placeholder="患者姓名"
+                    style="width: 160px"
+                    size="small"
+                    clearable
+                  />
+                </NSpace>
+                <NButton
+                  type="primary"
+                  size="small"
+                  @click="handleQuery"
+                  >查询</NButton
+                >
+                <NButton
+                  size="small"
+                  @click="handleReset"
+                  >重置</NButton
+                >
+                <NButton
+                  type="primary"
+                  size="small"
+                  @click="openCreateDrawer"
+                  >新建用药方案</NButton
+                >
+              </NSpace>
+            </NCard>
             <NDataTable
               :columns="columns"
               :data="tableData"
-              :pagination="{ pageSize: 10 }"
+              :pagination="planPagination"
+              :remote="true"
               :scroll-x="1200"
               size="small"
-              :max-height="560"
+              :max-height="480"
             />
           </NTabPane>
 
@@ -737,12 +857,11 @@ onUnmounted(() => {
           </NTabPane>
 
           <!-- Tab4: 用药安全与随访 -->
-          <NTabPane
+          <!-- <NTabPane
             name="safety"
             tab="用药安全与随访"
           >
             <div class="tab-content">
-              <!-- 4张执行统计卡片 -->
               <div class="exec-cards">
                 <NCard
                   v-for="card in executionStatCards"
@@ -769,7 +888,6 @@ onUnmounted(() => {
                 </NCard>
               </div>
 
-              <!-- 用药执行与随访明细列表 -->
               <NCard
                 title="用药执行与随访明细"
                 :bordered="false"
@@ -784,7 +902,7 @@ onUnmounted(() => {
                 />
               </NCard>
             </div>
-          </NTabPane>
+          </NTabPane> -->
         </NTabs>
       </NCard>
 

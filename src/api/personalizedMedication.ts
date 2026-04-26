@@ -47,4 +47,4 @@ export const getPlanDetail = (id) => get(`/api/medication/get/${id}`)
  * @param params
  * @returns
  */
-export const getUnplannedPatients = () => get('/api/medication/PatientSwithoutAPlan')
+export const getUnplannedPatients = (params?) => get('/api/medication/PatientSwithoutAPlan', params)

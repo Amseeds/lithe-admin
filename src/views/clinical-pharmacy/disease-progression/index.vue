@@ -350,9 +350,10 @@ const loading = ref(false)
 
 const getOverviewData = async (val?: [string, string]) => {
   const params: { startDate?: string; endDate?: string } = {}
+  console.log(val, 'val==========')
   if (val) {
-    params.startDate = val[0]
-    params.endDate = val[1]
+    params.startDate = dayjs(range.value[0]).format('YYYY-MM-DD')
+    params.endDate = dayjs(range.value[1]).format('YYYY-MM-DD')
   } else {
     params.startDate = dayjs(range.value[0]).format('YYYY-MM-DD')
     params.endDate = dayjs(range.value[1]).format('YYYY-MM-DD')
@@ -749,10 +750,28 @@ async function handleViewPatientDetail(patient: PatientRecord) {
             :content-style="{ padding: '16px' }"
           >
             <div class="patient-header">
-<div class="patient-avatar" :class="currentPatientDetail.basicInfo.sex === '女' ? 'female' : 'male'">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <circle cx="12" cy="7" r="4"/>
+              <div
+                class="patient-avatar"
+                :class="currentPatientDetail.basicInfo.sex === '女' ? 'female' : 'male'"
+              >
+                <svg
+                  width="40"
+                  height="40"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <circle
+                    cx="12"
+                    cy="7"
+                    r="4"
+                  />
                 </svg>
               </div>
               <div class="patient-main-info">
@@ -826,10 +845,17 @@ async function handleViewPatientDetail(patient: PatientRecord) {
                 </div>
                 <div class="indicator-item">
                   <span class="indicator-label">入院日期</span>
-                  <span v-if="currentPatientDetail.basicInfo.admissionDate" class="indicator-value secondary">
+                  <span
+                    v-if="currentPatientDetail.basicInfo.admissionDate"
+                    class="indicator-value secondary"
+                  >
                     {{ formatDate(currentPatientDetail.basicInfo.admissionDate) }}
                   </span>
-                  <span v-else class="indicator-empty">--</span>
+                  <span
+                    v-else
+                    class="indicator-empty"
+                    >--</span
+                  >
                 </div>
               </div>
             </div>
