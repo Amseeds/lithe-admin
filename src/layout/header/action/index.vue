@@ -30,6 +30,15 @@ const { navigationMode } = toRefsPreferencesStore()
     <ButtonAnimation
       :animation="false"
       tag="a"
+      href="/large-screen"
+      target="_blank"
+      title="大屏"
+    >
+      <span class="iconify ph--frame-corners" />
+    </ButtonAnimation>
+    <ButtonAnimation
+      :animation="false"
+      tag="a"
       href="https://github.com/tenianon/lithe-admin"
       target="_blank"
       rel="noopener noreferrer"

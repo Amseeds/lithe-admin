@@ -4,6 +4,7 @@ import type { RouteRecordRaw } from 'vue-router'
 
 const routes: RouteRecordRaw[] = [
   { path: '/sign-in', name: 'signIn', component: () => import('@/views/sign-in/index.vue') },
+  { path: '/large-screen', name: 'largeScreen', component: () => import('@/views/large-screen/index.vue') },
   {
     path: '/:pathMatch(.*)*',
     name: 'errorPage',

@@ -1,5 +1,4 @@
-import { isEmpty } from 'es-toolkit/compat'
-
+import router from '@/router'
 import { routerEventBus } from '@/event-bus'
 import { useUserStore } from '@/stores'
 
@@ -28,9 +27,10 @@ export function setupRouterGuard(router: Router) {
       return
     }
 
-    if (userStore.token && !router.hasRoute('layout')) {
+    if (!router.hasRoute('layout')) {
       try {
-        if (isEmpty(userStore.userRoute)) {
+        const userRoute = userStore.userRoute
+        if (!userRoute || userRoute.length === 0) {
           cleanup()
           return
         }
@@ -39,9 +39,8 @@ export function setupRouterGuard(router: Router) {
           path: '/',
           name: 'layout',
           component: Layout,
-          // if you need to have a redirect when accessing / routing
           redirect: '/dashboard',
-          children: userStore.userRoute,
+          children: userRoute,
         })
 
         return to.fullPath

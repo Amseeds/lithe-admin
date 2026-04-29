@@ -1,18 +1,9 @@
 <script setup lang="ts">
 import { watchDebounced } from '@vueuse/core'
 import chroma from 'chroma-js'
-import { BarChart, LineChart } from 'echarts/charts'
-import {
-  AxisPointerComponent,
-  GridComponent,
-  LegendComponent,
-  TitleComponent,
-  TooltipComponent,
-} from 'echarts/components'
-import { init, use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
 import { NNumberAnimation } from 'naive-ui'
-import { onMounted, watch, ref, computed, onUnmounted } from 'vue'
+import { computed, ref } from 'vue'
+import VChart from 'vue-echarts'
 
 import { ScrollContainer } from '@/components'
 import { toRefsPreferencesStore } from '@/stores'
@@ -26,9 +17,8 @@ import type {
   TitleComponentOption,
   TooltipComponentOption,
 } from 'echarts/components'
-import type { ComposeOption, EChartsType, LinearGradientObject } from 'echarts/core'
+import type { ComposeOption } from 'echarts/core'
 import type {
-  AnimationDelayCallback,
   CallbackDataParams,
   TopLevelFormatterParams,
   XAXisOption,
@@ -38,17 +28,6 @@ import type {
 defineOptions({
   name: 'Dashboard',
 })
-
-use([
-  BarChart,
-  LineChart,
-  GridComponent,
-  TooltipComponent,
-  LegendComponent,
-  TitleComponent,
-  AxisPointerComponent,
-  CanvasRenderer,
-])
 
 type DashboardCartesianComponentOption =
   | AxisPointerComponentOption
@@ -66,8 +45,7 @@ type LegendSelectedMap = NonNullable<LegendComponentOption['selected']>
 type DashboardLegendData = NonNullable<LegendComponentOption['data']>
 type DashboardLineSeriesDataItem = Extract<NonNullable<LineSeriesOption['data']>[number], number>
 type DashboardLineSeriesData = DashboardLineSeriesDataItem[]
-type DashboardBarSeriesData = Exclude<NonNullable<BarSeriesOption['data']>, ArrayLike<number>>
-type DashboardAnimationDelay = AnimationDelayCallback
+type DashboardBarSeriesData = Exclude<NonNullable<LineSeriesOption['data']>, ArrayLike<number>>
 type HighestChartSelectedValue = 'max' | 'min'
 
 interface DashboardCardData {
@@ -112,27 +90,6 @@ interface LegendSelectChangedEvent {
 const { sidebarMenu, navigationMode, themeColor, isDark } = toRefsPreferencesStore()
 
 const cardList = ref(generateCardData())
-
-const revenueChart = ref<HTMLDivElement | null>(null)
-let revenueChartInstance: EChartsType | null = null
-let revenueChartResizeHandler: (() => void) | null = null
-
-const revenueBarChart = ref<HTMLDivElement | null>(null)
-let revenueBarChartInstance: EChartsType | null = null
-let revenueBarChartResizeHandler: (() => void) | null = null
-
-const revenueBarChart2 = ref<HTMLDivElement | null>(null)
-let revenueBarChart2Instance: EChartsType | null = null
-let revenueBarChart2ResizeHandler: (() => void) | null = null
-
-const monthlyRadarChart = ref<HTMLDivElement | null>(null)
-let monthlyRadarChartInstance: EChartsType | null = null
-let monthlyRadarChartResizeHandler: (() => void) | null = null
-
-const highestRevenueChart = ref<HTMLDivElement | null>(null)
-let highestRevenueChartInstance: EChartsType | null = null
-let highestRevenueChartResizeHandler: (() => void) | null = null
-let collapseResizeTimeout: ReturnType<typeof setTimeout> | null = null
 
 const CHART_CONFIG = {
   MONTHS: Array.from({ length: 12 }, (_, i) => `${i + 1}月`),
@@ -266,13 +223,9 @@ function normalizeTooltipParams(params: TopLevelFormatterParams): DashboardToolt
   return Array.isArray(params) ? params : [params]
 }
 
-function createAnimationDelay(step: number): DashboardAnimationDelay {
-  return (idx) => idx * step
-}
-
-function createAreaGradient(color: string): LinearGradientObject {
+function createAreaGradient(color: string) {
   return {
-    type: 'linear',
+    type: 'linear' as const,
     x: 0,
     y: 0,
     x2: 0,
@@ -376,10 +329,7 @@ const chartDataManager = {
   },
 }
 
-function initRevenueChart() {
-  if (!revenueChart.value) return
-
-  const chart = init(revenueChart.value)
+const revenueChartOption = computed<DashboardLineChartOption>(() => {
   const series: LineSeriesOption[] = businessLinesWithData.value.map((line, idx) => ({
     name: line.name,
     type: 'line',
@@ -409,7 +359,7 @@ function initRevenueChart() {
     },
   }))
 
-  const option = {
+  return {
     title: [
       {
         text: '收入概览',
@@ -511,27 +461,11 @@ function initRevenueChart() {
 
     animationDuration: 1000,
     animationEasing: 'cubicOut' as const,
-    animationDelay: createAnimationDelay(100),
-  } satisfies DashboardLineChartOption
+    animationDelay: (idx: number) => idx * 100,
+  }
+})
 
-  chart.setOption(option)
-
-  chart.on('legendselectchanged', (params) => {
-    const legendParams = params as LegendSelectChangedEvent
-    if (legendParams.selected) {
-      revenueChartSelected.value = legendParams.selected
-    }
-  })
-
-  revenueChartInstance = chart
-  revenueChartResizeHandler = () => chart.resize()
-  window.addEventListener('resize', revenueChartResizeHandler, { passive: true })
-}
-
-function initRevenueBarChart() {
-  if (!revenueBarChart.value) return
-
-  const chart = init(revenueBarChart.value)
+const revenueBarChartOption = computed<DashboardLineChartOption>(() => {
   const legendData: DashboardLegendData = businessLinesWithData.value.map((line) => ({
     name: line.name,
     icon: 'circle',
@@ -568,7 +502,7 @@ function initRevenueBarChart() {
     },
   }))
 
-  const option = {
+  return {
     color: chartDataManager.getAllColors(),
     grid: { left: 5, right: 5, top: 60, bottom: 0, containLabel: false },
     xAxis: {
@@ -626,78 +560,16 @@ function initRevenueBarChart() {
 
     animationDuration: 1000,
     animationEasing: 'cubicOut' as const,
-    animationDelay: createAnimationDelay(100),
-  } satisfies DashboardLineChartOption
+    animationDelay: (idx: number) => idx * 100,
+  }
+})
 
-  chart.setOption(option)
-
-  revenueBarChartInstance = chart
-  revenueBarChartResizeHandler = () => chart.resize()
-  window.addEventListener('resize', revenueBarChartResizeHandler, { passive: true })
-
-  chart.on('legendselectchanged', (params) => {
-    const legendParams = params as LegendSelectChangedEvent
-    barChartSelectedLegend.value = legendParams.name
-
-    if (revenueBarChart2Instance) {
-      const selectedLine = chartDataManager.getLineByName(legendParams.name)
-      if (!selectedLine) return
-
-      const series: BarSeriesOption[] = [
-        {
-          name: legendParams.name,
-          type: 'bar',
-          barWidth: '60%',
-          data: selectedLine.data,
-          itemStyle: {
-            color: chroma(selectedLine.color).alpha(0.15).hex(),
-            borderWidth: 0,
-            borderRadius: [3, 3, 0, 0],
-          },
-          emphasis: {
-            itemStyle: {
-              color: chroma(selectedLine.color).alpha(0.3).hex(),
-              borderWidth: 0,
-            },
-          },
-        },
-      ]
-      const updateOption = {
-        tooltip: createTooltipConfig((tooltipParams) => {
-          const items = normalizeTooltipParams(tooltipParams)
-          const firstItem = items[0]
-          if (!firstItem) return ''
-
-          const date = resolveTooltipAxisLabel(firstItem)
-          const seriesName = firstItem.seriesName
-          const value = formatMetricValue(firstItem.value)
-          let result = `<div>${date}数据</div>`
-          items.forEach(() => {
-            result += `
-        <div style="display: flex; align-items: center; margin-top: 4px;">
-          <span style="display:inline-block; margin-right:4px; width:10px; height:10px; border-radius:50%; background-color:${selectedLine.color};"></span>
-          <span style="margin-right: 10px">${seriesName}</span>
-          <span>${value}</span>
-        </div>
-      `
-          })
-          return result
-        }),
-        series,
-      } satisfies DashboardBarChartOption
-
-      revenueBarChart2Instance.setOption(updateOption)
-    }
-  })
-}
-
-function initRevenueBarChart2() {
-  if (!revenueBarChart2.value) return
-
-  const chart = init(revenueBarChart2.value)
-
+const revenueBarChart2Option = computed<DashboardBarChartOption>(() => {
   const selectedLine = chartDataManager.getLineByName(barChartSelectedLegend.value)
-  if (!selectedLine) return
+  if (!selectedLine) {
+    return { series: [] } as DashboardBarChartOption
+  }
+
   const series: BarSeriesOption[] = [
     {
       name: barChartSelectedLegend.value,
@@ -718,7 +590,7 @@ function initRevenueBarChart2() {
     },
   ]
 
-  const option = {
+  return {
     color: chartDataManager.getAllColors(),
     grid: { left: 0, right: 0, top: 0, bottom: 0, containLabel: false },
     tooltip: createTooltipConfig((params) => {
@@ -754,25 +626,16 @@ function initRevenueBarChart2() {
 
     animationDuration: 1000,
     animationEasing: 'cubicOut' as const,
-    animationDelay: createAnimationDelay(50),
-  } satisfies DashboardBarChartOption
+    animationDelay: (idx: number) => idx * 50,
+  }
+})
 
-  chart.setOption(option)
-
-  revenueBarChart2Instance = chart
-  revenueBarChart2ResizeHandler = () => chart.resize()
-  window.addEventListener('resize', revenueBarChart2ResizeHandler, { passive: true })
-}
-
-function initMonthlyRadarChart() {
-  if (!monthlyRadarChart.value) return
-
+const monthlyRadarChartOption = computed<DashboardBarChartOption>(() => {
   const now = new Date()
   const currentMonth = now.getMonth()
 
   const currentMonthData = chartDataManager.getCurrentMonthData(currentMonth)
 
-  const chart = init(monthlyRadarChart.value)
   const seriesData: DashboardBarSeriesData = currentMonthData.map((item) => ({
     value: item.value,
     itemStyle: {
@@ -781,7 +644,7 @@ function initMonthlyRadarChart() {
     },
   }))
 
-  const option = {
+  return {
     title: [
       {
         text: '当月各业务收入',
@@ -883,17 +746,10 @@ function initMonthlyRadarChart() {
     ],
     animationDuration: 1000,
     animationEasing: 'cubicOut' as const,
-  } satisfies DashboardBarChartOption
+  }
+})
 
-  chart.setOption(option)
-  monthlyRadarChartInstance = chart
-  monthlyRadarChartResizeHandler = () => chart.resize()
-  window.addEventListener('resize', monthlyRadarChartResizeHandler, { passive: true })
-}
-
-function initHighestRevenueChart() {
-  if (!highestRevenueChart.value) return
-
+const highestRevenueChartOption = computed<DashboardLineChartOption>(() => {
   const highestLine = chartDataManager.getHighestRevenueLine()
   const lowestLine = chartDataManager.getLowestRevenueLine()
 
@@ -913,8 +769,6 @@ function initHighestRevenueChart() {
       data: lowestLine.data,
     },
   ] as const
-
-  const chart = init(highestRevenueChart.value)
 
   const legendSelected: LegendSelectedMap = {
     max: highestChartSelected.value === 'max',
@@ -950,7 +804,7 @@ function initHighestRevenueChart() {
     },
   }))
 
-  const option = {
+  return {
     title: [
       {
         text: '年度最高业务收入',
@@ -1044,168 +898,48 @@ function initHighestRevenueChart() {
     series,
     animationDuration: 1000,
     animationEasing: 'cubicOut' as const,
-    animationDelay: createAnimationDelay(100),
-  } satisfies DashboardLineChartOption
+    animationDelay: (idx: number) => idx * 100,
+  }
+})
 
-  chart.setOption(option)
-  highestRevenueChartInstance = chart
-  highestRevenueChartResizeHandler = () => chart.resize()
-  window.addEventListener('resize', highestRevenueChartResizeHandler, { passive: true })
-
-  chart.on('legendselectchanged', (params) => {
-    const legendParams = params as LegendSelectChangedEvent
-    const chartItem = chartData.find((item) => item.legendName === legendParams.name)
-    if (!chartItem) return
-    const isHighest = chartItem.legendValue === 'max'
-    highestChartSelected.value = isHighest ? 'max' : 'min'
-    const updateOption = {
-      title: [
-        {
-          text: isHighest ? '年度最高收入业务' : '年度最低收入业务',
-        },
-        {
-          text: `{a|${chartItem.businessName}}`,
-          textStyle: {
-            rich: {
-              a: {
-                color: chartItem.color,
-                backgroundColor: chroma(chartItem.color).alpha(0.1).hex(),
-              },
-            },
-          },
-        },
-      ],
-    } satisfies DashboardLineChartOption
-
-    chart.setOption(updateOption)
-  })
+function handleRevenueChartLegendSelectChanged(params: unknown) {
+  const legendParams = params as LegendSelectChangedEvent
+  if (legendParams.selected) {
+    revenueChartSelected.value = legendParams.selected
+  }
 }
 
-onMounted(() => {
-  initRevenueChart()
-  initRevenueBarChart()
-  initRevenueBarChart2()
-  initMonthlyRadarChart()
-  initHighestRevenueChart()
-})
-
-onUnmounted(() => {
-  if (revenueChartInstance) {
-    if (revenueChartResizeHandler) {
-      window.removeEventListener('resize', revenueChartResizeHandler)
-      revenueChartResizeHandler = null
-    }
-    revenueChartInstance.dispose()
-    revenueChartInstance = null
-  }
-
-  if (revenueBarChartInstance) {
-    if (revenueBarChartResizeHandler) {
-      window.removeEventListener('resize', revenueBarChartResizeHandler)
-      revenueBarChartResizeHandler = null
-    }
-    revenueBarChartInstance.dispose()
-    revenueBarChartInstance = null
-  }
-
-  if (revenueBarChart2Instance) {
-    if (revenueBarChart2ResizeHandler) {
-      window.removeEventListener('resize', revenueBarChart2ResizeHandler)
-      revenueBarChart2ResizeHandler = null
-    }
-    revenueBarChart2Instance.dispose()
-    revenueBarChart2Instance = null
-  }
-
-  if (monthlyRadarChartInstance) {
-    if (monthlyRadarChartResizeHandler) {
-      window.removeEventListener('resize', monthlyRadarChartResizeHandler)
-      monthlyRadarChartResizeHandler = null
-    }
-    monthlyRadarChartInstance.dispose()
-    monthlyRadarChartInstance = null
-  }
-
-  if (highestRevenueChartInstance) {
-    if (highestRevenueChartResizeHandler) {
-      window.removeEventListener('resize', highestRevenueChartResizeHandler)
-      highestRevenueChartResizeHandler = null
-    }
-    highestRevenueChartInstance.dispose()
-    highestRevenueChartInstance = null
-  }
-
-  if (collapseResizeTimeout !== null) {
-    clearTimeout(collapseResizeTimeout)
-    collapseResizeTimeout = null
-  }
-})
-
-function resizeAllCharts() {
-  if (revenueChartInstance) revenueChartInstance.resize()
-  if (revenueBarChartInstance) revenueBarChartInstance.resize()
-  if (revenueBarChart2Instance) revenueBarChart2Instance.resize()
-  if (monthlyRadarChartInstance) monthlyRadarChartInstance.resize()
-  if (highestRevenueChartInstance) highestRevenueChartInstance.resize()
+function handleRevenueBarChartLegendSelectChanged(params: unknown) {
+  const legendParams = params as LegendSelectChangedEvent
+  barChartSelectedLegend.value = legendParams.name
 }
 
-watchDebounced([() => sidebarMenu.value, () => navigationMode.value], resizeAllCharts, {
-  debounce: 300,
-  deep: true,
-})
+function handleHighestRevenueChartLegendSelectChanged(params: unknown) {
+  const legendParams = params as LegendSelectChangedEvent
+  const chartData = [
+    {
+      legendName: '最高',
+      legendValue: 'max',
+      businessName: chartDataManager.getHighestRevenueLine().name,
+      color: chartDataManager.getHighestRevenueLine().color,
+    },
+    {
+      legendName: '最低',
+      legendValue: 'min',
+      businessName: chartDataManager.getLowestRevenueLine().name,
+      color: chartDataManager.getLowestRevenueLine().color,
+    },
+  ] as const
+  const chartItem = chartData.find((item) => item.legendName === legendParams.name)
+  if (!chartItem) return
+  highestChartSelected.value = chartItem.legendValue === 'max' ? 'max' : 'min'
+}
 
-watch([isDark, themeColor], () => {
-  if (revenueChartInstance) {
-    if (revenueChartResizeHandler) {
-      window.removeEventListener('resize', revenueChartResizeHandler)
-      revenueChartResizeHandler = null
-    }
-    revenueChartInstance.dispose()
-    revenueChartInstance = null
-  }
-
-  if (revenueBarChartInstance) {
-    if (revenueBarChartResizeHandler) {
-      window.removeEventListener('resize', revenueBarChartResizeHandler)
-      revenueBarChartResizeHandler = null
-    }
-    revenueBarChartInstance.dispose()
-    revenueBarChartInstance = null
-  }
-
-  if (revenueBarChart2Instance) {
-    if (revenueBarChart2ResizeHandler) {
-      window.removeEventListener('resize', revenueBarChart2ResizeHandler)
-      revenueBarChart2ResizeHandler = null
-    }
-    revenueBarChart2Instance.dispose()
-    revenueBarChart2Instance = null
-  }
-
-  if (monthlyRadarChartInstance) {
-    if (monthlyRadarChartResizeHandler) {
-      window.removeEventListener('resize', monthlyRadarChartResizeHandler)
-      monthlyRadarChartResizeHandler = null
-    }
-    monthlyRadarChartInstance.dispose()
-    monthlyRadarChartInstance = null
-  }
-
-  if (highestRevenueChartInstance) {
-    if (highestRevenueChartResizeHandler) {
-      window.removeEventListener('resize', highestRevenueChartResizeHandler)
-      highestRevenueChartResizeHandler = null
-    }
-    highestRevenueChartInstance.dispose()
-    highestRevenueChartInstance = null
-  }
-
-  initRevenueChart()
-  initRevenueBarChart()
-  initRevenueBarChart2()
-  initMonthlyRadarChart()
-  initHighestRevenueChart()
-})
+watchDebounced(
+  [() => sidebarMenu.value, () => navigationMode.value],
+  () => {},
+  { debounce: 300, deep: true },
+)
 </script>
 <template>
   <ScrollContainer wrapper-class="flex flex-col gap-y-4 max-sm:gap-y-2">
@@ -1269,9 +1003,11 @@ watch([isDark, themeColor], () => {
           class="rounded border border-naive-border bg-naive-card px-5 pt-5 pb-4.5 transition-[background-color,border-color]"
           style="height: 400px"
         >
-          <div
-            ref="revenueChart"
+          <VChart
+            :option="revenueChartOption"
+            :autoresize="true"
             class="h-full"
+            @legendselectchanged="handleRevenueChartLegendSelectChanged"
           />
         </div>
       </div>
@@ -1280,12 +1016,15 @@ watch([isDark, themeColor], () => {
           class="flex flex-col rounded border border-naive-border bg-naive-card px-5 pt-5 pb-4.5 transition-[background-color,border-color]"
           style="height: 400px"
         >
-          <div
-            ref="revenueBarChart"
+          <VChart
+            :option="revenueBarChartOption"
+            :autoresize="true"
             class="flex-1"
+            @legendselectchanged="handleRevenueBarChartLegendSelectChanged"
           />
-          <div
-            ref="revenueBarChart2"
+          <VChart
+            :option="revenueBarChart2Option"
+            :autoresize="true"
             style="height: 150px"
           />
         </div>
@@ -1297,8 +1036,9 @@ watch([isDark, themeColor], () => {
           class="rounded border border-naive-border bg-naive-card px-5 pt-5 pb-3 transition-[background-color,border-color]"
           style="height: 340px"
         >
-          <div
-            ref="monthlyRadarChart"
+          <VChart
+            :option="monthlyRadarChartOption"
+            :autoresize="true"
             class="h-full"
           />
         </div>
@@ -1308,9 +1048,11 @@ watch([isDark, themeColor], () => {
           class="rounded border border-naive-border bg-naive-card p-5 transition-[background-color,border-color]"
           style="height: 340px; position: relative"
         >
-          <div
-            ref="highestRevenueChart"
+          <VChart
+            :option="highestRevenueChartOption"
+            :autoresize="true"
             class="h-full"
+            @legendselectchanged="handleHighestRevenueChartLegendSelectChanged"
           />
         </div>
       </div>

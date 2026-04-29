@@ -199,6 +199,13 @@ const menu: MenuMixedOptions[] = [
     label: '关于项目',
     component: 'about/index',
   },
+  {
+    path: 'system/menu',
+    name: 'systemMenu',
+    icon: 'ph:list',
+    label: '菜单管理',
+    component: 'system/menu/index',
+  },
 ]
 
 export async function signIn(data: { username: string; password: string }) {

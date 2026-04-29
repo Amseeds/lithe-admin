@@ -29,7 +29,11 @@
     "es-toolkit": "^1.45.1",
     "pinia": "^3.0.4",
     "vue": "^3.5.32",
-    "vue-router": "^5.0.4"
+    "vue-echarts": "^8.0.1",
+    "vue-router": "^5.0.4",
+    "vxe-pc-ui": "^4.13.25",
+    "vxe-table": "^4.18.12",
+    "xe-utils": "4.0.4"
   },
   "devDependencies": {
     "@iconify-json/ph": "^1.2.2",
