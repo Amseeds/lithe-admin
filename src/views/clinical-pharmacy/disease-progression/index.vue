@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import { ref, computed, onMounted, watch, nextTick, h, reactive } from 'vue'
+import * as echarts from 'echarts'
 import { ScrollContainer } from '@/components'
-import type { ECharts } from 'echarts'
 import {
   NCard,
   NTabs,
@@ -26,28 +26,8 @@ import {
   type DataTableColumns,
   type PaginationProps,
 } from 'naive-ui'
-import * as echarts from 'echarts'
 import { getPatientList, type PatientRecord, type PatientQueryParams } from '@/api/patientRecords'
-import {
-  complicationTrendChart,
-  complicationProgressTop20,
-  highRiskProgressPatients,
-} from './mock/tab1'
-import {
-  pancreaticFunctionCards,
-  cPeptideTrendChart,
-  pancreaticFunctionPatients,
-} from './mock/tab2'
-import {
-  microvascularCards,
-  macrovascularCards,
-  microvascularStageDistribution,
-  macrovascularStageDistribution,
-  microvascularProgressPatients,
-  macrovascularProgressPatients,
-} from './mock/tab3'
-import { generatePatientProgressDetail } from './mock/tab4'
-import type { Patient, PatientProgressDetail } from './mock/types'
+
 import {
   getDiseaseProgressionDetail,
   getDiseaseProgressionOverview,
@@ -62,34 +42,9 @@ const range = ref<[number, number]>([
   dayjs().subtract(1, 'day').startOf('day').valueOf(),
   dayjs().endOf('day').valueOf(),
 ])
-const patientStratification = ref<string[]>([])
-const complicationType = ref<string[]>([])
-const searchText = ref('')
-
-const timeRangeOptions = [
-  { label: '近1个月', value: '近1个月' },
-  { label: '近3个月', value: '近3个月' },
-  { label: '近6个月', value: '近6个月' },
-  { label: '近1年', value: '近1年' },
-]
-const patientStratificationOptions = [
-  { label: '年轻低危', value: '年轻低危' },
-  { label: '老年衰弱', value: '老年衰弱' },
-  { label: '肾功能不全', value: '肾功能不全' },
-  { label: '妊娠期', value: '妊娠期' },
-  { label: '手术期', value: '手术期' },
-  { label: '心血管高危', value: '心血管高危' },
-]
-const complicationTypeOptions = [
-  { label: '无并发症', value: '无并发症' },
-  { label: '微血管并发症', value: '微血管并发症' },
-  { label: '大血管并发症', value: '大血管并发症' },
-  { label: '多并发症合并', value: '多并发症合并' },
-]
 
 // Tab状态
 const activeTab = ref('tab1')
-const activeTab3Sub = ref('microvascular')
 
 // 弹窗状态
 const showPatientDetail = ref(false)
@@ -179,42 +134,6 @@ const top20Columns: DataTableColumns = [
   { title: '入院日期', key: 'admissiondate', width: 90 },
 ]
 
-// 表格列 - Tab1 高进展风险
-const highRiskColumns = [
-  { title: '患者姓名', key: 'name', width: 80 },
-  { title: '病历号', key: 'medicalRecordNo', width: 110 },
-  { title: '年龄', key: 'age', width: 50 },
-  { title: '所属分层', key: 'category', width: 100 },
-  { title: '并发症类型', key: 'complicationType', width: 130 },
-  { title: '进展情况', key: 'progressStatus', width: 100 },
-  { title: '发现日期', key: 'discoveryDate', width: 100 },
-]
-
-// 表格列 - Tab2 胰岛功能明细
-const pancreaticColumns = [
-  { title: '患者姓名', key: 'name', width: 100 },
-  { title: '病历号', key: 'medicalRecordNo', width: 120 },
-  { title: '年龄', key: 'age', width: 60 },
-  { title: '所属分层', key: 'category', width: 120 },
-  { title: '胰岛功能分级', key: 'pancreaticLevel', width: 120 },
-  { title: '基线C肽', key: 'baselineCPeptide', width: 100 },
-  { title: '最近C肽', key: 'latestCPeptide', width: 100 },
-  { title: '下降幅度', key: 'declineRate', width: 100 },
-  { title: '检测日期', key: 'testDate', width: 120 },
-]
-
-// 表格列 - Tab3 并发症明细
-const complicationDetailColumns = [
-  { title: '患者姓名', key: 'name', width: 100 },
-  { title: '病历号', key: 'medicalRecordNo', width: 120 },
-  { title: '年龄', key: 'age', width: 60 },
-  { title: '所属分层', key: 'category', width: 120 },
-  { title: '并发症名称', key: 'complicationName', width: 140 },
-  { title: '当前分期', key: 'currentStage', width: 100 },
-  { title: '较上次变化', key: 'changeFromLast', width: 140 },
-  { title: '最近检查日期', key: 'lastCheckDate', width: 120 },
-]
-
 // 表格列 - Tab4 患者列表
 const patientListColumns: DataTableColumns<PatientRecord> = [
   {
@@ -279,42 +198,13 @@ const examResultColumns = [
   { title: '异常等级', key: 'treatmentEffect', width: 120 },
 ]
 
-// 表格列 - 弹窗随访记录
-const followUpColumns = [
-  { title: '随访日期', key: 'followUpDate', width: 120 },
-  { title: '随访医生', key: 'followUpDoctor', width: 100 },
-  { title: '进展评估结论', key: 'progressConclusion', width: 250 },
-  { title: '治疗调整建议', key: 'treatmentAdvice', width: 250 },
-]
-
 // 图表实例
-let pieChart: ECharts | null = null
-let trendLineChart: ECharts | null = null
-let cPeptideChart: ECharts | null = null
-let stageBarChart: ECharts | null = null
-let detailCPeptideChart: ECharts | null = null
+let pieChart: any = null
+let detailCPeptideChart: any = null
 
 // 图表DOM refs
 const pieChartRef = ref<HTMLElement | null>(null)
-const trendLineChartRef = ref<HTMLElement | null>(null)
-const cPeptideChartRef = ref<HTMLElement | null>(null)
-const stageBarChartRef = ref<HTMLElement | null>(null)
 const detailCPeptideRef = ref<HTMLElement | null>(null)
-
-// Tab3当前数据
-const currentTab3Cards = computed(() =>
-  activeTab3Sub.value === 'microvascular' ? microvascularCards : macrovascularCards,
-)
-const currentTab3Distribution = computed(() =>
-  activeTab3Sub.value === 'microvascular'
-    ? microvascularStageDistribution
-    : macrovascularStageDistribution,
-)
-const currentTab3Patients = computed(() =>
-  activeTab3Sub.value === 'microvascular'
-    ? microvascularProgressPatients
-    : macrovascularProgressPatients,
-)
 
 // 卡片颜色样式
 function getComplicationCardClass(index: number): string {
@@ -323,10 +213,6 @@ function getComplicationCardClass(index: number): string {
       index
     ] || ''
   )
-}
-
-function getSafetyCardClass(index: number): string {
-  return ['type-adverse', 'type-liver', 'type-compliance', 'type-risk'][index] || ''
 }
 
 function getTimelineType(type: string): 'success' | 'warning' | 'info' {
@@ -415,8 +301,6 @@ const top20PatientList = computed(() => {
 // 初始化图表
 function initCharts() {
   if (activeTab.value === 'tab1') initTab1Charts()
-  else if (activeTab.value === 'tab2') initTab2Charts()
-  else if (activeTab.value === 'tab3') initTab3Charts()
 }
 
 function initTab1Charts() {
@@ -428,83 +312,18 @@ function initTab1Charts() {
     pieChart = echarts.init(pieChartRef.value)
     pieChart.showLoading()
   }
-  if (trendLineChartRef.value) {
-    if (trendLineChart) {
-      trendLineChart.dispose()
-      trendLineChart = null
-    }
-    trendLineChart = echarts.init(trendLineChartRef.value)
-    trendLineChart.showLoading()
-  }
 }
 
-function initTab2Charts() {
-  if (cPeptideChartRef.value && !cPeptideChart) {
-    cPeptideChart = echarts.init(cPeptideChartRef.value)
-    cPeptideChart.setOption({
-      tooltip: { trigger: 'axis' },
-      legend: { data: cPeptideTrendChart.series.map((s) => s.name) },
-      xAxis: { type: 'category', data: cPeptideTrendChart.xAxis, axisLabel: { rotate: 30 } },
-      yAxis: { type: 'value', name: 'C肽 (ng/mL)' },
-      series: [
-        {
-          name: '全院平均C肽',
-          type: 'line',
-          data: cPeptideTrendChart.series[0].data,
-          smooth: true,
-          itemStyle: { color: '#5470C6' },
-        },
-        {
-          name: '正常参考下限',
-          type: 'line',
-          data: cPeptideTrendChart.series[1].data,
-          lineStyle: { type: 'dashed' },
-          itemStyle: { color: '#91CC75' },
-        },
-      ],
-    })
+// Tab切换时重置图表
+watch(activeTab, async () => {
+  await nextTick()
+  pieChart?.dispose()
+  pieChart = null
+  initCharts()
+  if (activeTab.value === 'tab4') {
+    getPatientListData()
   }
-}
-
-function initTab3Charts() {
-  if (stageBarChartRef.value && !stageBarChart) {
-    stageBarChart = echarts.init(stageBarChartRef.value)
-    const dist = currentTab3Distribution.value
-    stageBarChart.setOption({
-      tooltip: { trigger: 'axis' },
-      legend: { data: ['early', 'mid', 'late'] },
-      xAxis: {
-        type: 'category',
-        data: dist.map((d) => d.complicationName),
-        axisLabel: { interval: 0 },
-      },
-      yAxis: { type: 'value', name: '人数' },
-      series: [
-        {
-          name: 'early',
-          type: 'bar',
-          stack: 'total',
-          data: dist.map((d) => d.early),
-          itemStyle: { color: '#91CC75' },
-        },
-        {
-          name: 'mid',
-          type: 'bar',
-          stack: 'total',
-          data: dist.map((d) => d.mid),
-          itemStyle: { color: '#FAC858' },
-        },
-        {
-          name: 'late',
-          type: 'bar',
-          stack: 'total',
-          data: dist.map((d) => d.late),
-          itemStyle: { color: '#EE6666' },
-        },
-      ],
-    })
-  }
-}
+})
 
 function initDetailCharts() {
   if (!currentPatientDetail.value) return
@@ -546,30 +365,6 @@ function initDetailCharts() {
   }
 }
 
-// Tab切换时重置图表
-watch(activeTab, async () => {
-  await nextTick()
-  pieChart?.dispose()
-  pieChart = null
-  trendLineChart?.dispose()
-  trendLineChart = null
-  cPeptideChart?.dispose()
-  cPeptideChart = null
-  stageBarChart?.dispose()
-  stageBarChart = null
-  initCharts()
-  if (activeTab.value === 'tab4') {
-    getPatientListData()
-  }
-})
-
-watch(activeTab3Sub, async () => {
-  await nextTick()
-  stageBarChart?.dispose()
-  stageBarChart = null
-  initTab3Charts()
-})
-
 watch(showPatientDetail, async (show) => {
   if (show) {
     await nextTick()
@@ -585,9 +380,6 @@ onMounted(() => {
 
 function handleResize() {
   pieChart?.resize()
-  trendLineChart?.resize()
-  cPeptideChart?.resize()
-  stageBarChart?.resize()
   detailCPeptideChart?.resize()
 }
 

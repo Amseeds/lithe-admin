@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { h, ref, nextTick, onMounted, onUnmounted, watch, reactive } from 'vue'
+import { h, ref, nextTick, onMounted, reactive } from 'vue'
 import { ScrollContainer } from '@/components'
-import type { ECharts } from 'echarts'
 import {
   NCard,
   NTabs,
@@ -27,12 +26,9 @@ import {
   type PaginationProps,
 } from 'naive-ui'
 import { useMessage } from 'naive-ui'
-import * as echarts from 'echarts'
 import type { MedicationPlan, PlanDetail, ExecutionRecord, FollowUpRecord } from './mock/types'
 import {
   statCards,
-  coverageBarData,
-  drugTypePieData,
   // unplannedPatients,
   riskPatients,
   planList as initialPlanList,
@@ -448,99 +444,6 @@ const executionColumns: DataTableColumns<ExecutionRecord> = [
 ]
 
 // ============================================================
-// ECharts - Tab1 图表
-// ============================================================
-const barChartRef = ref<HTMLElement | null>(null)
-const pieChartRef = ref<HTMLElement | null>(null)
-let barChart: ECharts | null = null
-let pieChart: ECharts | null = null
-
-function initTab1Charts() {
-  if (barChartRef.value && !barChart) {
-    barChart = echarts.init(barChartRef.value)
-    barChart.setOption({
-      title: {
-        text: '不同患者分层方案覆盖情况',
-        left: 'center',
-        textStyle: { fontSize: 14, fontWeight: 600 },
-      },
-      tooltip: { trigger: 'axis' },
-      legend: { bottom: 10, data: ['患者总数', '已覆盖'] },
-      grid: { top: 55, left: 50, right: 30, bottom: 60 },
-      xAxis: {
-        type: 'category',
-        data: coverageBarData.map((d) => d.分层),
-        axisLabel: { rotate: 0 },
-      },
-      yAxis: { type: 'value', name: '人数' },
-      series: [
-        {
-          name: '患者总数',
-          type: 'bar',
-          data: coverageBarData.map((d) => d.患者总数),
-          itemStyle: { color: '#818cf8' },
-          barWidth: 28,
-        },
-        {
-          name: '已覆盖',
-          type: 'bar',
-          data: coverageBarData.map((d) => d.已覆盖),
-          itemStyle: { color: '#409EFF' },
-          barWidth: 28,
-        },
-      ],
-    })
-  }
-  if (pieChartRef.value && !pieChart) {
-    pieChart = echarts.init(pieChartRef.value)
-    pieChart.setOption({
-      title: {
-        text: '降糖药物使用类型分布',
-        left: 'center',
-        textStyle: { fontSize: 14, fontWeight: 600 },
-      },
-      tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
-      legend: { orient: 'vertical', left: 'left', top: 'middle' },
-      series: [
-        {
-          type: 'pie',
-          radius: ['35%', '65%'],
-          center: ['60%', '55%'],
-          data: drugTypePieData,
-          emphasis: {
-            itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.2)' },
-          },
-          label: { formatter: '{b}\n{d}%' },
-        },
-      ],
-    })
-  }
-}
-
-function disposeTab1Charts() {
-  barChart?.dispose()
-  barChart = null
-  pieChart?.dispose()
-  pieChart = null
-}
-
-// 初始化入口
-function initCharts() {
-  if (activeTab.value === 'overview') {
-    initTab1Charts()
-  }
-}
-
-// Tab切换时重置图表
-watch(activeTab, async (newTab) => {
-  await nextTick()
-  if (newTab === 'overview') {
-    disposeTab1Charts()
-    initTab1Charts()
-  }
-})
-
-// ============================================================
 // 用药明细弹窗表格列
 // ============================================================
 const medDetailColumns: DataTableColumns<{
@@ -557,16 +460,9 @@ const medDetailColumns: DataTableColumns<{
 // 生命周期
 // ============================================================
 onMounted(() => {
-  nextTick(() => {
-    initTab1Charts()
-  })
   getMedicationPlanList()
   handleGetDashboardData()
   handleGetUnplannedPatients()
-})
-
-onUnmounted(() => {
-  disposeTab1Charts()
 })
 </script>
 
@@ -635,7 +531,6 @@ onUnmounted(() => {
           v-model:value="activeTab"
           type="line"
           animated
-          @update:value="initCharts"
         >
           <!-- Tab1: 用药方案总览 -->
           <NTabPane

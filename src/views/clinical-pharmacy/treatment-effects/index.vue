@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick, h, reactive } from 'vue'
-import type { ECharts } from 'echarts'
 import {
   NCard,
   NTabs,
@@ -21,101 +20,20 @@ import {
   type DataTableColumns,
   type PaginationProps,
 } from 'naive-ui'
-import * as echarts from 'echarts'
-import { ScrollContainer } from '@/components'
+import { AppChart, ScrollContainer } from '@/components'
 import { getPatientList, type PatientRecord, type PatientQueryParams } from '@/api/patientRecords'
-import {
-  efficacyCards,
-  efficacyFactorsChart,
-  efficacyTrendChart,
-  unachievedTop20,
-  highRiskPatients,
-} from './mock/tab1'
-import {
-  glucoseMetabolicIndices,
-  lipidMetabolicIndices,
-  liverKidneyIndices,
-  otherIndices,
-  hba1cAbnormalPatients,
-  generateDistributionData,
-  generateTrendData,
-} from './mock/tab2'
-import {
-  medicationSafetyCards,
-  adverseReactionChart,
-  complianceEfficacyChart,
-  drugAdverseReactions,
-  highRiskMedicationPatients,
-} from './mock/tab3'
-import { generatePatientDetail, generateHba1cTrend, generateGlucoseTrend } from './mock/tab4'
+
 import type { Patient, PatientDetail } from './mock/types'
 
 defineOptions({
   name: 'TreatmentEffects',
 })
 
-// 筛选条件
-const timeRange = ref<string | null>('近3个月')
-const patientStratification = ref<string[]>([])
-const efficacyGrade = ref<string[]>([])
-const searchText = ref('')
-
-const timeRangeOptions = [
-  { label: '近1个月', value: '近1个月' },
-  { label: '近3个月', value: '近3个月' },
-  { label: '近6个月', value: '近6个月' },
-  { label: '近1年', value: '近1年' },
-]
-
-const patientStratificationOptions = [
-  { label: '年轻低危', value: '年轻低危' },
-  { label: '老年衰弱', value: '老年衰弱' },
-  { label: '肾功能不全', value: '肾功能不全' },
-  { label: '妊娠期', value: '妊娠期' },
-  { label: '手术期', value: '手术期' },
-  { label: '心血管高危', value: '心血管高危' },
-]
-
-const efficacyGradeOptions = [
-  { label: '优秀达标', value: '优秀达标' },
-  { label: '稳定达标', value: '稳定达标' },
-  { label: '部分达标', value: '部分达标' },
-  { label: '未达标', value: '未达标' },
-  { label: '高风险异常', value: '高风险异常' },
-]
 
 // Tab状态
 const activeTab = ref('tab4')
 const activeTab2Sub = ref('glucose')
 
-// Tab2子Tab选项
-const tab2SubOptions = [
-  { label: '糖代谢指标', name: 'glucose' },
-  { label: '脂质代谢指标', name: 'lipid' },
-  { label: '肝肾功能指标', name: 'liverKidney' },
-  { label: '其他配套指标', name: 'other' },
-]
-
-// Tab2当前指标数据
-const currentTab2Indices = computed(() => {
-  switch (activeTab2Sub.value) {
-    case 'glucose':
-      return glucoseMetabolicIndices
-    case 'lipid':
-      return lipidMetabolicIndices
-    case 'liverKidney':
-      return liverKidneyIndices
-    case 'other':
-      return otherIndices
-    default:
-      return glucoseMetabolicIndices
-  }
-})
-
-// Tab2当前异常患者
-const currentTab2AbnormalPatients = computed(() => {
-  return hba1cAbnormalPatients
-})
 
 // 弹窗状态
 const showPatientDetail = ref(false)
@@ -270,19 +188,6 @@ const patientListColumns: DataTableColumns<PatientRecord> = [
   },
 ]
 
-// 表格列定义 - Tab2异常患者
-const tab2AbnormalColumns = [
-  { title: '患者姓名', key: 'name', width: 100 },
-  { title: '病历号', key: 'medicalRecordNo', width: 120 },
-  { title: '年龄', key: 'age', width: 80 },
-  { title: '所属分层', key: 'category', width: 120 },
-  { title: '最近检测值', key: 'latestValue', width: 110 },
-  { title: '个人目标值', key: 'personalTarget', width: 110 },
-  { title: '异常等级', key: 'abnormalLevel', width: 100 },
-  { title: '上次检测值', key: 'previousValue', width: 110 },
-  { title: '变化幅度', key: 'changeRate', width: 100 },
-  { title: '检测时间', key: 'testDate', width: 120 },
-]
 
 // 表格列定义 - 患者详情指标
 const indicatorColumns = [
@@ -336,171 +241,39 @@ const reportColumns = [
   { title: '核心结论', key: 'coreConclusion', width: 300 },
 ]
 
-// 图表实例
-let factorsChart: ECharts | null = null
-let trendChart: ECharts | null = null
-let adverseChart: ECharts | null = null
-let complianceChart: ECharts | null = null
-let hba1cTrendChart: ECharts | null = null
-let glucoseTrendChart: ECharts | null = null
-
-// 图表DOM refs
-const factorsChartRef = ref<HTMLElement | null>(null)
-const trendChartRef = ref<HTMLElement | null>(null)
-const adverseChartRef = ref<HTMLElement | null>(null)
-const complianceChartRef = ref<HTMLElement | null>(null)
-const hba1cTrendRef = ref<HTMLElement | null>(null)
-const glucoseTrendRef = ref<HTMLElement | null>(null)
-
 // 当前选中的指标（用于Tab2图表）
 const currentSelectedIndex = ref(0)
 
-// 初始化图表
-function initCharts() {
-  if (activeTab.value === 'tab1') {
-    initTab1Charts()
-  } else if (activeTab.value === 'tab3') {
-    initTab3Charts()
+const hba1cTrendOption = computed(() => {
+  if (!currentPatientDetail.value) return {}
+  const hba1cTrendData = currentPatientDetail.value.lsxt
+  if (!hba1cTrendData || hba1cTrendData.length === 0) {
+    return {}
   }
-}
+  const months = hba1cTrendData.map((item: { adate: string }) => item.adate?.split(' ')[0] || '')
+  const values = hba1cTrendData.map((item: { avolume: string }) => item.avolume)
 
-function initTab1Charts() {
-  if (factorsChartRef.value && !factorsChart) {
-    factorsChart = echarts.init(factorsChartRef.value)
-    const option = {
-      tooltip: { trigger: 'axis' },
-      legend: { data: efficacyFactorsChart.series.map((s) => s.name) },
-      xAxis: { type: 'category', data: efficacyFactorsChart.xAxis },
-      yAxis: { type: 'value', name: '达标率(%)', max: 100 },
-      series: efficacyFactorsChart.series.map((s) => ({
-        name: s.name,
-        type: 'bar',
-        data: s.data,
-        label: { show: true, position: 'top', formatter: '{c}%' },
-      })),
-    }
-    factorsChart.setOption(option)
-  }
-
-  if (trendChartRef.value && !trendChart) {
-    trendChart = echarts.init(trendChartRef.value)
-    const option = {
-      tooltip: { trigger: 'axis' },
-      legend: { data: efficacyTrendChart.series.map((s) => s.name) },
-      xAxis: { type: 'category', data: efficacyTrendChart.xAxis },
-      yAxis: { type: 'value', name: '占比(%)', max: 60 },
-      series: efficacyTrendChart.series.map((s) => ({
-        name: s.name,
+  return {
+    tooltip: { trigger: 'axis' },
+    xAxis: { type: 'category', data: months },
+    yAxis: { type: 'value', name: 'HbA1c(%)' },
+    series: [
+      {
+        name: 'HbA1c检测值',
         type: 'line',
-        data: s.data,
-        label: { show: true, position: 'top', formatter: '{c}%' },
+        data: values,
         smooth: true,
-      })),
-    }
-    trendChart.setOption(option)
-  }
-}
-
-function initTab3Charts() {
-  if (adverseChartRef.value && !adverseChart) {
-    adverseChart = echarts.init(adverseChartRef.value)
-    const option = {
-      tooltip: { trigger: 'axis' },
-      xAxis: {
-        type: 'category',
-        data: adverseReactionChart.xAxis,
-        axisLabel: {
-          interval: 0,
-        },
+        itemStyle: { color: '#5470C6' },
+        label: { show: true, formatter: '{c}' },
       },
-      yAxis: { type: 'value', name: '发生率(%)' },
-      series: [
-        {
-          name: '不良反应发生率',
-          type: 'bar',
-          data: adverseReactionChart.series[0].data,
-          label: { show: true, position: 'top', formatter: '{c}%' },
-          itemStyle: { color: '#5470C6' },
-        },
-      ],
-    }
-    adverseChart.setOption(option)
+    ],
   }
-
-  if (complianceChartRef.value && !complianceChart) {
-    complianceChart = echarts.init(complianceChartRef.value)
-    const option = {
-      tooltip: { trigger: 'axis' },
-      xAxis: { type: 'category', data: complianceEfficacyChart.xAxis },
-      yAxis: { type: 'value', name: '达标率(%)', max: 100 },
-      series: [
-        {
-          name: '疗效达标率',
-          type: 'line',
-          data: complianceEfficacyChart.series[0].data,
-          label: { show: true, position: 'top', formatter: '{c}%' },
-          smooth: true,
-          itemStyle: { color: '#5470C6' },
-        },
-      ],
-    }
-    complianceChart.setOption(option)
-  }
-}
-
-// 初始化患者详情弹窗中的图表
-function initDetailCharts() {
-  if (!currentPatientDetail.value) return
-  if (currentPatientDetail.value && hba1cTrendRef.value) {
-    const hba1cTrendData = currentPatientDetail.value.lsxt
-    if (!hba1cTrendData || hba1cTrendData.length === 0) {
-      if (hba1cTrendChart) {
-        hba1cTrendChart.dispose()
-        hba1cTrendChart = null
-      }
-      return
-    }
-    const months = hba1cTrendData.map((item: { adate: string }) => item.adate?.split(' ')[0] || '')
-    const values = hba1cTrendData.map((item: { avolume: string }) => item.avolume)
-    const target = currentPatientDetail.value.basicInfo?.latestHbA1c?.replace('%', '') || '7.0'
-
-    if (!hba1cTrendChart) {
-      hba1cTrendChart = echarts.init(hba1cTrendRef.value)
-    }
-    hba1cTrendChart.setOption({
-      tooltip: { trigger: 'axis' },
-      xAxis: { type: 'category', data: months },
-      yAxis: { type: 'value', name: 'HbA1c(%)' },
-      series: [
-        {
-          name: 'HbA1c检测值',
-          type: 'line',
-          data: values,
-          smooth: true,
-          itemStyle: { color: '#5470C6' },
-          label: { show: true, formatter: '{c}' },
-        },
-      ],
-    })
-  }
-}
+})
 
 // Tab切换时重置图表
 watch(activeTab, async (newTab) => {
   await nextTick()
-  if (newTab === 'tab1') {
-    factorsChart?.dispose()
-    factorsChart = null
-    trendChart?.dispose()
-    trendChart = null
-    initTab1Charts()
-  } else if (newTab === 'tab3') {
-    adverseChart?.dispose()
-    adverseChart = null
-    complianceChart?.dispose()
-    complianceChart = null
-    initTab3Charts()
-  } else if (newTab === 'tab4') {
+  if (newTab === 'tab4') {
     getPatientListData()
   }
 })
@@ -511,36 +284,11 @@ watch(activeTab2Sub, async () => {
   currentSelectedIndex.value = 0
 })
 
-// 弹窗打开时初始化图表
-watch(showPatientDetail, async (show) => {
-  if (show) {
-    await nextTick()
-    initDetailCharts()
-  }
-})
-
 // 窗口resize时重绘图表
 onMounted(() => {
-  window.addEventListener('resize', handleResize)
-  initCharts()
   getPatientListData()
 })
 
-function handleResize() {
-  factorsChart?.resize()
-  trendChart?.resize()
-  adverseChart?.resize()
-  complianceChart?.resize()
-  hba1cTrendChart?.resize()
-  glucoseTrendChart?.resize()
-}
-
-// 查看详情
-function handleViewDetail() {
-  if (patientList.value.length > 0) {
-    handleViewPatientDetail(patientList.value[0])
-  }
-}
 
 async function handleViewPatientDetail(patient: Patient) {
   // currentPatientDetail.value = generatePatientDetail(patient)
@@ -550,8 +298,6 @@ async function handleViewPatientDetail(patient: Patient) {
   currentPatientDetail.value = data
 
   getCompareData(patient)
-  hba1cTrendChart = null
-  glucoseTrendChart = null
   showPatientDetail.value = true
 }
 
@@ -568,28 +314,6 @@ const getCompareData = async (patient) => {
   indicatorLoading.value = false
 }
 
-function handleViewReport() {
-  // 仅做样式，无真实逻辑
-}
-
-// 获取疗效卡片CSS类
-function getEfficacyCardClass(level: string): string {
-  const classMap: Record<string, string> = {
-    优秀达标: 'excellent',
-    稳定达标: 'stable',
-    部分达标: 'partial',
-    未达标: 'failed',
-    高风险异常: 'risk',
-  }
-  return classMap[level] || ''
-}
-
-// 获取安全卡片CSS类
-function getSafetyCardClass(index: number): string {
-  const classMap = ['type-adverse', 'type-liver', 'type-compliance', 'type-risk']
-  return classMap[index] || ''
-}
-
 // HbA1c数值颜色分类
 function getHba1cClass(value: string | number | null | undefined): string {
   if (!value && value !== 0) return ''
@@ -601,15 +325,6 @@ function getHba1cClass(value: string | number | null | undefined): string {
   return 'text-red-600 font-medium'
 }
 
-// 生成Tab2分布图数据
-function getDistributionChartData(index: any) {
-  return generateDistributionData(index.normalRange, index.target)
-}
-
-// 生成Tab2趋势图数据
-function getTrendChartData(index: any) {
-  return generateTrendData(index.target * 1.2, index.target)
-}
 </script>
 
 <template>
@@ -675,7 +390,6 @@ function getTrendChartData(index: any) {
           v-model:value="activeTab"
           type="line"
           animated
-          @update:value="initCharts"
         >
           <!-- Tab4: 患者疗效明细列表 -->
           <NTabPane
@@ -881,10 +595,10 @@ function getTrendChartData(index: any) {
                   size="small"
                 />
                 <template v-else>
-                  <div
-                    ref="hba1cTrendRef"
+                  <AppChart
+                    :option="hba1cTrendOption"
                     class="chart-container"
-                  ></div>
+                  />
                 </template>
               </NGi>
             </NGrid>
@@ -900,7 +614,6 @@ function getTrendChartData(index: any) {
 </template>
 
 <script lang="ts">
-import { h } from 'vue'
 import { getIndicatorComparisonData, getTreatmentEffectsDetail } from '@/api/treatmentEffects'
 export default {}
 </script>

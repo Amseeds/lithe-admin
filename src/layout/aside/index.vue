@@ -86,7 +86,7 @@ watch(
 <template>
   <div class="flex h-full">
     <aside
-      class="flex h-full flex-col justify-between gap-y-4 bg-naive-card pb-4"
+      class="flex h-full flex-col justify-between gap-y-4 bg-naive-card"
       :class="{
         'transition-[background-color,width]': !isSidebarColResizing,
       }"

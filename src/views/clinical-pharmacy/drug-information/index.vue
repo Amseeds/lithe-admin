@@ -96,7 +96,7 @@ const columns = [
     render: (row: DrugInformation) => (
       <NButton
         text
-        type="primary"
+        type='primary'
         onClick={() => handleViewDetail(row)}
       >
         查看详情
@@ -105,11 +105,7 @@ const columns = [
   },
 ]
 
-const {
-  data,
-  isLoading,
-  refetch,
-} = useQuery({
+const { data, isLoading, refetch } = useQuery({
   key: () => ['drug-list', queryParams.pageNum, queryParams.pageSize, queryParams.drugName ?? ''],
   query: () => getDrugList(queryParams),
   staleTime: 0,

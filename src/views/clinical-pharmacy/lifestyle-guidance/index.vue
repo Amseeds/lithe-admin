@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { h, ref, nextTick, onMounted, onUnmounted, watch, reactive } from 'vue'
-import type { ECharts } from 'echarts'
+import { h, ref, onMounted, watch, reactive } from 'vue'
 import {
   NCard,
   NDataTable,
@@ -28,12 +27,9 @@ import {
   type SelectOption,
 } from 'naive-ui'
 import type { DataTableColumns } from 'naive-ui'
-import * as echarts from 'echarts'
 import type { LifestylePlan, PlanDetail, ExecutionRecord, FollowUpRecord } from './mock/types'
 import {
   statCards,
-  barChartData,
-  pieChartData,
   // unplannedPatients,
   // lowExecutionPatients,
   // planList,
@@ -138,78 +134,6 @@ function cardChangeStyle(type: 'increase' | 'decrease' | 'neutral') {
 // ============================================================
 const activeTab = ref('library')
 
-// ============================================================
-// Tab1: 图表
-// ============================================================
-const barChartRef = ref<HTMLElement | null>(null)
-const pieChartRef = ref<HTMLElement | null>(null)
-let barChart: ECharts | null = null
-let pieChart: ECharts | null = null
-
-function initTab1Charts() {
-  if (barChartRef.value && !barChart) {
-    barChart = echarts.init(barChartRef.value)
-    barChart.setOption({
-      tooltip: { trigger: 'axis' },
-      legend: { data: ['患者总数', '已制定方案'] },
-      grid: { left: 40, right: 20, top: 40, bottom: 70 },
-      xAxis: { type: 'category', data: barChartData.map((d) => d.category) },
-      yAxis: { type: 'value', name: '人数' },
-      series: [
-        {
-          name: '患者总数',
-          type: 'bar',
-          data: barChartData.map((d) => d.total),
-          itemStyle: { color: '#818cf8' },
-          emphasis: {
-            itemStyle: {
-              color: '#6366f1',
-            },
-          },
-        },
-        {
-          name: '已制定方案',
-          type: 'bar',
-          data: barChartData.map((d) => d.planned),
-          itemStyle: { color: '#6366f1' },
-          emphasis: {
-            itemStyle: {
-              color: '#4f46e5',
-            },
-          },
-        },
-      ],
-    })
-  }
-  if (pieChartRef.value && !pieChart) {
-    pieChart = echarts.init(pieChartRef.value)
-    pieChart.setOption({
-      tooltip: { trigger: 'item', formatter: '{b}: {c}人 ({d}%)' },
-      legend: { bottom: 10 },
-      series: [
-        {
-          type: 'pie',
-          radius: ['40%', '70%'],
-          center: ['50%', '45%'],
-          data: pieChartData.map((d) => ({
-            ...d,
-            itemStyle: {
-              color: d.name.includes('高')
-                ? '#18a058'
-                : d.name.includes('中')
-                  ? '#e6a23c'
-                  : '#d03050',
-            },
-          })),
-          label: { formatter: '{b}\n{d}%' },
-        },
-      ],
-    })
-  }
-}
-
-// ============================================================
-// Tab1: 未制定方案列表列
 // ============================================================
 const unplannedColumns: DataTableColumns<any> = [
   { title: '病历号', key: 'zyh', width: 120 },
@@ -670,49 +594,12 @@ const followUpColumns: DataTableColumns<FollowUpRecord> = [
 ]
 
 // ============================================================
-// 初始化入口（由 NTabs @update:value 触发）
-// ============================================================
-function initCharts() {
-  if (activeTab.value === 'overview') {
-    initTab1Charts()
-  }
-}
-
-// ============================================================
-// Tab切换时重置图表（treatment-effects 模式：dispose + null + 重新init）
-// ============================================================
-watch(activeTab, async (newTab) => {
-  await nextTick()
-  if (newTab === 'overview') {
-    barChart?.dispose()
-    barChart = null
-    pieChart?.dispose()
-    pieChart = null
-    initTab1Charts()
-  }
-})
-
-// ============================================================
 // 生命周期
 // ============================================================
-let resizeHandler: (() => void) | null = null
-
 onMounted(() => {
-  initTab1Charts()
-  resizeHandler = () => {
-    barChart?.resize()
-    pieChart?.resize()
-  }
-  window.addEventListener('resize', resizeHandler, { passive: true })
   handleGetDashboardData()
   getGuidancePlanList()
   handleGetUnplannedPatients()
-})
-
-onUnmounted(() => {
-  if (resizeHandler) window.removeEventListener('resize', resizeHandler)
-  barChart?.dispose()
-  pieChart?.dispose()
 })
 </script>
 
@@ -768,7 +655,6 @@ onUnmounted(() => {
         <NTabs
           v-model:value="activeTab"
           type="line"
-          @update:value="initCharts"
         >
           <!-- Tab3: 标准化指导库 -->
           <NTabPane
