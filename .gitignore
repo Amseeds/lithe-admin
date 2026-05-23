@@ -37,3 +37,8 @@ yarn.lock
 bun.lock
 
 dist.zip
+.firecrawl
+
+/public/data/adr-bulletins
+/output
+/scripts

@@ -51,6 +51,8 @@ const pagination = reactive<PaginationProps>({
   pageSizes: [10, 15, 20],
   itemCount: 0,
   showQuickJumper: true,
+  prefix: ({ itemCount }) =>
+    itemCount ? <div>总数 {itemCount} 条</div> : null,
   onUpdatePage: (page) => {
     pagination.page = page
     refetch()

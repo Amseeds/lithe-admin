@@ -1,41 +1,35 @@
 <script setup lang="tsx">
+import { useQuery } from '@pinia/colada'
 import {
   NCard,
   NForm,
   NFormItem,
   NInput,
-  NSelect,
   NButton,
   NDataTable,
   NSpace,
-  NRadioButton,
-  NRadioGroup,
-  NPopconfirm,
-  NPagination,
   useMessage,
   useModal,
+  NPopconfirm,
+  NPagination,
 } from 'naive-ui'
-
-import { ScrollContainer } from '@/components'
-import { useQuery } from '@pinia/colada'
 import { reactive, ref, watch } from 'vue'
 
 import {
-  getEducationList,
-  deleteEducation,
-  toggleFavorite,
-  CATEGORY_OPTIONS,
-  type EducationMaterial,
-  type EducationQueryParams,
-} from '@/api/medicationEducation'
+  getList,
+  deleteChineseMedicalWork,
+  type ChineseMedicalWork,
+} from '@/api/traditionalChineseMedicine/medicalWork'
+import { ScrollContainer } from '@/components'
 import { useResettableReactive } from '@/composables'
 import { download } from '@/utils/request'
+
 import AddModal from './AddModal.vue'
 
 import type { PaginationProps } from 'naive-ui'
 
 defineOptions({
-  name: 'MedicationEducation',
+  name: 'TraditionalChineseMedicineWorks',
 })
 
 const message = useMessage()
@@ -43,14 +37,12 @@ const message = useMessage()
 // 查询参数
 const [queryParams, , resetQueryParams] = useResettableReactive<EducationQueryParams>({
   title: '',
-  category: undefined,
-  CheckFavorites: '0',
   pageNum: 1,
   pageSize: 15,
 })
 
 // 数据列表
-const dataList = ref<EducationMaterial[]>([])
+const dataList = ref<ChineseMedicalWork[]>([])
 
 // 分页
 const pagination = reactive<PaginationProps>({
@@ -83,59 +75,28 @@ const { data, isLoading, refetch } = useQuery({
     queryParams.pageSize,
     queryParams.title ?? '',
     queryParams.category ?? '',
-    queryParams.CheckFavorites ?? '0',
   ],
-  query: () => getEducationList(queryParams),
+  query: () => getList(queryParams),
   staleTime: 0,
 })
 
 watch(data, (newData) => {
   if (newData?.data) {
+    console.log('newData:', newData)
     dataList.value = newData.data.list || []
     pagination.itemCount = newData.data.total || 0
   }
 })
 
-// 分类选项
-const categoryOptions = CATEGORY_OPTIONS.map((item) => ({
-  label: item.label,
-  value: item.value,
-}))
-
 // 表格列
 const columns = [
   { title: '标题', key: 'title' },
-  { title: '关键词', key: 'keywords' },
-  { title: '简介', key: 'description' },
-  {
-    title: '分类',
-    key: 'category',
-    render: (row: EducationMaterial) => {
-      const option = CATEGORY_OPTIONS.find((o) => o.value === String(row.category))
-      return option?.label ?? row.category
-    },
-  },
-  {
-    title: '更新时间',
-    key: 'updateTime',
-    render: (row: EducationMaterial) => {
-      if (!row.updateTime) return '-'
-      return new Date(row.updateTime).toLocaleString('zh-CN')
-    },
-  },
   {
     title: '操作',
     key: 'actions',
     width: 200,
-    render: (row: EducationMaterial) => (
+    render: (row: ChineseMedicalWork) => (
       <NSpace>
-        <NButton
-          text
-          type={row.isFavorited ? 'warning' : 'primary'}
-          onClick={() => handleFavorite(row)}
-        >
-          {row.isFavorited ? '取消收藏' : '收藏'}
-        </NButton>
         <NButton
           text
           type='primary'
@@ -161,19 +122,8 @@ const columns = [
   },
 ]
 
-// 收藏
-const handleFavorite = async (row: EducationMaterial) => {
-  try {
-    await toggleFavorite(row.materialId)
-    message.success(row.isFavorited ? '取消收藏成功' : '收藏成功')
-    refetch()
-  } catch (error) {
-    message.error('操作失败')
-  }
-}
-
 // 下载
-const handleDownload = (row: EducationMaterial) => {
+const handleDownload = (row: ChineseMedicalWork) => {
   console.log('下载资料:', row)
   download({
     url: `/api/education/${row.materialId}/download`,
@@ -181,9 +131,9 @@ const handleDownload = (row: EducationMaterial) => {
 }
 
 // 删除
-const handleDelete = async (row: EducationMaterial) => {
+const handleDelete = async (row: ChineseMedicalWork) => {
   try {
-    await deleteEducation(row.materialId)
+    await deleteChineseMedicalWork(row.materialId)
     message.success('删除成功')
     refetch()
   } catch (error) {
@@ -249,17 +199,6 @@ const handleReset = () => {
                 @keyup.enter="handleSearch"
               />
             </NFormItem>
-            <NFormItem label="资料分类">
-              <NSelect
-                :key="queryParams.category"
-                v-model:value="queryParams.category"
-                :options="categoryOptions"
-                placeholder="请选择"
-                clearable
-                style="width: 160px"
-                @update:value="handleSearch"
-              />
-            </NFormItem>
           </NForm>
           <div class="flex gap-2">
             <NButton
@@ -271,13 +210,6 @@ const handleReset = () => {
           </div>
         </div>
         <div class="flex items-center gap-4">
-          <NRadioGroup
-            v-model:value="queryParams.CheckFavorites"
-            @update:value="handleSearch"
-          >
-            <NRadioButton value="0">全部</NRadioButton>
-            <NRadioButton value="1">收藏</NRadioButton>
-          </NRadioGroup>
           <NButton
             type="primary"
             @click="handleAdd"

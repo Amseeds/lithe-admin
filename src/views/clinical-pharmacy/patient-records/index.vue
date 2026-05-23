@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="tsx">
 import {
   NButton,
   NCard,
@@ -18,7 +18,12 @@ import {
 import { ref, reactive, h, onMounted } from 'vue'
 
 import { ScrollContainer } from '@/components'
-import { getPatientList, getPatientDetail, type PatientRecord, type PatientQueryParams } from '@/api'
+import {
+  getPatientList,
+  getPatientDetail,
+  type PatientRecord,
+  type PatientQueryParams,
+} from '@/api'
 
 import FollowUpModal from './FollowUpModal.vue'
 
@@ -116,7 +121,7 @@ const followUp = (row: PatientRecord) => {
 
 // 随访成功回调
 const onFollowUpSuccess = () => {
-//   message.success('随访计划创建成功')
+  //   message.success('随访计划创建成功')
 }
 
 // 表格列定义
@@ -185,6 +190,8 @@ const pagination = reactive<PaginationProps>({
   pageSizes: [10, 15, 20],
   itemCount: 0,
   showQuickJumper: true,
+  prefix: ({ itemCount }) =>
+    itemCount ? <div>总数 {itemCount} 条</div> : null,
   onUpdatePage: (page) => {
     pagination.page = page
     queryParams.pageNum = page
@@ -318,37 +325,59 @@ onMounted(() => {
               :y-gap="8"
             >
               <NGi>
-                <div class="basic-info-item"><span class="label">姓名：</span>{{ currentDetail.name }}</div>
+                <div class="basic-info-item">
+                  <span class="label">姓名：</span>{{ currentDetail.name }}
+                </div>
               </NGi>
               <NGi>
-                <div class="basic-info-item"><span class="label">性别：</span>{{ currentDetail.sex }}</div>
+                <div class="basic-info-item">
+                  <span class="label">性别：</span>{{ currentDetail.sex }}
+                </div>
               </NGi>
               <NGi>
-                <div class="basic-info-item"><span class="label">年龄：</span>{{ currentDetail.age }}</div>
+                <div class="basic-info-item">
+                  <span class="label">年龄：</span>{{ currentDetail.age }}
+                </div>
               </NGi>
               <NGi>
-                <div class="basic-info-item"><span class="label">民族：</span>{{ currentDetail.nation || '-' }}</div>
+                <div class="basic-info-item">
+                  <span class="label">民族：</span>{{ currentDetail.nation || '-' }}
+                </div>
               </NGi>
               <NGi>
-                <div class="basic-info-item"><span class="label">婚姻状况：</span>{{ currentDetail.marriage || '-' }}</div>
+                <div class="basic-info-item">
+                  <span class="label">婚姻状况：</span>{{ currentDetail.marriage || '-' }}
+                </div>
               </NGi>
               <NGi>
-                <div class="basic-info-item"><span class="label">报告人：</span>{{ currentDetail.informant || '-' }}</div>
+                <div class="basic-info-item">
+                  <span class="label">报告人：</span>{{ currentDetail.informant || '-' }}
+                </div>
               </NGi>
               <NGi>
-                <div class="basic-info-item"><span class="label">职业：</span>{{ currentDetail.job || '-' }}</div>
+                <div class="basic-info-item">
+                  <span class="label">职业：</span>{{ currentDetail.job || '-' }}
+                </div>
               </NGi>
               <NGi>
-                <div class="basic-info-item"><span class="label">工作单位：</span>{{ currentDetail.workUnit || '-' }}</div>
+                <div class="basic-info-item">
+                  <span class="label">工作单位：</span>{{ currentDetail.workUnit || '-' }}
+                </div>
               </NGi>
               <NGi>
-                <div class="basic-info-item"><span class="label">可靠性：</span>{{ currentDetail.reliability || '-' }}</div>
+                <div class="basic-info-item">
+                  <span class="label">可靠性：</span>{{ currentDetail.reliability || '-' }}
+                </div>
               </NGi>
               <NGi :span="3">
-                <div class="basic-info-item"><span class="label">籍贯：</span>{{ currentDetail.address || '-' }}</div>
+                <div class="basic-info-item">
+                  <span class="label">籍贯：</span>{{ currentDetail.address || '-' }}
+                </div>
               </NGi>
               <NGi :span="3">
-                <div class="basic-info-item"><span class="label">家庭住址：</span>{{ currentDetail.address || '-' }}</div>
+                <div class="basic-info-item">
+                  <span class="label">家庭住址：</span>{{ currentDetail.address || '-' }}
+                </div>
               </NGi>
             </NGrid>
           </div>

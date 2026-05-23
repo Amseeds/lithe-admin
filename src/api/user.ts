@@ -27,18 +27,18 @@ export interface UserInfo {
  * ============================================================================
  */
 export const fixedMenu: MenuMixedOptions[] = [
-  {
-    path: 'dashboard',
-    name: 'dashboard',
-    icon: 'icon-[mage--dashboard-chart]',
-    label: '仪表板',
-    meta: {
-      componentName: 'Dashboard',
-      pinned: true,
-      showTab: true,
-    },
-    component: 'dashboard/index',
-  },
+  // {
+  //   path: 'dashboard',
+  //   name: 'dashboard',
+  //   icon: 'icon-[mage--dashboard-chart]',
+  //   label: '仪表板',
+  //   meta: {
+  //     componentName: 'Dashboard',
+  //     pinned: true,
+  //     showTab: true,
+  //   },
+  //   component: 'dashboard/index',
+  // },
 
   {
     path: 'pharmacy-knowledge-base',
@@ -65,6 +65,28 @@ export const fixedMenu: MenuMixedOptions[] = [
               showTab: true,
             },
           },
+          {
+            path: 'medication-instructions',
+            name: 'medicationInstructions',
+            icon: 'iconify ph--clipboard-text',
+            label: '用药交代实用手册',
+            component: 'clinical-pharmacy/medication-instructions/index',
+            meta: {
+              componentName: 'MedicationInstructions',
+              showTab: true,
+            },
+          },
+          {
+            path: 'adverse-drug-reactions',
+            name: 'adverseDrugReactions',
+            icon: 'iconify ph--warning-octagon',
+            label: '药物不良反应查询',
+            component: 'clinical-pharmacy/adverse-drug-reactions/index',
+            meta: {
+              componentName: 'AdverseDrugReactions',
+              showTab: true,
+            },
+          },
         ],
       },
       {
@@ -85,6 +107,39 @@ export const fixedMenu: MenuMixedOptions[] = [
               showTab: true,
             },
           },
+          {
+            path: 'tcm-prescriptions',
+            name: 'tcmPrescriptions',
+            icon: 'iconify ph--prescription',
+            label: '中医方剂',
+            component: 'clinical-pharmacy/tcm-prescriptions/index',
+            meta: {
+              componentName: 'TCMPrescriptions',
+              showTab: true,
+            },
+          },
+          {
+            path: 'tcm-terminology',
+            name: 'tcmTerminology',
+            icon: 'iconify ph--translate',
+            label: '中医标准与术语',
+            component: 'clinical-pharmacy/tcm-terminology/index',
+            meta: {
+              componentName: 'TCMTerminology',
+              showTab: true,
+            },
+          },
+          {
+            path: 'chinese-medical-works',
+            name: 'chineseMedicalWorks',
+            icon: 'iconify ph--book-open-text',
+            label: '中医著作',
+            component: 'clinical-pharmacy/chinese-medical-works/index',
+            meta: {
+              componentName: 'ChineseMedicalWorks',
+              showTab: true,
+            },
+          },
         ],
       },
       {
@@ -94,6 +149,17 @@ export const fixedMenu: MenuMixedOptions[] = [
         icon: 'iconify ph--stethoscope',
         label: '临床诊疗知识库',
         children: [
+          {
+            path: 'disease-knowledge',
+            name: 'diseaseKnowledge',
+            icon: 'iconify ph--virus',
+            label: '疾病知识',
+            component: 'clinical-pharmacy/disease-knowledge/index',
+            meta: {
+              componentName: 'DiseaseKnowledge',
+              showTab: true,
+            },
+          },
           {
             path: 'inspection-knowledge',
             name: 'inspectionKnowledge',
@@ -105,17 +171,17 @@ export const fixedMenu: MenuMixedOptions[] = [
               showTab: true,
             },
           },
-          {
-            path: 'clinical-knowledge',
-            name: 'clinicalKnowledge',
-            icon: 'iconify ph--first-aid-kit',
-            label: '临床知识',
-            component: 'clinical-pharmacy/clinical-knowledge/index',
-            meta: {
-              componentName: 'ClinicalKnowledge',
-              showTab: true,
-            },
-          },
+          // {
+          //   path: 'clinical-knowledge',
+          //   name: 'clinicalKnowledge',
+          //   icon: 'iconify ph--first-aid-kit',
+          //   label: '临床知识',
+          //   component: 'clinical-pharmacy/clinical-knowledge/index',
+          //   meta: {
+          //     componentName: 'ClinicalKnowledge',
+          //     showTab: true,
+          //   },
+          // },
           {
             path: 'lab-knowledge',
             name: 'labKnowledge',
@@ -138,17 +204,17 @@ export const fixedMenu: MenuMixedOptions[] = [
               showTab: true,
             },
           },
-          {
-            path: 'diagnostic-principles',
-            name: 'diagnosticPrinciples',
-            icon: 'iconify ph--cross',
-            label: '中西医诊疗原则',
-            component: 'clinical-pharmacy/diagnostic-principles/index',
-            meta: {
-              componentName: 'DiagnosticPrinciples',
-              showTab: true,
-            },
-          },
+          // {
+          //   path: 'diagnostic-principles',
+          //   name: 'diagnosticPrinciples',
+          //   icon: 'iconify ph--cross',
+          //   label: '中西医诊疗原则',
+          //   component: 'clinical-pharmacy/diagnostic-principles/index',
+          //   meta: {
+          //     componentName: 'DiagnosticPrinciples',
+          //     showTab: true,
+          //   },
+          // },
         ],
       },
     ],
@@ -178,7 +244,7 @@ export const fixedMenu: MenuMixedOptions[] = [
     redirect: 'efficacy-assessment/treatment-effects',
     name: 'efficacyAssessment',
     icon: 'iconify ph--chart-line-up',
-    label: '疗效及安全评估',
+    label: '糖尿病疗效及安全评估',
     children: [
       {
         path: 'blood-sugar-targets',
@@ -231,7 +297,7 @@ export const fixedMenu: MenuMixedOptions[] = [
     redirect: 'pharmaceutical-care/personalized-medication',
     name: 'pharmaceuticalCare',
     icon: 'iconify ph--syringe',
-    label: '药学服务管理',
+    label: '糖尿病药学服务管理',
     children: [
       {
         path: 'personalized-medication',
@@ -295,7 +361,7 @@ export const fixedMenu: MenuMixedOptions[] = [
     redirect: 'safety-alert/alert-management',
     name: 'safetyAlert',
     icon: 'iconify ph--warning',
-    label: '用药安全预警',
+    label: '糖尿病用药安全预警',
     children: [
       {
         path: 'alert-management',
@@ -310,26 +376,26 @@ export const fixedMenu: MenuMixedOptions[] = [
       },
     ],
   },
-  {
-    path: 'data-cleaning',
-    redirect: 'data-cleaning/cleaning',
-    name: 'dataCleaning',
-    icon: 'iconify ph--broom',
-    label: '数据清洗',
-    children: [
-      {
-        path: 'cleaning',
-        name: 'cleaning',
-        icon: 'iconify ph--broom',
-        label: '数据清洗',
-        component: 'data-cleaning/index',
-        meta: {
-          componentName: 'DataCleaning',
-          showTab: true,
-        },
-      },
-    ],
-  },
+  // {
+  //   path: 'data-cleaning',
+  //   redirect: 'data-cleaning/cleaning',
+  //   name: 'dataCleaning',
+  //   icon: 'iconify ph--broom',
+  //   label: '数据清洗',
+  //   children: [
+  //     {
+  //       path: 'cleaning',
+  //       name: 'cleaning',
+  //       icon: 'iconify ph--broom',
+  //       label: '数据清洗',
+  //       component: 'data-cleaning/index',
+  //       meta: {
+  //         componentName: 'DataCleaning',
+  //         showTab: true,
+  //       },
+  //     },
+  //   ],
+  // },
 ]
 
 export async function signIn(data: { username: string; password: string }) {

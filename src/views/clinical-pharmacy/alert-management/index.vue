@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="tsx">
 import {
   NButton,
   NTabPane,
@@ -256,6 +256,7 @@ const pendingPagination = reactive<PaginationProps>({
   showSizePicker: true,
   pageSizes: [10, 20, 50],
   showQuickJumper: true,
+  prefix: ({ itemCount }) => (itemCount ? <div>总数 {itemCount} 条</div> : null),
   onUpdatePage: (page: number) => {
     pendingPagination.page = page
     searchParams.pageNum = page
@@ -277,6 +278,7 @@ const handledPagination = reactive<PaginationProps>({
   showSizePicker: true,
   pageSizes: [10, 20, 50],
   showQuickJumper: true,
+  prefix: ({ itemCount }) => (itemCount ? <div>总数 {itemCount} 条</div> : null),
   onUpdatePage: (page: number) => {
     handledPagination.page = page
     searchParams.pageNum = page
@@ -356,9 +358,11 @@ onMounted(() => {
             :loading="loading"
             :bordered="true"
             :scroll-x="1000"
-            :pagination="pendingPagination"
             :remote="true"
           />
+          <div class="mt-3 flex justify-end">
+            <NPagination v-bind="pendingPagination" />
+          </div>
         </NTabPane>
         <NTabPane
           name="handled"
@@ -370,9 +374,11 @@ onMounted(() => {
             :loading="loading"
             :bordered="true"
             :scroll-x="1100"
-            :pagination="handledPagination"
             :remote="true"
           />
+          <div class="mt-3 flex justify-end">
+            <NPagination v-bind="handledPagination" />
+          </div>
         </NTabPane>
       </NTabs>
     </div>

@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="tsx">
 import dayjs from 'dayjs'
 import { ref, computed, onMounted, watch, nextTick, h, reactive } from 'vue'
 import * as echarts from 'echarts'
@@ -66,6 +66,8 @@ const patientPagination = reactive<PaginationProps>({
   showSizePicker: true,
   pageSizes: [10, 15, 20],
   showQuickJumper: true,
+  prefix: ({ itemCount }) =>
+    itemCount ? <div>总数 {itemCount} 条</div> : null,
   onUpdatePage: (page: number) => {
     patientPagination.page = page
     patientQueryParams.pageNum = page
@@ -513,10 +515,12 @@ async function handleViewPatientDetail(patient: PatientRecord) {
                 :columns="patientListColumns"
                 :data="patientList"
                 :loading="patientListLoading"
-                :pagination="patientPagination"
                 :max-height="600"
                 :remote="true"
               />
+              <div class="mt-3 flex justify-end">
+                <NPagination v-bind="patientPagination" />
+              </div>
             </NCard>
           </NTabPane>
         </NTabs>

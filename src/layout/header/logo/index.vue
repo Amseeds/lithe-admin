@@ -70,7 +70,7 @@ watch(
       </div> -->
       <div
         class="flex flex-1 overflow-hidden transition-[margin-left,max-width]"
-        :class="sidebarMenu.collapsed ? 'ml-0 max-w-0' : 'ml-4 max-w-54'"
+        :class="sidebarMenu.collapsed ? 'ml-0 max-w-0' : 'ml-4'"
       >
         <h1 class="truncate text-xl">
           {{ APP_NAME }}

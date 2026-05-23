@@ -45,6 +45,8 @@ const pagination = reactive<PaginationProps>({
   pageSizes: [10, 15, 20],
   itemCount: 0,
   showQuickJumper: true,
+  prefix: ({ itemCount }) =>
+    itemCount ? <div>总数 {itemCount} 条</div> : null,
   onUpdatePage: (page) => {
     pagination.page = page
     queryParams.pageNum = page
@@ -61,11 +63,6 @@ const pagination = reactive<PaginationProps>({
 
 const columns = [
   {
-    key: 'drugId',
-    title: '编码',
-    width: 80,
-  },
-  {
     key: 'drugName',
     title: '药品名称',
     ellipsis: {
@@ -78,15 +75,6 @@ const columns = [
     title: '药物成分',
     ellipsis: {
       tooltip: true,
-    },
-  },
-  {
-    key: 'updateTime',
-    title: '更新时间',
-    width: 180,
-    render: (row: DrugInformation) => {
-      if (!row.updateTime) return '-'
-      return new Date(row.updateTime).toLocaleString('zh-CN')
     },
   },
   {

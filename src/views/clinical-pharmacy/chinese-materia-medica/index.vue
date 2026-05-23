@@ -49,6 +49,8 @@ const pagination = reactive<PaginationProps>({
   pageSizes: [10, 15, 20],
   itemCount: 0,
   showQuickJumper: true,
+  prefix: ({ itemCount }) =>
+    itemCount ? <div>总数 {itemCount} 条</div> : null,
   onUpdatePage: (page) => {
     pagination.page = page
     queryParams.pageNum = page
@@ -64,11 +66,11 @@ const pagination = reactive<PaginationProps>({
 })
 
 const columns = [
-  {
-    key: 'id',
-    title: '编码',
-    width: 80,
-  },
+  // {
+  //   key: 'id',
+  //   title: '编码',
+  //   width: 80,
+  // },
   {
     key: 'name',
     title: '名称',
@@ -77,14 +79,14 @@ const columns = [
     },
     width: 120,
   },
-  {
-    key: 'sourceFile',
-    title: '来源文件',
-    ellipsis: {
-      tooltip: true,
-    },
-    width: 140,
-  },
+  // {
+  //   key: 'sourceFile',
+  //   title: '来源文件',
+  //   ellipsis: {
+  //     tooltip: true,
+  //   },
+  //   width: 140,
+  // },
   {
     key: 'natureFlavor',
     title: '性味',
@@ -111,15 +113,15 @@ const columns = [
     },
     render: (row: ChineseMateriaMedica) => row.functionsIndications || '-',
   },
-  {
-    key: 'createdAt',
-    title: '创建时间',
-    width: 180,
-    render: (row: ChineseMateriaMedica) => {
-      if (!row.createdAt) return '-'
-      return new Date(row.createdAt).toLocaleString('zh-CN')
-    },
-  },
+  // {
+  //   key: 'createdAt',
+  //   title: '创建时间',
+  //   width: 180,
+  //   render: (row: ChineseMateriaMedica) => {
+  //     if (!row.createdAt) return '-'
+  //     return new Date(row.createdAt).toLocaleString('zh-CN')
+  //   },
+  // },
   {
     title: '操作',
     key: 'actions',

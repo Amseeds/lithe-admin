@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="tsx">
 import { ref, computed, onMounted, watch, nextTick, h, reactive } from 'vue'
 import {
   NCard,
@@ -29,11 +29,9 @@ defineOptions({
   name: 'TreatmentEffects',
 })
 
-
 // Tab状态
 const activeTab = ref('tab4')
 const activeTab2Sub = ref('glucose')
-
 
 // 弹窗状态
 const showPatientDetail = ref(false)
@@ -55,6 +53,7 @@ const patientPagination = reactive<PaginationProps>({
   showSizePicker: true,
   pageSizes: [10, 15, 20],
   showQuickJumper: true,
+  prefix: ({ itemCount }) => (itemCount ? <div>总数 {itemCount} 条</div> : null),
   onUpdatePage: (page: number) => {
     patientPagination.page = page
     patientQueryParams.pageNum = page
@@ -188,7 +187,6 @@ const patientListColumns: DataTableColumns<PatientRecord> = [
   },
 ]
 
-
 // 表格列定义 - 患者详情指标
 const indicatorColumns = [
   {
@@ -289,7 +287,6 @@ onMounted(() => {
   getPatientListData()
 })
 
-
 async function handleViewPatientDetail(patient: Patient) {
   // currentPatientDetail.value = generatePatientDetail(patient)
   const { code, data } = await getTreatmentEffectsDetail({ zyh: patient.zyh })
@@ -324,7 +321,6 @@ function getHba1cClass(value: string | number | null | undefined): string {
   if (num <= 8.0) return 'text-orange-500 font-medium'
   return 'text-red-600 font-medium'
 }
-
 </script>
 
 <template>
@@ -422,10 +418,12 @@ function getHba1cClass(value: string | number | null | undefined): string {
                 :columns="patientListColumns"
                 :data="patientList"
                 :loading="patientListLoading"
-                :pagination="patientPagination"
                 :max-height="600"
                 :remote="true"
               />
+              <div class="mt-3 flex justify-end">
+                <NPagination v-bind="patientPagination" />
+              </div>
             </NCard>
           </NTabPane>
         </NTabs>
@@ -613,7 +611,7 @@ function getHba1cClass(value: string | number | null | undefined): string {
   </ScrollContainer>
 </template>
 
-<script lang="ts">
+<script lang="tsx">
 import { getIndicatorComparisonData, getTreatmentEffectsDetail } from '@/api/treatmentEffects'
 export default {}
 </script>

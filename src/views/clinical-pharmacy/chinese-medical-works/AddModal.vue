@@ -12,11 +12,7 @@ import {
 } from 'naive-ui'
 import { ref, reactive } from 'vue'
 
-import {
-  createEducation,
-  CATEGORY_OPTIONS,
-  type CreateEducationParams,
-} from '@/api/medicationEducation'
+import { updateMaterial } from '@/api/traditionalChineseMedicine/medicalWork'
 import type { FormRules } from 'naive-ui'
 
 const props = defineProps<{
@@ -37,12 +33,6 @@ const form = reactive({
 const formRef = ref()
 const fileList = ref<UploadFileInfo[]>([])
 const isSubmitting = ref(false)
-
-// 分类选项
-const categoryOptions = CATEGORY_OPTIONS.map((item) => ({
-  label: item.label,
-  value: item.value,
-}))
 
 // 验证规则
 const rules: FormRules = {
@@ -77,15 +67,15 @@ const handleSubmit = async () => {
 
     const formData = new FormData()
     formData.append('title', form.title)
-    formData.append('category', form.category)
-    formData.append('keywords', form.keywords)
-    formData.append('description', form.description)
+    // formData.append('category', form.category)
+    // formData.append('keywords', form.keywords)
+    // formData.append('description', form.description)
     if (form.remark) {
       formData.append('remark', form.remark)
     }
     formData.append('file', file)
 
-    await createEducation(formData)
+    await updateMaterial(formData)
     props.message.success('新增成功！')
     props.onSuccess?.()
   } catch (error) {
@@ -128,29 +118,17 @@ const handleReset = () => {
           placeholder="请输入标题"
         />
       </NFormItem>
-      <NFormItem
-        label="资料分类"
-        path="category"
-      >
+      <!-- <NFormItem label="资料分类" path="category">
         <NSelect
           v-model:value="form.category"
           :options="categoryOptions"
           placeholder="请选择资料分类"
         />
       </NFormItem>
-      <NFormItem
-        label="关键词"
-        path="keywords"
-      >
-        <NInput
-          v-model:value="form.keywords"
-          placeholder="请输入关键词"
-        />
+      <NFormItem label="关键词" path="keywords">
+        <NInput v-model:value="form.keywords" placeholder="请输入关键词" />
       </NFormItem>
-      <NFormItem
-        label="简介"
-        path="description"
-      >
+      <NFormItem label="简介" path="description">
         <NInput
           v-model:value="form.description"
           type="textarea"
@@ -158,15 +136,9 @@ const handleReset = () => {
           :rows="3"
         />
       </NFormItem>
-      <NFormItem
-        label="备注"
-        path="remark"
-      >
-        <NInput
-          v-model:value="form.remark"
-          placeholder="请输入备注"
-        />
-      </NFormItem>
+      <NFormItem label="备注" path="remark">
+        <NInput v-model:value="form.remark" placeholder="请输入备注" />
+      </NFormItem> -->
       <NFormItem
         label="附件"
         path="file"
