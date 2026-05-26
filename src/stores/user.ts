@@ -2,7 +2,7 @@ import { useStorage } from '@vueuse/core'
 import { acceptHMRUpdate, defineStore, storeToRefs } from 'pinia'
 import { computed } from 'vue'
 
-import { signIn } from '@/api'
+import { signIn, getUserMenu } from '@/api'
 import router from '@/router'
 import { resolveMenu, resolveRoute } from '@/router/helper'
 
@@ -49,6 +49,15 @@ export const useUserStore = defineStore('userStore', () => {
 
   const userRoute = computed(() => resolveRoute(user.value.menu))
 
+  async function refreshUserMenu() {
+    try {
+      const res = await getUserMenu()
+      user.value.menu = res.data
+    } catch (error) {
+      console.error('刷新菜单失败:', error)
+    }
+  }
+
   return {
     user,
     token,
@@ -56,6 +65,7 @@ export const useUserStore = defineStore('userStore', () => {
     userRoute,
     userSignIn,
     cleanup,
+    refreshUserMenu,
   }
 })
 

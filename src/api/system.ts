@@ -46,17 +46,35 @@ export async function getMenuTree() {
   })
 }
 
-export async function createMenu(data: Partial<SystemMenu>) {
-  return request<SystemMenu>({
-    url: '/menu',
+export interface MenuCreatePayload {
+  parent_id?: number | null
+  path: string
+  name: string
+  label?: string | null
+  icon?: string | null
+  component?: string | null
+  redirect?: string | null
+  sort_order?: number
+  menu_type?: string
+  key?: string | null
+  status?: number
+  auth_code?: string | null
+  is_visible?: boolean
+  is_enabled?: boolean
+  meta?: Record<string, unknown> | null
+}
+
+export async function createMenu(data: MenuCreatePayload) {
+  return request({
+    url: '/system/menu',
     method: 'post',
     data,
   })
 }
 
-export async function updateMenu(id: number, data: Partial<SystemMenu>) {
-  return request<SystemMenu>({
-    url: `/menu/${id}`,
+export async function updateMenu(id: number, data: Partial<MenuCreatePayload>) {
+  return request({
+    url: `/system/menu/${id}`,
     method: 'put',
     data,
   })
@@ -64,7 +82,7 @@ export async function updateMenu(id: number, data: Partial<SystemMenu>) {
 
 export async function deleteMenu(id: number) {
   return request({
-    url: `/menu/${id}`,
+    url: `/system/menu/${id}`,
     method: 'delete',
   })
 }

@@ -215,3 +215,10 @@ export async function signIn(data: { username: string; password: string }) {
     data,
   })
 }
+
+export async function getUserMenu() {
+  return request<MenuMixedOptions[]>({
+    url: '/user/menu',
+    method: 'get',
+  })
+}
