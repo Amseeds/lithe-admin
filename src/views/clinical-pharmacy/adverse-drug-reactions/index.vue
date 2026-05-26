@@ -10,15 +10,12 @@ import {
   NRadioGroup,
   NPagination,
 } from 'naive-ui'
-import { reactive, ref, watch } from 'vue'
+import { reactive, ref, watch, nextTick } from 'vue'
 
 import { ScrollContainer } from '@/components'
 import { useQuery } from '@pinia/colada'
 
-import {
-  getAdverseReactionList,
-  type AdverseReactionMaterial,
-} from '@/api/adverseReaction'
+import { getAdverseReactionList, type AdverseReactionMaterial } from '@/api/adverseReaction'
 import { useResettableReactive } from '@/composables'
 
 import type { PaginationProps } from 'naive-ui'
@@ -39,12 +36,11 @@ const dataList = ref<AdverseReactionMaterial[]>([])
 // 分页
 const pagination = reactive<PaginationProps>({
   page: 1,
-  pageSize: 15,
+  pageSize: 10,
   showSizePicker: true,
-  pageSizes: [15, 20, 25],
+  pageSizes: [10, 15, 20],
   itemCount: 0,
-  prefix: ({ itemCount }) =>
-    itemCount ? <div>总数 {itemCount} 条</div> : null,
+  prefix: ({ itemCount }) => (itemCount ? <div>总数 {itemCount} 条</div> : null),
   onUpdatePage: (page) => {
     pagination.page = page
     refetch()
@@ -58,13 +54,7 @@ const pagination = reactive<PaginationProps>({
 
 // 列表查询
 const { data, isLoading, refetch } = useQuery({
-  key: () => [
-    'adverse-reaction-list',
-    pagination.page ?? 1,
-    pagination.pageSize ?? 15,
-    queryParams.description ?? '',
-    queryParams.Type ?? '1',
-  ],
+  key: () => ['adverse-reaction-list', pagination.page ?? 1, pagination.pageSize ?? 15],
   query: () =>
     getAdverseReactionList({
       pageNum: pagination.page ?? 1,
@@ -82,22 +72,37 @@ watch(data, (newData) => {
   }
 })
 
+const fileBaseUrl = import.meta.env.VITE_FILE_BASE_URL
+
 // 表格列
 const columns = [
-  { title: '标题', key: 'description' },
+  {
+    title: '标题',
+    key: 'description',
+    render: (row: AdverseReactionMaterial) => (
+      <a
+        href={`${fileBaseUrl}${row.filePath}`}
+        target='_blank'
+        rel='noopener noreferrer'
+        class='text-blue-500 hover:text-blue-600 hover:underline'
+      >
+        {row.description}
+      </a>
+    ),
+  },
 ]
 
 // 查询
 const handleSearch = () => {
   pagination.page = 1
-  refetch()
+  nextTick(() => refetch())
 }
 
 // 重置
 const handleReset = () => {
   resetQueryParams()
   pagination.page = 1
-  refetch()
+  nextTick(() => refetch())
 }
 </script>
 
@@ -127,7 +132,7 @@ const handleReset = () => {
                 placeholder="请输入标题"
                 clearable
                 style="width: 160px"
-                @keyup.enter="handleSearch"
+                @input="handleSearch"
               />
             </NFormItem>
           </NForm>

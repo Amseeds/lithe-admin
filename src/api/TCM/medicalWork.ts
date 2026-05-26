@@ -13,14 +13,14 @@ export interface ChineseMedicalWork {
 }
 
 // 查询参数
-export interface EducationQueryParams {
+export interface WorkQueryParams {
   title?: string
   pageNum: number
   pageSize: number
 }
 
 // 分页响应
-export interface EducationPageResponse {
+export interface Response {
   list: ChineseMedicalWork[]
   total: number
 }

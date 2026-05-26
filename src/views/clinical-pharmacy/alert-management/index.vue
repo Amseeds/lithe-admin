@@ -14,7 +14,7 @@ import { ref, computed, h, reactive, onMounted, nextTick } from 'vue'
 
 import { ScrollContainer } from '@/components'
 
-import { pendingWarnings, handledWarnings, type PendingWarning, type HandledWarning } from './mock'
+import { type PendingWarning, type HandledWarning } from './mock'
 import { getDashboardData, getWarningLing, updateWarningStatus } from '@/api/alertManagement'
 
 defineOptions({
@@ -26,10 +26,10 @@ const activeTab = ref('pending')
 const loading = ref(false)
 
 // 待处理预警数据（响应式）
-const pendingData = ref<PendingWarning[]>([...pendingWarnings])
+const pendingData = ref<PendingWarning[]>([])
 
 // 已处理预警数据
-const handledData = ref<HandledWarning[]>([...handledWarnings])
+const handledData = ref<HandledWarning[]>([])
 
 const boardData = ref({
   totalCount: 0,

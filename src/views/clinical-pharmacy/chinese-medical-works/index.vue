@@ -19,7 +19,8 @@ import {
   getList,
   deleteChineseMedicalWork,
   type ChineseMedicalWork,
-} from '@/api/traditionalChineseMedicine/medicalWork'
+  type WorkQueryParams,
+} from '@/api/TCM/medicalWork.ts'
 import { ScrollContainer } from '@/components'
 import { useResettableReactive } from '@/composables'
 import { download } from '@/utils/request'
@@ -35,10 +36,10 @@ defineOptions({
 const message = useMessage()
 
 // 查询参数
-const [queryParams, , resetQueryParams] = useResettableReactive<EducationQueryParams>({
+const [queryParams, , resetQueryParams] = useResettableReactive<WorkQueryParams>({
   title: '',
   pageNum: 1,
-  pageSize: 15,
+  pageSize: 10,
 })
 
 // 数据列表
@@ -47,12 +48,11 @@ const dataList = ref<ChineseMedicalWork[]>([])
 // 分页
 const pagination = reactive<PaginationProps>({
   page: 1,
-  pageSize: 15,
+  pageSize: 10,
   showSizePicker: true,
-  pageSizes: [15, 20, 25],
+  pageSizes: [10, 15, 20],
   itemCount: 0,
-  prefix: ({ itemCount }) =>
-    itemCount ? <div>总数 {itemCount} 条</div> : null,
+  prefix: ({ itemCount }) => (itemCount ? <div>总数 {itemCount} 条</div> : null),
   onUpdatePage: (page) => {
     pagination.page = page
     queryParams.pageNum = page
@@ -69,13 +69,7 @@ const pagination = reactive<PaginationProps>({
 
 // 列表查询
 const { data, isLoading, refetch } = useQuery({
-  key: () => [
-    'education-list',
-    queryParams.pageNum,
-    queryParams.pageSize,
-    queryParams.title ?? '',
-    queryParams.category ?? '',
-  ],
+  key: () => ['education-list', queryParams.pageNum, queryParams.pageSize, queryParams.title ?? ''],
   query: () => getList(queryParams),
   staleTime: 0,
 })

@@ -58,7 +58,7 @@ export const fixedMenu: MenuMixedOptions[] = [
             path: 'drug-information',
             name: 'drugInformation',
             icon: 'iconify ph--pill',
-            label: '药品信息',
+            label: '药品说明书',
             component: 'clinical-pharmacy/drug-information/index',
             meta: {
               componentName: 'DrugInformation',
@@ -80,7 +80,7 @@ export const fixedMenu: MenuMixedOptions[] = [
             path: 'adverse-drug-reactions',
             name: 'adverseDrugReactions',
             icon: 'iconify ph--warning-octagon',
-            label: '药物不良反应查询',
+            label: '药物不良反应',
             component: 'clinical-pharmacy/adverse-drug-reactions/index',
             meta: {
               componentName: 'AdverseDrugReactions',
@@ -122,7 +122,7 @@ export const fixedMenu: MenuMixedOptions[] = [
             path: 'tcm-terminology',
             name: 'tcmTerminology',
             icon: 'iconify ph--translate',
-            label: '中医标准与术语',
+            label: '中医标准',
             component: 'clinical-pharmacy/tcm-terminology/index',
             meta: {
               componentName: 'TCMTerminology',

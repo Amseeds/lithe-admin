@@ -12,7 +12,7 @@ import {
 } from 'naive-ui'
 import { ref, reactive } from 'vue'
 
-import { updateMaterial } from '@/api/traditionalChineseMedicine/medicalWork'
+import { updateMaterial } from '@/api/TCM/medicalWork'
 import type { FormRules } from 'naive-ui'
 
 const props = defineProps<{
@@ -118,27 +118,6 @@ const handleReset = () => {
           placeholder="请输入标题"
         />
       </NFormItem>
-      <!-- <NFormItem label="资料分类" path="category">
-        <NSelect
-          v-model:value="form.category"
-          :options="categoryOptions"
-          placeholder="请选择资料分类"
-        />
-      </NFormItem>
-      <NFormItem label="关键词" path="keywords">
-        <NInput v-model:value="form.keywords" placeholder="请输入关键词" />
-      </NFormItem>
-      <NFormItem label="简介" path="description">
-        <NInput
-          v-model:value="form.description"
-          type="textarea"
-          placeholder="请输入简介"
-          :rows="3"
-        />
-      </NFormItem>
-      <NFormItem label="备注" path="remark">
-        <NInput v-model:value="form.remark" placeholder="请输入备注" />
-      </NFormItem> -->
       <NFormItem
         label="附件"
         path="file"
