@@ -59,7 +59,7 @@ export const fixedMenu: MenuMixedOptions[] = [
             name: 'drugInformation',
             icon: 'iconify ph--pill',
             label: '药品说明书',
-            component: 'clinical-pharmacy/drug-information/index',
+            component: 'drug-information/index',
             meta: {
               componentName: 'DrugInformation',
               showTab: true,
@@ -70,7 +70,7 @@ export const fixedMenu: MenuMixedOptions[] = [
             name: 'medicationInstructions',
             icon: 'iconify ph--clipboard-text',
             label: '用药交代实用手册',
-            component: 'clinical-pharmacy/medication-instructions/index',
+            component: 'medication-instructions/index',
             meta: {
               componentName: 'MedicationInstructions',
               showTab: true,
@@ -81,7 +81,7 @@ export const fixedMenu: MenuMixedOptions[] = [
             name: 'adverseDrugReactions',
             icon: 'iconify ph--warning-octagon',
             label: '药物不良反应',
-            component: 'clinical-pharmacy/adverse-drug-reactions/index',
+            component: 'adverse-drug-reactions/index',
             meta: {
               componentName: 'AdverseDrugReactions',
               showTab: true,
@@ -101,7 +101,7 @@ export const fixedMenu: MenuMixedOptions[] = [
             name: 'chineseMateriaMedica',
             icon: 'iconify ph--plant',
             label: '中药材',
-            component: 'clinical-pharmacy/chinese-materia-medica/index',
+            component: 'chinese-materia-medica/index',
             meta: {
               componentName: 'ChineseMateriaMedica',
               showTab: true,
@@ -112,7 +112,7 @@ export const fixedMenu: MenuMixedOptions[] = [
             name: 'tcmPrescriptions',
             icon: 'iconify ph--prescription',
             label: '中医方剂',
-            component: 'clinical-pharmacy/tcm-prescriptions/index',
+            component: 'tcm-prescriptions/index',
             meta: {
               componentName: 'TCMPrescriptions',
               showTab: true,
@@ -123,7 +123,7 @@ export const fixedMenu: MenuMixedOptions[] = [
             name: 'tcmTerminology',
             icon: 'iconify ph--translate',
             label: '中医标准',
-            component: 'clinical-pharmacy/tcm-terminology/index',
+            component: 'tcm-terminology/index',
             meta: {
               componentName: 'TCMTerminology',
               showTab: true,
@@ -134,7 +134,7 @@ export const fixedMenu: MenuMixedOptions[] = [
             name: 'chineseMedicalWorks',
             icon: 'iconify ph--book-open-text',
             label: '中医著作',
-            component: 'clinical-pharmacy/chinese-medical-works/index',
+            component: 'chinese-medical-works/index',
             meta: {
               componentName: 'ChineseMedicalWorks',
               showTab: true,
@@ -154,7 +154,7 @@ export const fixedMenu: MenuMixedOptions[] = [
             name: 'diseaseKnowledge',
             icon: 'iconify ph--virus',
             label: '疾病知识',
-            component: 'clinical-pharmacy/disease-knowledge/index',
+            component: 'disease-knowledge/index',
             meta: {
               componentName: 'DiseaseKnowledge',
               showTab: true,
@@ -165,7 +165,7 @@ export const fixedMenu: MenuMixedOptions[] = [
             name: 'inspectionKnowledge',
             icon: 'iconify ph--magnifying-glass',
             label: '检查知识',
-            component: 'clinical-pharmacy/inspection-knowledge/index',
+            component: 'inspection-knowledge/index',
             meta: {
               componentName: 'InspectionKnowledge',
               showTab: true,
@@ -176,7 +176,7 @@ export const fixedMenu: MenuMixedOptions[] = [
           //   name: 'clinicalKnowledge',
           //   icon: 'iconify ph--first-aid-kit',
           //   label: '临床知识',
-          //   component: 'clinical-pharmacy/clinical-knowledge/index',
+          //   component: 'clinical-knowledge/index',
           //   meta: {
           //     componentName: 'ClinicalKnowledge',
           //     showTab: true,
@@ -187,7 +187,7 @@ export const fixedMenu: MenuMixedOptions[] = [
             name: 'labKnowledge',
             icon: 'iconify ph--flask',
             label: '检验知识',
-            component: 'clinical-pharmacy/lab-knowledge/index',
+            component: 'lab-knowledge/index',
             meta: {
               componentName: 'LabKnowledge',
               showTab: true,
@@ -198,7 +198,7 @@ export const fixedMenu: MenuMixedOptions[] = [
             name: 'nursingKnowledge',
             icon: 'iconify ph--hands-praying',
             label: '护理知识',
-            component: 'clinical-pharmacy/nursing-knowledge/index',
+            component: 'nursing-knowledge/index',
             meta: {
               componentName: 'NursingKnowledge',
               showTab: true,
@@ -209,7 +209,7 @@ export const fixedMenu: MenuMixedOptions[] = [
           //   name: 'diagnosticPrinciples',
           //   icon: 'iconify ph--cross',
           //   label: '中西医诊疗原则',
-          //   component: 'clinical-pharmacy/diagnostic-principles/index',
+          //   component: 'diagnostic-principles/index',
           //   meta: {
           //     componentName: 'DiagnosticPrinciples',
           //     showTab: true,
@@ -231,7 +231,7 @@ export const fixedMenu: MenuMixedOptions[] = [
         name: 'patientRecords',
         icon: 'iconify ph--folder-user',
         label: '患者档案',
-        component: 'clinical-pharmacy/patient-records/index',
+        component: 'patient-records/index',
         meta: {
           componentName: 'PatientRecords',
           showTab: true,
@@ -251,7 +251,7 @@ export const fixedMenu: MenuMixedOptions[] = [
         name: 'bloodSugarTargets',
         icon: 'iconify ph--drop-half-bottom',
         label: '控糖目标',
-        component: 'clinical-pharmacy/blood-sugar-targets/index',
+        component: 'blood-sugar-targets/index',
         meta: {
           componentName: 'BloodSugarTargets',
           showTab: true,
@@ -262,7 +262,7 @@ export const fixedMenu: MenuMixedOptions[] = [
         name: 'diseaseProgression',
         icon: 'iconify ph--activity',
         label: '病情进展',
-        component: 'clinical-pharmacy/disease-progression/index',
+        component: 'disease-progression/index',
         meta: {
           componentName: 'DiseaseProgression',
           showTab: true,
@@ -273,7 +273,7 @@ export const fixedMenu: MenuMixedOptions[] = [
         name: 'treatmentEffects',
         icon: 'iconify ph--trend-up',
         label: '治疗效果',
-        component: 'clinical-pharmacy/treatment-effects/index',
+        component: 'treatment-effects/index',
         meta: {
           componentName: 'TreatmentEffects',
           showTab: true,
@@ -284,7 +284,7 @@ export const fixedMenu: MenuMixedOptions[] = [
         name: 'efficacyReport',
         icon: 'iconify ph--file-search',
         label: '疗效报告',
-        component: 'clinical-pharmacy/efficacy-report/index',
+        component: 'efficacy-report/index',
         meta: {
           componentName: 'EfficacyReport',
           showTab: true,
@@ -304,7 +304,7 @@ export const fixedMenu: MenuMixedOptions[] = [
         name: 'personalizedMedication',
         icon: 'iconify ph--prescription',
         label: '个性化用药方案',
-        component: 'clinical-pharmacy/personalized-medication/index',
+        component: 'personalized-medication/index',
         meta: {
           componentName: 'PersonalizedMedication',
           showTab: true,
@@ -315,7 +315,7 @@ export const fixedMenu: MenuMixedOptions[] = [
         name: 'medicationEducation',
         icon: 'iconify ph--chat-circle-text',
         label: '用药宣教与咨询',
-        component: 'clinical-pharmacy/medication-education/index',
+        component: 'medication-education/index',
         meta: {
           componentName: 'MedicationEducation',
           showTab: true,
@@ -326,7 +326,7 @@ export const fixedMenu: MenuMixedOptions[] = [
         name: 'followUpRules',
         icon: 'iconify ph--list-checks',
         label: '随访规则',
-        component: 'clinical-pharmacy/follow-up-rules/index',
+        component: 'follow-up-rules/index',
         meta: {
           componentName: 'FollowUpRules',
           showTab: true,
@@ -337,7 +337,7 @@ export const fixedMenu: MenuMixedOptions[] = [
         name: 'followUpPlan',
         icon: 'iconify ph--calendar-check',
         label: '随访计划',
-        component: 'clinical-pharmacy/follow-up-plan/index',
+        component: 'follow-up-plan/index',
         meta: {
           componentName: 'FollowUpPlan',
           showTab: true,
@@ -348,7 +348,7 @@ export const fixedMenu: MenuMixedOptions[] = [
         name: 'lifestyleGuidance',
         icon: 'iconify ph--heart',
         label: '生活方式指导',
-        component: 'clinical-pharmacy/lifestyle-guidance/index',
+        component: 'lifestyle-guidance/index',
         meta: {
           componentName: 'LifestyleGuidance',
           showTab: true,
@@ -368,7 +368,7 @@ export const fixedMenu: MenuMixedOptions[] = [
         name: 'alertManagement',
         icon: 'iconify ph--bell',
         label: '预警管理',
-        component: 'clinical-pharmacy/alert-management/index',
+        component: 'alert-management/index',
         meta: {
           componentName: 'AlertManagement',
           showTab: true,
