@@ -376,6 +376,103 @@ export const fixedMenu: MenuMixedOptions[] = [
       },
     ],
   },
+  {
+    path: 'eight-business-scenarios',
+    redirect: 'eight-business-scenarios/special-population-ai-guide',
+    name: 'eightBusinessScenarios',
+    icon: 'iconify ph--grid-four',
+    label: '八大业务场景',
+    children: [
+      {
+        path: 'special-population-ai-guide',
+        name: 'specialPopulationAiMedication',
+        icon: 'iconify ph--users-three',
+        label: '特殊人群AI用药指导',
+        component: 'special-population-ai-guide/index',
+        meta: {
+          componentName: 'SpecialPopulationAiMedication',
+          showTab: true,
+        },
+      },
+      {
+        path: 'glucose-visit-reminder',
+        name: 'bloodSugarVisitReminder',
+        icon: 'iconify ph--calendar-check',
+        label: '血糖管理就诊提醒',
+        component: 'glucose-visit-reminder/index',
+        meta: {
+          componentName: 'BloodSugarVisitReminder',
+          showTab: true,
+        },
+      },
+      {
+        path: 'treatment-effectiveness',
+        name: 'medicationEffectiveness',
+        icon: 'iconify ph--chart-line-up',
+        label: '药物治疗方案有效性',
+        component: 'treatment-effectiveness/index',
+        meta: {
+          componentName: 'MedicationEffectiveness',
+          showTab: true,
+        },
+      },
+      {
+        path: 'interaction-education',
+        name: 'interactionEducation',
+        icon: 'iconify ph--arrows-left-right',
+        label: '相互作用识别与教育',
+        component: 'interaction-education/index',
+        meta: {
+          componentName: 'InteractionEducation',
+          showTab: true,
+        },
+      },
+      {
+        path: 'health-education',
+        name: 'scienceEducation',
+        icon: 'iconify ph--book-open-text',
+        label: '科普教育',
+        component: 'health-education/index',
+        meta: {
+          componentName: 'ScienceEducation',
+          showTab: true,
+        },
+      },
+      {
+        path: 'adverse-reaction-warning',
+        name: 'adverseReactionEducation',
+        icon: 'iconify ph--warning-octagon',
+        label: '不良反应预警与教育',
+        component: 'adverse-reaction-warning/index',
+        meta: {
+          componentName: 'AdverseReactionEducation',
+          showTab: true,
+        },
+      },
+      {
+        path: 'ai-drug-guide',
+        name: 'aiDrugGuide',
+        icon: 'iconify ph--robot',
+        label: 'AI用药指导',
+        component: 'ai-drug-guide/index',
+        meta: {
+          componentName: 'AiDrugGuide',
+          showTab: true,
+        },
+      },
+      {
+        path: 'ai-drug-reminder',
+        name: 'aiDrugReminder',
+        icon: 'iconify ph--bell-ringing',
+        label: 'AI用药提醒与药物咨询',
+        component: 'ai-drug-reminder/index',
+        meta: {
+          componentName: 'AiDrugReminder',
+          showTab: true,
+        },
+      },
+    ],
+  },
   // {
   //   path: 'data-cleaning',
   //   redirect: 'data-cleaning/cleaning',

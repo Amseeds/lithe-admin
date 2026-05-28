@@ -40,7 +40,9 @@
       "Bash(cp -r clinical-pharmacy/__TRACKED_VAR__ ./)",
       "Bash(rm -rf clinical-pharmacy/__TRACKED_VAR__)",
       "Bash(npx vue-tsc *)",
-      "Bash(npx vite *)"
+      "Bash(npx vite *)",
+      "mcp__zai-mcp-server__analyze_image",
+      "mcp__zai-mcp-server__ui_to_artifact"
     ]
   }
 }
