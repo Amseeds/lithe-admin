@@ -1,4 +1,5 @@
 export * from './dataForm'
 export * from './dataTable'
+export * from './role'
 export * from './system'
 export * from './user'

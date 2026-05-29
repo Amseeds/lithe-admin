@@ -206,6 +206,13 @@ const menu: MenuMixedOptions[] = [
     label: '菜单管理',
     component: 'system/menu/index',
   },
+  {
+    path: 'system/role',
+    name: 'systemRole',
+    icon: 'ph:user-gear',
+    label: '角色管理',
+    component: 'system/role/index',
+  },
 ]
 
 export async function signIn(data: { username: string; password: string }) {
