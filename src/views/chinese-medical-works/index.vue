@@ -156,6 +156,15 @@ const handleAdd = () => {
   })
 }
 
+// 搜索词变化时重置分页
+watch(
+  () => queryParams.title,
+  () => {
+    queryParams.pageNum = 1
+    pagination.page = 1
+  },
+)
+
 // 查询
 const handleSearch = () => {
   queryParams.pageNum = 1

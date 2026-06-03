@@ -242,12 +242,6 @@ onMounted(() => {
                 })
               "
             />
-            <div
-              v-if="!patientLoading && patientList.length === 0"
-              class="empty-state"
-            >
-              暂无患者数据
-            </div>
           </div>
           <div class="pagination-box">
             <NPagination

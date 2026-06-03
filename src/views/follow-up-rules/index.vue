@@ -28,10 +28,16 @@ const { isMaxMd, isMaxLg } = useInjection(mediaQueryInjectionKey)
 
 const [form, , resetForm] = useResettableReactive<FollowUpRuleQuery>({
   ruleName: '',
-  riskLevel: undefined,
+  riskLevel: null,
   pageNum: 1,
   pageSize: 10,
 })
+
+function handleReset() {
+  resetForm()
+  pagination.page = 1
+  refetch()
+}
 
 // 风险等级映射
 const RISK_LEVEL_MAP: Record<string, string> = {
@@ -51,8 +57,7 @@ const pagination = reactive<PaginationProps>({
   pageSizes: [10, 15, 20],
   itemCount: 0,
   showQuickJumper: true,
-  prefix: ({ itemCount }) =>
-    itemCount ? <div>总数 {itemCount} 条</div> : null,
+  prefix: ({ itemCount }) => (itemCount ? <div>总数 {itemCount} 条</div> : null),
   onUpdatePage: (page) => {
     pagination.page = page
     refetch()
@@ -76,8 +81,22 @@ const columns: DataTableColumns<FollowUpRule> = [
     width: 120,
     render: (row) => {
       const label = RISK_LEVEL_MAP[row.riskLevel] || row.riskLevel
-      const type = row.riskLevel === 'HIGH' ? 'error' : row.riskLevel === 'MEDIUM' ? 'warning' : row.riskLevel === 'LOW' ? 'success' : 'info'
-      return <NTag type={type} size="small">{label}</NTag>
+      const type =
+        row.riskLevel === 'HIGH'
+          ? 'error'
+          : row.riskLevel === 'MEDIUM'
+            ? 'warning'
+            : row.riskLevel === 'LOW'
+              ? 'success'
+              : 'info'
+      return (
+        <NTag
+          type={type}
+          size='small'
+        >
+          {label}
+        </NTag>
+      )
     },
   },
   {
@@ -110,12 +129,14 @@ const riskLevelOptions = [
   { label: '特殊人群', value: 'SPECIAL' },
 ]
 
-const {
-  data,
-  isLoading,
-  refetch,
-} = useQuery({
-  key: () => ['followUpRuleList', pagination.page ?? 1, pagination.pageSize ?? 10, form.ruleName, form.riskLevel],
+const { data, isLoading, refetch } = useQuery({
+  key: () => [
+    'followUpRuleList',
+    pagination.page ?? 1,
+    pagination.pageSize ?? 10,
+    form.ruleName,
+    form.riskLevel,
+  ],
   query: () =>
     getRuleList({
       ruleName: form.ruleName,
@@ -198,7 +219,7 @@ const handleQueryClick = () => {
           </NButton>
           <NButton
             type="warning"
-            @click="resetForm"
+            @click="handleReset"
           >
             <template #icon>
               <span class="iconify ph--arrow-clockwise" />

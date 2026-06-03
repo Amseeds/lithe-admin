@@ -1,16 +1,14 @@
-const SSE_URL = '/api/api/aiuse/consult-stream'
+const SSE_URL = '/api/api/aiuse/glucose-visit-reminder-stream'
 
-export interface AdverseReactionConsultParams {
+export interface GlucoseAiParams {
   patientId: string
-  question: string
-  consultType: 'adverse_reaction'
   signal?: AbortSignal
 }
 
 /**
- * 药物不良反应 AI 查询 SSE 流式咨询
+ * 血糖管理就诊提醒 AI SSE 流式咨询
  */
-export function streamAdverseReactionConsult(params: AdverseReactionConsultParams): Promise<Response> {
+export function streamGlucoseVisitAi(params: GlucoseAiParams): Promise<Response> {
   const token = localStorage.getItem('token') || ''
   const { signal, ...body } = params
 

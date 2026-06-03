@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
-import { useMessage } from 'naive-ui'
-import { streamConsult } from '@/api/adverseReactionEducation'
+import { ref, nextTick } from 'vue'
+import { NDropdown, useMessage } from 'naive-ui'
+import { streamScienceEducationConsult } from '@/api/healthEducation'
+import { questionCategories, type QuestionItem } from './questions'
 
 defineOptions({
   name: 'ScienceEducation',
@@ -12,7 +13,6 @@ const message = useMessage()
 const inputText = ref('')
 const isFocused = ref(false)
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
-const recommandations = ref<{ id: number; category: string; text: string }[][]>([])
 
 // 对话相关
 const messages = ref<{ role: 'user' | 'ai'; content: string }[]>([])
@@ -21,156 +21,45 @@ const loading = ref(false)
 const chatBoxRef = ref<HTMLDivElement | null>(null)
 let abortController: AbortController | null = null
 
-const allSuggestions = [
-  {
-    id: 1,
-    category: '初始评估与用药启动',
-    text: '刚确诊糖尿病，如何根据我的年龄和体重制定初始用药方案？',
-  },
-  {
-    id: 2,
-    category: '初始评估与用药启动',
-    text: '糖化血红蛋白(HbA1c) 8.5%，二甲双胍单药治疗是否足够？',
-  },
-  {
-    id: 3,
-    category: '初始评估与用药启动',
-    text: '我的胰岛功能报告提示β细胞功能尚可，是否适合使用DPP-4抑制剂？',
-  },
-  {
-    id: 4,
-    category: '初始评估与用药启动',
-    text: '肾功能轻度减退（eGFR 55），哪些口服降糖药需要调整剂量？',
-  },
-  {
-    id: 5,
-    category: '初始评估与用药启动',
-    text: '最近多次出现低血糖，如何重新评估我的降糖方案强度？',
-  },
-  {
-    id: 6,
-    category: '个体化药物选择',
-    text: '合并慢性肾病（CKD），SGLT2抑制剂和GLP-1受体激动剂哪个更优？',
-  },
-  {
-    id: 7,
-    category: '个体化药物选择',
-    text: '糖尿病合并心血管疾病，GLP-1激动剂与SGLT2抑制剂如何协同使用？',
-  },
-  { id: 8, category: '个体化药物选择', text: '餐后血糖持续偏高，阿卡波糖和瑞格列奈谁更适合我？' },
-  {
-    id: 9,
-    category: '个体化药物选择',
-    text: '胰岛素起始治疗，基础胰岛素（甘精）与预混胰岛素（30R）如何选择？',
-  },
-  {
-    id: 10,
-    category: '个体化药物选择',
-    text: '2型糖尿病肥胖患者，GLP-1激动剂与二甲双胍联合用药策略？',
-  },
-  {
-    id: 11,
-    category: '用药调整与剂量优化',
-    text: '二甲双胍从500mg加至850mg，胃肠道不耐受如何应对？',
-  },
-  {
-    id: 12,
-    category: '用药调整与剂量优化',
-    text: '甘精胰岛素每天12单位，空腹血糖仍高于7.0，如何逐步调整剂量？',
-  },
-  {
-    id: 13,
-    category: '用药调整与剂量优化',
-    text: '使用SGLT2抑制剂后出现体重下降、肌酐升高，需要停药吗？',
-  },
-  {
-    id: 14,
-    category: '用药调整与剂量优化',
-    text: '餐时胰岛素（赖脯）与基础胰岛素比例为1:2，如何优化注射时间点？',
-  },
-  {
-    id: 15,
-    category: '用药调整与剂量优化',
-    text: '老年人使用磺脲类降糖药（格列美脲），如何调整剂量预防低血糖？',
-  },
-  {
-    id: 16,
-    category: '不良反应与药学监护',
-    text: '使用恩格列净后出现反复泌尿系感染，如何处理及预防？',
-  },
-  {
-    id: 17,
-    category: '不良反应与药学监护',
-    text: '利拉鲁肽引起持续性恶心呕吐，是否可调整为度拉糖肽？',
-  },
-  { id: 18, category: '不良反应与药学监护', text: '二甲双胍长期服用后维生素B12缺乏，如何补充？' },
-  {
-    id: 19,
-    category: '不良反应与药学监护',
-    text: '使用达格列净后出现酮症酸中毒（DKA）倾向，我该注意什么？',
-  },
-  {
-    id: 20,
-    category: '不良反应与药学监护',
-    text: '格列吡嗪导致严重的低血糖，更换为西格列汀是否可行？',
-  },
-  {
-    id: 21,
-    category: '合并症与特殊人群管理',
-    text: '糖尿病合并肝硬化（Child-Pugh B级），哪些降糖药禁用？',
-  },
-  {
-    id: 22,
-    category: '合并症与特殊人群管理',
-    text: '妊娠期糖尿病（GDM），哪些口服降糖药相对安全？',
-  },
-  {
-    id: 23,
-    category: '合并症与特殊人群管理',
-    text: '糖尿病患者合并甲状腺功能减退，左甲状腺素与降糖药如何错时服用？',
-  },
-  {
-    id: 24,
-    category: '合并症与特殊人群管理',
-    text: '老年（80岁）糖尿病患者，控制目标是HbA1c 7.5%还是8.0%？',
-  },
-  {
-    id: 25,
-    category: '生活方式与长期随访',
-    text: '每日服用二甲双胍缓释片，忘记一次该立即补服还是跳过？',
-  },
-  {
-    id: 26,
-    category: '生活方式与长期随访',
-    text: '糖尿病患者服用他汀类药物，降糖药与他汀是否需要减量？',
-  },
-  {
-    id: 27,
-    category: '生活方式与长期随访',
-    text: '糖尿病患者复诊前3天如何自行监测血糖并调整用药？',
-  },
-]
+const VISIBLE_COUNT = 3
 
-function shufflePick(arr: typeof allSuggestions, n: number) {
-  const shuffled = [...arr]
-  for (let i = shuffled.length - 1; i > 0; i--) {
+function shuffleArray<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
-    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    ;[a[i], a[j]] = [a[j], a[i]]
   }
-  return shuffled.slice(0, n)
+  return a
 }
+
+// 每个分类随机打乱（仅初始化时执行一次）
+const shuffledCategories = questionCategories.map((cat) => ({
+  ...cat,
+  shuffled: shuffleArray(cat.questions),
+}))
+
+function visibleQuestions(catIdx: number): QuestionItem[] {
+  return shuffledCategories[catIdx].shuffled.slice(0, VISIBLE_COUNT)
+}
+
+function otherQuestions(catIdx: number): QuestionItem[] {
+  return shuffledCategories[catIdx].shuffled.slice(VISIBLE_COUNT)
+}
+
+function dropdownOptions(catIdx: number) {
+  return otherQuestions(catIdx).map((q) => ({
+    key: q.id,
+    label: q.text,
+  }))
+}
+
+const dropdownVisible = ref<Record<number, boolean>>({})
+
+const allSuggestions = questionCategories.flatMap((c) => c.questions)
 
 function autoResize(el: HTMLTextAreaElement) {
   el.style.height = 'auto'
   el.style.height = Math.min(el.scrollHeight, 400) + 'px'
-}
-
-function splitIntoRows(items: typeof allSuggestions, cols: number) {
-  const rows: (typeof allSuggestions)[] = []
-  for (let i = 0; i < items.length; i += cols) {
-    rows.push(items.slice(i, i + cols))
-  }
-  return rows
 }
 
 function scrollToBottom() {
@@ -209,7 +98,7 @@ async function handleSend() {
   loading.value = true
 
   try {
-    const res = await streamConsult({
+    const res = await streamScienceEducationConsult({
       patientId: '',
       question: q,
       consultType: 'general',
@@ -278,10 +167,6 @@ function handleClear() {
   currentAiContent.value = ''
 }
 
-onMounted(() => {
-  const picked = shufflePick(allSuggestions, 9)
-  recommandations.value = splitIntoRows(picked, 3)
-})
 </script>
 
 <template>
@@ -296,25 +181,49 @@ onMounted(() => {
         v-if="messages.length === 0 && !currentAiContent"
         class="mx-auto flex min-h-full max-w-4xl flex-col items-center justify-center px-6 pt-12 pb-6"
       >
-        <h1 class="mb-10 text-center text-3xl font-bold tracking-tight text-gray-900">
+        <h1 class="mb-8 text-center text-3xl font-bold tracking-tight text-slate-800">
           有什么我能帮你的吗？
         </h1>
 
-        <div class="flex w-full flex-col items-center gap-3">
+        <div class="flex w-full max-w-5xl flex-col gap-5">
           <div
-            v-for="(row, rowIdx) in recommandations"
-            :key="rowIdx"
-            class="flex justify-center gap-3"
+            v-for="(cat, catIdx) in shuffledCategories"
+            :key="cat.key"
+            class="category-group"
           >
-            <button
-              v-for="card in row"
-              :key="card.id"
-              class="flex shrink-0 cursor-pointer items-center justify-center truncate rounded-xl px-5 py-3 text-sm text-gray-900 transition-all duration-200 hover:opacity-80 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 focus-visible:outline-none"
-              style="background-color: #eaeaea"
-              @click="handleCardClick(card.text)"
-            >
-              {{ card.text }}
-            </button>
+            <div class="category-header">
+              <span class="iconify category-icon" :class="cat.icon" />
+              <span class="category-label">{{ cat.label }}</span>
+              <NDropdown
+                v-if="otherQuestions(catIdx).length"
+                trigger="click"
+                :options="dropdownOptions(catIdx)"
+                :show="dropdownVisible[catIdx]"
+                @select="(key: number) => {
+                  const q = allSuggestions.find(s => s.id === key)
+                  if (q) handleCardClick(q.text)
+                }"
+                @clickoutside="dropdownVisible[catIdx] = false"
+              >
+                <button
+                  class="more-btn"
+                  @click="dropdownVisible[catIdx] = !dropdownVisible[catIdx]"
+                >
+                  <span>查看全部</span>
+                  <span class="iconify ph--caret-down more-arrow" />
+                </button>
+              </NDropdown>
+            </div>
+            <div class="category-cards">
+              <button
+                v-for="q in visibleQuestions(catIdx)"
+                :key="q.id"
+                class="question-card"
+                @click="handleCardClick(q.text)"
+              >
+                {{ q.text }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -436,3 +345,90 @@ onMounted(() => {
     </footer>
   </div>
 </template>
+
+<style scoped>
+.category-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+.category-icon {
+  font-size: 16px;
+  color: #409eff;
+  flex-shrink: 0;
+}
+
+.category-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.more-btn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #409eff;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.more-btn:hover {
+  background-color: #eff6ff;
+}
+
+.more-arrow {
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.category-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.question-card {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.question-card:hover {
+  border-color: #409eff;
+  box-shadow: 0 1px 6px rgba(64, 158, 255, 0.08);
+  color: #1e293b;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .question-card,
+  .more-btn,
+  .more-arrow {
+    transition: none;
+  }
+}
+</style>

@@ -52,7 +52,7 @@ export const DEFAULT_PREFERENCES_OPTIONS = {
     collapsed: false,
     minWidth: 64,
     width: 256,
-    maxWidth: 456,
+    maxWidth: 500,
     mobileWidth: 256,
   },
   showFooter: false,

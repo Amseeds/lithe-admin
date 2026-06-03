@@ -1,16 +1,14 @@
-const SSE_URL = '/api/api/aiuse/consult-stream'
+const SSE_URL = '/api/api/aiuse/comorbidity-guidance-stream'
 
-export interface AdverseReactionConsultParams {
+export interface DrugGuideAiParams {
   patientId: string
-  question: string
-  consultType: 'adverse_reaction'
   signal?: AbortSignal
 }
 
 /**
- * 药物不良反应 AI 查询 SSE 流式咨询
+ * AI 用药指导 SSE 流式咨询
  */
-export function streamAdverseReactionConsult(params: AdverseReactionConsultParams): Promise<Response> {
+export function streamDrugGuideAi(params: DrugGuideAiParams): Promise<Response> {
   const token = localStorage.getItem('token') || ''
   const { signal, ...body } = params
 

@@ -82,6 +82,12 @@ const patientPagination = reactive<PaginationProps>({
   },
 })
 
+function handleSearch() {
+  patientQueryParams.pageNum = 1
+  patientPagination.page = 1
+  getPatientListData()
+}
+
 const getPatientListData = async () => {
   patientListLoading.value = true
   try {
@@ -496,18 +502,18 @@ async function handleViewPatientDetail(patient: PatientRecord) {
                   placeholder="住院号"
                   clearable
                   style="width: 160px"
-                  @keyup.enter="getPatientListData"
+                  @keyup.enter="handleSearch"
                 />
                 <NInput
                   v-model:value="patientQueryParams.name"
                   placeholder="姓名"
                   clearable
                   style="width: 160px"
-                  @keyup.enter="getPatientListData"
+                  @keyup.enter="handleSearch"
                 />
                 <NButton
                   type="primary"
-                  @click="getPatientListData"
+                  @click="handleSearch"
                   >查询</NButton
                 >
               </div>

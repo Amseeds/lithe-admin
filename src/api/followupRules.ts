@@ -3,7 +3,7 @@ import { get } from '@/utils/request'
 // 随访规则查询参数
 export interface FollowUpRuleQuery {
   ruleName?: string
-  riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH' | 'SPECIAL'
+  riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH' | 'SPECIAL' | null
   pageNum: number
   pageSize: number
 }
@@ -25,4 +25,7 @@ export interface FollowUpRule {
  * 获取随访规则列表
  */
 export const getRuleList = (params: FollowUpRuleQuery) =>
-  get<{ list: FollowUpRule[]; total: number }>('/api/followup-rule/getallrules', params as unknown as Record<string, unknown>)
+  get<{ list: FollowUpRule[]; total: number }>(
+    '/api/followup-rule/getallrules',
+    params as unknown as Record<string, unknown>,
+  )

@@ -55,7 +55,10 @@ export function setupRouterGuard(router: Router) {
 
   router.beforeResolve(() => {})
 
-  router.afterEach(() => {
+  router.afterEach((to) => {
+    const title = (to.meta?.title as string) || ''
+    document.title = title ? `${title} - 药学服务平台` : '药学服务平台'
+
     routerEventBus.emit({ type: 'afterEach' })
   })
 }

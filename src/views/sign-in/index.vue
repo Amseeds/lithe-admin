@@ -78,17 +78,19 @@ const { isLoading: isSignInLoading, mutate: signInMutation } = useMutation({
 
 const mergedLoading = computed(() => isSignInLoading.value || isNavigating.value)
 
-function toLayout() {
+async function toLayout() {
   const { r } = router.currentRoute.value.query
+  const targetPath = (r as string) || '/'
 
   isNavigating.value = true
-  router
-    .replace({
-      path: (r as string) || '/',
-    })
-    .finally(() => {
-      isNavigating.value = false
-    })
+  try {
+    await router.replace(targetPath)
+  } catch {
+    // 跳转失败兜底: 等 layout 路由注册后重试
+    await router.push(targetPath)
+  } finally {
+    isNavigating.value = false
+  }
 }
 
 const handleSubmitClick = () => {

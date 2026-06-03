@@ -106,6 +106,15 @@ watch(data, (newData) => {
   }
 })
 
+// 药品名称变化时重置分页
+watch(
+  () => queryParams.drugName,
+  () => {
+    queryParams.pageNum = 1
+    pagination.page = 1
+  },
+)
+
 // 查询
 const handleSearch = () => {
   queryParams.pageNum = 1

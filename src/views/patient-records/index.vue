@@ -89,6 +89,13 @@ const getList = async () => {
   }
 }
 
+// 查询(重置分页)
+const handleSearch = () => {
+  queryParams.pageNum = 1
+  pagination.page = 1
+  getList()
+}
+
 // 重置查询
 const resetQuery = () => {
   queryParams.zyh = ''
@@ -230,7 +237,7 @@ onMounted(() => {
               v-model:value="queryParams.zyh"
               placeholder="请输入住院号"
               clearable
-              @keyup.enter="getList"
+              @keyup.enter="handleSearch"
             />
           </NFormItem>
           <NFormItem label="姓名">
@@ -238,14 +245,14 @@ onMounted(() => {
               v-model:value="queryParams.name"
               placeholder="请输入姓名"
               clearable
-              @keyup.enter="getList"
+              @keyup.enter="handleSearch"
             />
           </NFormItem>
         </NForm>
         <div class="flex gap-2">
           <NButton
             type="info"
-            @click="getList"
+            @click="handleSearch"
             :loading="loading"
             :disabled="loading"
           >

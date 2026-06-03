@@ -90,6 +90,8 @@ const timeRangeOptions: SelectOption[] = [
 ]
 
 function handleQuery() {
+  searchParams.pageNum = 1
+  planPagination.page = 1
   searchParams.status = filters.value.status || undefined
   searchParams.patientId = filters.value.patientId || undefined
   searchParams.patientName = filters.value.patientName || undefined
@@ -97,6 +99,8 @@ function handleQuery() {
 }
 
 function handleReset() {
+  searchParams.pageNum = 1
+  planPagination.page = 1
   filters.value = {
     stratification: [],
     status: '',

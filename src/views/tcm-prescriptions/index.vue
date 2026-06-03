@@ -144,7 +144,7 @@ const handleReset = () => {
               @keyup.enter="handleSearch"
             />
           </NFormItem>
-          <NFormItem label="分类">
+          <!-- <NFormItem label="分类">
             <NSelect
               v-model:value="queryParams.categoryId"
               :options="[
@@ -156,7 +156,7 @@ const handleReset = () => {
               clearable
               @update:value="handleSearch"
             />
-          </NFormItem>
+          </NFormItem> -->
           <div class="flex gap-2">
             <NButton
               type="primary"

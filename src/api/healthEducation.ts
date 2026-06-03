@@ -1,16 +1,16 @@
 const SSE_URL = '/api/api/aiuse/consult-stream'
 
-export interface AdverseReactionConsultParams {
+export interface ScienceEducationConsultParams {
   patientId: string
   question: string
-  consultType: 'adverse_reaction'
+  consultType: 'general'
   signal?: AbortSignal
 }
 
 /**
- * 药物不良反应 AI 查询 SSE 流式咨询
+ * 科普教育 AI 咨询 SSE 流式请求
  */
-export function streamAdverseReactionConsult(params: AdverseReactionConsultParams): Promise<Response> {
+export function streamScienceEducationConsult(params: ScienceEducationConsultParams): Promise<Response> {
   const token = localStorage.getItem('token') || ''
   const { signal, ...body } = params
 

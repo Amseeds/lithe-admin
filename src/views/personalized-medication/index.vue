@@ -77,6 +77,8 @@ const timeRangeOptions = [
 ]
 
 function handleQuery() {
+  searchParams.pageNum = 1
+  planPagination.page = 1
   searchParams.status = statusFilter.value
   searchParams.patientId = patientIdFilter.value
   searchParams.patientName = patientNameFilter.value
@@ -84,6 +86,8 @@ function handleQuery() {
 }
 
 function handleReset() {
+  searchParams.pageNum = 1
+  planPagination.page = 1
   statusFilter.value = null
   patientIdFilter.value = ''
   patientNameFilter.value = ''
