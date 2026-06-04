@@ -2,8 +2,8 @@
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { ScrollContainer } from '@/components'
 import { useInjection, useSSE } from '@/composables'
-import { streamSpecialPopulationConsult } from '@/api/specialPopulation'
-import { getPatientList, type PatientRecord } from '@/api'
+import { streamSpecialPopulationConsult, getSpecialPopulationPatients } from '@/api/specialPopulation'
+import { type PatientRecord } from '@/api'
 import {
   NCard,
   NTabs,
@@ -77,12 +77,17 @@ function scrollResponseToBottom() {
 
 const currentCategory = computed(() => categories.find((c) => c.value === activeTab.value)!)
 
+const lxMap: Record<string, number> = { pregnancy: 1, nafld: 2, renal: 3 }
+
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
 async function loadPatients() {
   patientLoading.value = true
   try {
-    const { data } = await getPatientList(queryParams.value)
+    const { data } = await getSpecialPopulationPatients({
+      lx: lxMap[activeTab.value] || 1,
+      ...queryParams.value,
+    })
     patientList.value = data.list || []
     patientPagination.value.itemCount = data.total || 0
   } finally {
