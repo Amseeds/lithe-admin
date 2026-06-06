@@ -7,7 +7,7 @@ const message = useMessage()
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_SITE_BASE_API || '/api',
-  timeout: 30_000,
+  timeout: 60_000,
 })
 
 // 请求拦截器
