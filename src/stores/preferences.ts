@@ -51,7 +51,7 @@ export const DEFAULT_PREFERENCES_OPTIONS = {
   sidebarMenu: {
     collapsed: false,
     minWidth: 64,
-    width: 256,
+    width: 286,
     maxWidth: 500,
     mobileWidth: 256,
   },

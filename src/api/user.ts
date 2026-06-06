@@ -237,6 +237,39 @@ export const fixedMenu: MenuMixedOptions[] = [
           showTab: true,
         },
       },
+      {
+        path: 'follow-up-rules',
+        name: 'followUpRules',
+        icon: 'iconify ph--list-checks',
+        label: '随访规则',
+        component: 'follow-up-rules/index',
+        meta: {
+          componentName: 'FollowUpRules',
+          showTab: true,
+        },
+      },
+      {
+        path: 'follow-up-plan',
+        name: 'followUpPlan',
+        icon: 'iconify ph--calendar-check',
+        label: '随访计划',
+        component: 'follow-up-plan/index',
+        meta: {
+          componentName: 'FollowUpPlan',
+          showTab: true,
+        },
+      },
+      {
+        path: 'lifestyle-guidance',
+        name: 'lifestyleGuidance',
+        icon: 'iconify ph--heart',
+        label: '生活方式指导',
+        component: 'lifestyle-guidance/index',
+        meta: {
+          componentName: 'LifestyleGuidance',
+          showTab: true,
+        },
+      },
     ],
   },
   {
@@ -365,39 +398,7 @@ export const fixedMenu: MenuMixedOptions[] = [
       //     showTab: true,
       //   },
       // },
-      {
-        path: 'follow-up-rules',
-        name: 'followUpRules',
-        icon: 'iconify ph--list-checks',
-        label: '随访规则',
-        component: 'follow-up-rules/index',
-        meta: {
-          componentName: 'FollowUpRules',
-          showTab: true,
-        },
-      },
-      {
-        path: 'follow-up-plan',
-        name: 'followUpPlan',
-        icon: 'iconify ph--calendar-check',
-        label: '随访计划',
-        component: 'follow-up-plan/index',
-        meta: {
-          componentName: 'FollowUpPlan',
-          showTab: true,
-        },
-      },
-      {
-        path: 'lifestyle-guidance',
-        name: 'lifestyleGuidance',
-        icon: 'iconify ph--heart',
-        label: '生活方式指导',
-        component: 'lifestyle-guidance/index',
-        meta: {
-          componentName: 'LifestyleGuidance',
-          showTab: true,
-        },
-      },
+
       {
         path: 'health-education',
         name: 'scienceEducation',

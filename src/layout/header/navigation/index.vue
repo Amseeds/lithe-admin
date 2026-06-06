@@ -8,6 +8,8 @@ defineOptions({
   name: 'Navigation',
 })
 
+const appName = import.meta.env.VITE_APP_NAME
+
 const AsyncNavigationButton = defineAsyncComponent(() => import('./NavigationButton.vue'))
 const AsyncHorizontalMenu = defineAsyncComponent(() => import('./HorizontalMenu.vue'))
 const AsyncBreadcrumb = defineAsyncComponent(() => import('./Breadcrumb.vue'))
@@ -22,6 +24,12 @@ const { showNavigationButton, breadcrumb, navigationMode } = toRefsPreferencesSt
     <CollapseTransition :display="breadcrumb.show && navigationMode === 'sidebar'">
       <AsyncBreadcrumb />
     </CollapseTransition>
+    <span
+      v-if="navigationMode === 'sidebar'"
+      class="flex-1 truncate text-center text-xl"
+    >
+      {{ appName }}
+    </span>
     <CollapseTransition :display="navigationMode === 'horizontal'">
       <AsyncHorizontalMenu />
     </CollapseTransition>

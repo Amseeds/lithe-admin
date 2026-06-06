@@ -44,6 +44,7 @@ watch(
 </script>
 <template>
   <div
+    v-if="navigationMode !== 'sidebar'"
     class="shrink-0"
     :class="{
       'transition-[width]': !isSidebarColResizing,
