@@ -43,7 +43,13 @@
       "Bash(npx vite *)",
       "mcp__zai-mcp-server__analyze_image",
       "mcp__zai-mcp-server__ui_to_artifact",
-      "Bash(npx ctx7@latest library vue \"composition api SSE streaming NaiveUI patterns\")"
+      "Bash(npx ctx7@latest library vue \"composition api SSE streaming NaiveUI patterns\")",
+      "Bash(grep -v '//')",
+      "Bash(where python *)",
+      "Read(//c/Users/admin/AppData/Local/Programs/Python/**)",
+      "Read(//c/Users/admCn/**)",
+      "Bash(\"C:/Users/admin/AppData/Local/Programs/Python/Python314/python.exe\" --version)",
+      "Bash(C:/Users/admin/AppData/Local/Programs/Python/Python314/python.exe *)"
     ]
   }
 }

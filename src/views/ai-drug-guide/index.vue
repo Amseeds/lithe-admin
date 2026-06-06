@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { ScrollContainer, AppChart } from '@/components'
 import { useInjection, useSSE } from '@/composables'
+import { renderMarkdown, parseAiResponse } from '@/utils/markdown'
 import { streamDrugGuideAi } from '@/api/aiDrugGuide'
 import { getPatientList, type PatientRecord } from '@/api'
 import {
@@ -14,6 +15,8 @@ import {
   NSpin,
   NModal,
   NTag,
+  NCollapse,
+  NCollapseItem,
   useMessage,
   type DataTableColumns,
   type PaginationProps,
@@ -266,9 +269,12 @@ const showAiModal = ref(false)
 
 // ===================== AI 流式 =====================
 const streamingText = ref('')
+const showRawContent = ref(false)
 const isGenerating = ref(false)
 const streamError = ref<string | null>(null)
 const aiResponseBoxRef = ref<ScrollbarInst | null>(null)
+
+const parsedAi = computed(() => parseAiResponse(streamingText.value))
 let streamAbortController: AbortController | null = null
 
 function scrollAiToBottom() {
@@ -818,43 +824,36 @@ onMounted(() => {
             v-if="streamingText"
             class="response-content"
           >
-            <div class="response-text">
-              <template
-                v-for="(block, bi) in streamingText.split('\n\n').filter(Boolean)"
-                :key="bi"
-              >
-                <h3
-                  v-if="block.startsWith('## ')"
-                  class="resp-h3"
-                >
-                  {{ block.replace('## ', '') }}
-                </h3>
-                <h4
-                  v-else-if="block.startsWith('### ')"
-                  class="resp-h4"
-                >
-                  {{ block.replace('### ', '') }}
-                </h4>
-                <ul
-                  v-else-if="block.includes('\n- ')"
-                  class="resp-ul"
-                >
-                  <li
-                    v-for="(line, li) in block.split('\n').filter((l) => l.trim())"
-                    :key="li"
-                    class="resp-li"
-                  >
-                    {{ line.replace(/^- /, '').replace(/^\d+\.\s/, '') }}
-                  </li>
-                </ul>
-                <p
-                  v-else
-                  class="resp-p"
-                >
-                  {{ block }}
-                </p>
-              </template>
-            </div>
+            <NCollapse
+              v-if="parsedAi.thinking"
+              class="ai-thinking"
+              :default-expanded-names="parsedAi.hasFinal ? [] : ['think']"
+            >
+              <NCollapseItem name="think">
+                <template #header>
+                  <span class="ai-thinking-label">思考过程</span>
+                </template>
+                <div class="ai-thinking-content">{{ parsedAi.thinking }}</div>
+              </NCollapseItem>
+            </NCollapse>
+            <div
+              v-if="parsedAi.hasFinal || !parsedAi.thinking"
+              class="ai-content"
+              v-html="renderMarkdown(parsedAi.response || streamingText)"
+            />
+            <span
+              v-if="isGenerating && !parsedAi.hasFinal && parsedAi.thinking"
+              class="streaming-thinking"
+              >思考中...</span
+            >
+            <span
+              v-if="isGenerating"
+              class="streaming-cursor"
+            />
+            <button class="raw-toggle" @click="showRawContent = !showRawContent">
+              {{ showRawContent ? '收起' : '原始' }}
+            </button>
+            <pre v-if="showRawContent" class="raw-content">{{ streamingText }}</pre>
           </div>
 
           <div
@@ -1429,7 +1428,7 @@ onMounted(() => {
 }
 
 .response-content {
-  padding: 20px 24px;
+  padding: 0 20px 24px;
   animation: fade-in 0.3s ease;
 }
 
@@ -1444,41 +1443,156 @@ onMounted(() => {
   }
 }
 
-.response-text {
+// ============================================================
+// Markdown 渲染元素
+// ============================================================
+.ai-content {
   font-size: 14px;
   line-height: 1.85;
   color: #1e293b;
+
+  :deep(p) {
+    margin: 0 0 10px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  :deep(strong) {
+    font-weight: 600;
+    color: #0f172a;
+  }
+  :deep(em) {
+    font-style: italic;
+    color: #475569;
+  }
+  :deep(h2) {
+    font-size: 17px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 24px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e8ecf1;
+  }
+  :deep(h3) {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 18px 0 8px;
+  }
+  :deep(h4) {
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+    margin: 14px 0 6px;
+  }
+  :deep(ul),
+  :deep(ol) {
+    margin: 8px 0 12px;
+    padding-left: 20px;
+  }
+  :deep(li) {
+    margin-bottom: 4px;
+    color: #475569;
+  }
+  :deep(code) {
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #334155;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+  :deep(pre) {
+    background: #f8fafc;
+    border: 1px solid #e8ecf1;
+    border-radius: 8px;
+    padding: 12px;
+    overflow-x: auto;
+    margin: 8px 0;
+    code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+    }
+  }
+  :deep(a) {
+    color: #409eff;
+    text-decoration: none;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+  :deep(blockquote) {
+    border-left: 3px solid #409eff;
+    padding: 4px 12px;
+    margin: 8px 0;
+    background: #f8fafc;
+    color: #64748b;
+  }
 }
 
-.resp-h3 {
-  font-size: 16px;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 20px 0 8px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid #e2e8f0;
+// ============================================================
+// 思考过程
+// ============================================================
+.ai-thinking {
+  margin-bottom: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #fde68a;
+
+  :deep(.n-collapse-item__header) {
+    font-size: 12px;
+    color: #a68a3c;
+    padding: 8px 14px !important;
+    background: #fefce8;
+    border-bottom: 1px solid #fde68a;
+  }
+
+  :deep(.n-collapse-item__content-inner) {
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #78716c;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    background: #fffdf0;
+  }
 }
 
-.resp-h4 {
-  font-size: 14px;
-  font-weight: 600;
-  color: #334155;
-  margin: 14px 0 6px;
+.ai-thinking-label {
+  font-size: 12px;
+  color: #a68a3c;
 }
 
-.resp-ul {
-  padding-left: 20px;
-  margin: 6px 0 12px;
+.ai-thinking-content {
+  font-size: 13px;
+  color: #78716c;
+  line-height: 1.6;
+  white-space: pre-wrap;
 }
 
-.resp-li {
-  margin-bottom: 4px;
-  color: #475569;
+.streaming-thinking {
+  color: #94a3b8;
+  font-style: italic;
 }
 
-.resp-p {
-  font-size: 14px;
-  color: #475569;
+.streaming-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 16px;
+  background: #409eff;
+  vertical-align: text-bottom;
+  margin-left: 2px;
+  animation: cursor-blink 1s step-end infinite;
+}
+
+@keyframes cursor-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 
 .response-error {
@@ -1497,5 +1611,37 @@ onMounted(() => {
   .response-content {
     animation: none;
   }
+  .streaming-cursor {
+    animation: none;
+    opacity: 1;
+  }
+}
+.raw-toggle {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 2px 8px;
+  border: 1px solid #e8ecf1;
+  border-radius: 4px;
+  background: #fafbfc;
+  color: #94a3b8;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  &:hover { color: #64748b; border-color: #cbd5e1; }
+}
+
+.raw-content {
+  margin-top: 6px;
+  padding: 10px;
+  border-radius: 6px;
+  background: #fefce8;
+  border: 1px solid #fde68a;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #78716c;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 240px;
+  overflow-y: auto;
 }
 </style>

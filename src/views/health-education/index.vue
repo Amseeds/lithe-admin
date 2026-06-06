@@ -1,24 +1,32 @@
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
-import { NDropdown, useMessage } from 'naive-ui'
+import { ref, nextTick, computed } from 'vue'
+import { NCollapse, NCollapseItem, NCard, NDropdown, NScrollbar, useMessage } from 'naive-ui'
+import { ScrollContainer } from '@/components'
+import { useInjection } from '@/composables'
+import { mediaQueryInjectionKey } from '@/injection'
 import { streamScienceEducationConsult } from '@/api/healthEducation'
+import { renderMarkdown, parseAiResponse } from '@/utils/markdown'
 import { questionCategories, type QuestionItem } from './questions'
 
 defineOptions({
-  name: 'ScienceEducation',
+  name: 'HealthEducation',
 })
 
 const message = useMessage()
+const { isMaxMd, isMaxLg } = useInjection(mediaQueryInjectionKey)
 
 const inputText = ref('')
 const isFocused = ref(false)
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
 // 对话相关
-const messages = ref<{ role: 'user' | 'ai'; content: string }[]>([])
+const messages = ref<
+  { role: 'user' | 'ai'; content: string; thinking?: string; response?: string }[]
+>([])
 const currentAiContent = ref('')
+const showRawContent = ref(false)
 const loading = ref(false)
-const chatBoxRef = ref<HTMLDivElement | null>(null)
+const chatBoxRef = ref<InstanceType<typeof NScrollbar> | null>(null)
 let abortController: AbortController | null = null
 
 const VISIBLE_COUNT = 3
@@ -59,28 +67,28 @@ const allSuggestions = questionCategories.flatMap((c) => c.questions)
 
 function autoResize(el: HTMLTextAreaElement) {
   el.style.height = 'auto'
-  el.style.height = Math.min(el.scrollHeight, 400) + 'px'
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px'
 }
+
+const parsedCurrent = computed(() => parseAiResponse(currentAiContent.value))
+
+const thinkExpanded = computed(() => {
+  if (!currentAiContent.value) return []
+  if (parsedCurrent.value.thinking && !parsedCurrent.value.hasFinal) return ['think']
+  return []
+})
 
 function scrollToBottom() {
   nextTick(() => {
-    if (chatBoxRef.value) {
-      chatBoxRef.value.scrollTop = chatBoxRef.value.scrollHeight
-    }
+    chatBoxRef.value?.scrollTo({ top: 99999, behavior: 'instant' } as any)
   })
 }
 
-// ============================================================
-// 卡片点击 → 填入文本并发送
-// ============================================================
 function handleCardClick(cardText: string) {
   inputText.value = cardText
   handleSend()
 }
 
-// ============================================================
-// 发送消息 + SSE 流式接收
-// ============================================================
 async function handleSend() {
   const q = inputText.value.trim()
   if (!q || loading.value) return
@@ -137,7 +145,13 @@ async function handleSend() {
     }
 
     if (currentAiContent.value) {
-      messages.value.push({ role: 'ai', content: currentAiContent.value })
+      const parsed = parseAiResponse(currentAiContent.value)
+      messages.value.push({
+        role: 'ai',
+        content: currentAiContent.value,
+        thinking: parsed.thinking,
+        response: parsed.response,
+      })
       currentAiContent.value = ''
     }
   } catch (err: unknown) {
@@ -156,7 +170,13 @@ function handleStop() {
     abortController = null
   }
   if (currentAiContent.value) {
-    messages.value.push({ role: 'ai', content: currentAiContent.value })
+    const parsed = parseAiResponse(currentAiContent.value)
+    messages.value.push({
+      role: 'ai',
+      content: currentAiContent.value,
+      thinking: parsed.thinking,
+      response: parsed.response,
+    })
     currentAiContent.value = ''
   }
   loading.value = false
@@ -166,191 +186,330 @@ function handleClear() {
   messages.value = []
   currentAiContent.value = ''
 }
-
 </script>
 
 <template>
-  <div class="flex h-full flex-col bg-white">
-    <!-- === 中间内容区（可滚动） === -->
-    <main
-      ref="chatBoxRef"
-      class="flex-1 overflow-y-auto"
+  <ScrollContainer
+    wrapper-class="flex flex-col gap-y-4 health-education-page"
+    :scrollable="isMaxLg"
+  >
+    <NCard
+      class="main-card flex-1"
+      :size="isMaxMd ? 'small' : undefined"
+      content-class="flex flex-col min-h-0"
     >
-      <!-- 无对话时：欢迎页 + 推荐卡片 -->
-      <div
-        v-if="messages.length === 0 && !currentAiContent"
-        class="mx-auto flex min-h-full max-w-4xl flex-col items-center justify-center px-6 pt-12 pb-6"
-      >
-        <h1 class="mb-8 text-center text-3xl font-bold tracking-tight text-slate-800">
-          有什么我能帮你的吗？
-        </h1>
-
-        <div class="flex w-full max-w-5xl flex-col gap-5">
-          <div
-            v-for="(cat, catIdx) in shuffledCategories"
-            :key="cat.key"
-            class="category-group"
-          >
-            <div class="category-header">
-              <span class="iconify category-icon" :class="cat.icon" />
-              <span class="category-label">{{ cat.label }}</span>
-              <NDropdown
-                v-if="otherQuestions(catIdx).length"
-                trigger="click"
-                :options="dropdownOptions(catIdx)"
-                :show="dropdownVisible[catIdx]"
-                @select="(key: number) => {
-                  const q = allSuggestions.find(s => s.id === key)
-                  if (q) handleCardClick(q.text)
-                }"
-                @clickoutside="dropdownVisible[catIdx] = false"
-              >
-                <button
-                  class="more-btn"
-                  @click="dropdownVisible[catIdx] = !dropdownVisible[catIdx]"
-                >
-                  <span>查看全部</span>
-                  <span class="iconify ph--caret-down more-arrow" />
-                </button>
-              </NDropdown>
-            </div>
-            <div class="category-cards">
-              <button
-                v-for="q in visibleQuestions(catIdx)"
-                :key="q.id"
-                class="question-card"
-                @click="handleCardClick(q.text)"
-              >
-                {{ q.text }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 对话消息区 -->
-      <div
-        v-else
-        class="mx-auto px-4 py-6"
-      >
-        <!-- 历史消息 -->
-        <div
-          v-for="(msg, idx) in messages"
-          :key="idx"
-          class="mb-4"
+      <div class="chat-layout">
+        <!-- === 中间内容区（可滚动） === -->
+        <NScrollbar
+          ref="chatBoxRef"
+          class="chat-body"
         >
+          <!-- 无对话时：欢迎页 + 推荐卡片 -->
           <div
-            v-if="msg.role === 'user'"
-            class="flex justify-end"
+            v-if="messages.length === 0 && !currentAiContent"
+            class="welcome-container"
           >
-            <div class="max-w-[80%] rounded-2xl bg-blue-50 px-4 py-2.5 text-sm text-gray-800">
-              {{ msg.content }}
+            <h1 class="welcome-title">有什么我能帮你的吗？</h1>
+
+            <div class="categories-wrapper">
+              <div
+                v-for="(cat, catIdx) in shuffledCategories"
+                :key="cat.key"
+                class="category-group"
+                :class="{ 'category-group--last': catIdx === shuffledCategories.length - 1 }"
+              >
+                <div class="category-header">
+                  <span
+                    class="category-icon iconify"
+                    :class="cat.icon"
+                  />
+                  <span class="category-label">{{ cat.label }}</span>
+                  <NDropdown
+                    v-if="otherQuestions(catIdx).length"
+                    trigger="click"
+                    :options="dropdownOptions(catIdx)"
+                    :show="dropdownVisible[catIdx]"
+                    @select="
+                      (key: number) => {
+                        const q = allSuggestions.find((s) => s.id === key)
+                        if (q) handleCardClick(q.text)
+                      }
+                    "
+                    @clickoutside="dropdownVisible[catIdx] = false"
+                  >
+                    <button
+                      class="more-btn"
+                      @click="dropdownVisible[catIdx] = !dropdownVisible[catIdx]"
+                    >
+                      <span>查看全部</span>
+                      <span class="more-arrow iconify ph--caret-down" />
+                    </button>
+                  </NDropdown>
+                </div>
+                <div class="category-cards">
+                  <button
+                    v-for="q in visibleQuestions(catIdx)"
+                    :key="q.id"
+                    class="question-card"
+                    @click="handleCardClick(q.text)"
+                  >
+                    {{ q.text }}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
+
+          <!-- 对话消息区 -->
           <div
             v-else
-            class="flex justify-start"
+            class="messages-container"
           >
+            <!-- 历史消息 -->
             <div
-              class="max-w-[80%] rounded-2xl bg-gray-100 px-4 py-2.5 text-sm leading-relaxed text-gray-800"
+              v-for="(msg, idx) in messages"
+              :key="idx"
+              class="message-item"
             >
-              {{ msg.content }}
+              <div
+                v-if="msg.role === 'user'"
+                class="message-row message-row--user"
+              >
+                <div class="message-user">
+                  {{ msg.content }}
+                </div>
+              </div>
+              <div
+                v-else
+                class="message-row message-row--ai"
+              >
+                <div class="message-ai">
+                  <template v-if="msg.thinking || msg.response">
+                    <div class="ai-bubble">
+                      <NCollapse
+                        v-if="msg.thinking"
+                        class="ai-thinking"
+                      >
+                        <NCollapseItem name="think">
+                          <template #header>
+                            <span class="ai-thinking-label">思考过程</span>
+                          </template>
+                          <div class="ai-thinking-content">
+                            {{ msg.thinking.replace(/^##\s*Thinking\s*/i, '') }}
+                          </div>
+                        </NCollapseItem>
+                      </NCollapse>
+                      <div
+                        class="ai-content"
+                        v-html="renderMarkdown(msg.response || '')"
+                      />
+                    </div>
+                  </template>
+                  <div
+                    v-else
+                    class="message-ai-fallback"
+                    v-html="renderMarkdown(msg.content)"
+                  />
+                <button class="raw-toggle" @click="showRawContent = !showRawContent">
+                  {{ showRawContent ? '收起' : '原始' }}
+                </button>
+                <pre v-if="showRawContent" class="raw-content">{{ msg.content }}</pre>
+                </div>
+              </div>
+            </div>
+
+            <!-- 正在流式输出的内容 -->
+            <div
+              v-if="currentAiContent"
+              class="message-item"
+            >
+              <div class="message-row message-row--ai">
+                <div class="message-ai">
+                  <div class="ai-bubble">
+                    <NCollapse
+                      v-if="parsedCurrent.thinking"
+                      class="ai-thinking"
+                      :default-expanded-names="thinkExpanded"
+                    >
+                      <NCollapseItem name="think">
+                        <template #header>
+                          <span class="ai-thinking-label">思考过程</span>
+                        </template>
+                        <div class="ai-thinking-content">
+                          {{ parsedCurrent.thinking.replace(/^##\s*Thinking\s*/i, '') }}
+                        </div>
+                      </NCollapseItem>
+                    </NCollapse>
+                    <div class="ai-content">
+                      <span
+                        v-if="parsedCurrent.hasFinal"
+                        v-html="renderMarkdown(parsedCurrent.response)"
+                      />
+                      <span
+                        v-else
+                        class="streaming-thinking"
+                        >思考中...</span
+                      >
+                      <span
+                        v-if="loading"
+                        class="streaming-cursor"
+                      />
+                    </div>
+                  </div>
+                <button class="raw-toggle" @click="showRawContent = !showRawContent">
+                  {{ showRawContent ? '收起' : '原始' }}
+                </button>
+                <pre v-if="showRawContent" class="raw-content">{{ currentAiContent }}</pre>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        </NScrollbar>
 
-        <!-- 正在流式输出的内容 -->
-        <div
-          v-if="currentAiContent"
-          class="mb-4 flex justify-start"
-        >
+        <!-- === 底部输入框 === -->
+        <footer class="chat-footer">
           <div
-            class="max-w-[80%] rounded-2xl bg-gray-100 px-4 py-2.5 text-sm leading-relaxed text-gray-800"
+            class="input-wrapper"
+            :class="{ 'input-wrapper--focused': isFocused }"
           >
-            {{ currentAiContent }}
-            <span class="inline-block h-4 w-[2px] animate-pulse bg-gray-500 align-middle" />
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <!-- === 底部输入框（悬浮固定） === -->
-    <footer class="shrink-0 border-t border-gray-100 bg-white px-4 pt-3 pb-6">
-      <div class="mx-auto max-w-3xl">
-        <div
-          class="relative rounded-2xl border bg-white transition-all duration-200"
-          :class="
-            isFocused
-              ? 'border-blue-200 shadow-[0_0_0_2px_rgba(59,130,246,0.08),0_4px_12px_rgba(0,0,0,0.05)]'
-              : 'border-gray-200 shadow-[0_1px_2px_rgba(0,0,0,0.03)]'
-          "
-        >
-          <div class="px-5 pt-4 pb-2">
             <textarea
               ref="textareaRef"
               v-model="inputText"
               placeholder="发送消息..."
               rows="1"
-              class="scrollbar-thin w-full resize-none bg-transparent text-[15px] leading-relaxed text-gray-800 outline-none placeholder:text-gray-400"
-              :style="{ maxHeight: '400px' }"
+              class="chat-textarea"
               :disabled="loading"
               @input="textareaRef && autoResize(textareaRef)"
               @focus="isFocused = true"
               @blur="isFocused = false"
               @keydown.enter.exact.prevent="inputText.trim() && !loading && handleSend()"
             />
-          </div>
 
-          <div class="flex items-center justify-between px-3 pb-2">
-            <!-- 操作按钮 -->
-            <div class="flex gap-1.5">
+            <div class="input-actions">
+              <div class="action-left">
+                <button
+                  v-if="loading"
+                  class="action-btn action-btn--stop"
+                  @click="handleStop"
+                >
+                  停止生成
+                </button>
+                <button
+                  v-if="messages.length > 0 && !loading"
+                  class="action-btn action-btn--clear"
+                  @click="handleClear"
+                >
+                  清空对话
+                </button>
+              </div>
+
               <button
-                v-if="loading"
-                class="cursor-pointer rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
-                @click="handleStop"
+                class="send-btn"
+                :class="inputText.trim() && !loading ? 'send-btn--active' : 'send-btn--disabled'"
+                :disabled="!inputText.trim() || loading"
+                aria-label="发送消息"
+                @click="handleSend"
               >
-                停止生成
-              </button>
-              <button
-                v-if="messages.length > 0 && !loading"
-                class="cursor-pointer rounded-lg px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100"
-                @click="handleClear"
-              >
-                清空对话
+                <span class="iconify text-lg ph--arrow-up" />
               </button>
             </div>
-
-            <!-- 发送按钮 -->
-            <button
-              class="flex size-9 cursor-pointer items-center justify-center rounded-xl text-white transition-all duration-200 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 focus-visible:outline-none"
-              :class="
-                inputText.trim() && !loading
-                  ? 'bg-[#0066ff] shadow-sm hover:bg-[#0052cc] hover:shadow-md active:scale-95'
-                  : 'cursor-not-allowed bg-gray-200'
-              "
-              :disabled="!inputText.trim() || loading"
-              aria-label="发送消息"
-              @click="handleSend"
-            >
-              <span
-                class="iconify text-lg transition-transform duration-200"
-                :class="
-                  inputText.trim() && !loading ? 'ph--arrow-up' : 'text-gray-400 ph--arrow-up'
-                "
-              />
-            </button>
           </div>
-        </div>
+        </footer>
       </div>
-    </footer>
-  </div>
+    </NCard>
+  </ScrollContainer>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
+// ============================================================
+// 页面级样式
+// ============================================================
+.health-education-page {
+  padding: 20px 24px;
+  background: linear-gradient(160deg, #f0f4f8 0%, #f5f7fa 100%);
+
+  @media (max-width: 768px) {
+    padding: 12px 8px;
+  }
+}
+
+.main-card {
+  border-radius: 14px;
+  box-shadow:
+    0 2px 12px rgba(64, 158, 255, 0.06),
+    0 1px 3px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(64, 158, 255, 0.06);
+  overflow: hidden;
+
+  :deep(.n-card__content) {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
+.chat-layout {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-body {
+  flex: 1;
+  min-height: 0;
+}
+
+// ============================================================
+// 欢迎页
+// ============================================================
+.welcome-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 24px 24px;
+  max-width: 960px;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 32px 16px 16px;
+  }
+}
+
+.welcome-title {
+  margin-bottom: 32px;
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #1e293b;
+
+  @media (max-width: 768px) {
+    font-size: 22px;
+    margin-bottom: 24px;
+  }
+}
+
+.categories-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
 .category-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
+
+  &--last {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
 }
 
 .category-header {
@@ -382,13 +541,14 @@ function handleClear() {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 4px 10px;
   border-radius: 6px;
   transition: background-color 0.2s ease;
-}
 
-.more-btn:hover {
-  background-color: #eff6ff;
+  &:hover {
+    background-color: #e8f4fd;
+    color: #337ecc;
+  }
 }
 
 .more-arrow {
@@ -400,35 +560,480 @@ function handleClear() {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .question-card {
   display: flex;
   align-items: center;
-  min-height: 40px;
-  padding: 10px 16px;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  min-height: 44px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #e8ecf1;
   background: #f8fafc;
   font-size: 13px;
   color: #475569;
   line-height: 1.5;
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    border-color: #409eff;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+    color: #1e293b;
+    transform: translateY(-1px);
+  }
 }
 
-.question-card:hover {
-  border-color: #409eff;
-  box-shadow: 0 1px 6px rgba(64, 158, 255, 0.08);
+// ============================================================
+// 对话消息区
+// ============================================================
+.messages-container {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 20px 16px;
+
+  @media (max-width: 768px) {
+    padding: 16px 12px;
+  }
+}
+
+.message-item {
+  margin-bottom: 20px;
+}
+
+.message-row {
+  display: flex;
+
+  &--user {
+    justify-content: flex-end;
+  }
+
+  &--ai {
+    justify-content: flex-start;
+  }
+}
+
+.message-user {
+  max-width: 75%;
+  padding: 10px 16px;
+  border-radius: 16px 4px 16px 16px;
+  background: #e8f4fd;
+  border: 1px solid #b9d9ff;
   color: #1e293b;
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: break-word;
+
+  @media (max-width: 1024px) {
+    max-width: 85%;
+  }
+
+  @media (max-width: 768px) {
+    max-width: 90%;
+  }
 }
 
+.message-ai {
+  max-width: 75%;
+
+  @media (max-width: 1024px) {
+    max-width: 85%;
+  }
+
+  @media (max-width: 768px) {
+    max-width: 90%;
+  }
+}
+
+.ai-bubble {
+  border-radius: 4px 16px 16px 16px;
+  background: #ffffff;
+  border: 1px solid #e8ecf1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.ai-content {
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #334155;
+  word-break: break-word;
+
+  :deep(p) {
+    margin: 0 0 8px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  :deep(strong) {
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  :deep(em) {
+    font-style: italic;
+    color: #475569;
+  }
+
+  :deep(h3) {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 16px 0 8px;
+  }
+
+  :deep(h4) {
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+    margin: 12px 0 6px;
+  }
+
+  :deep(ul),
+  :deep(ol) {
+    margin: 8px 0;
+    padding-left: 20px;
+  }
+
+  :deep(li) {
+    margin-bottom: 4px;
+  }
+
+  :deep(code) {
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #334155;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  :deep(pre) {
+    background: #f8fafc;
+    border: 1px solid #e8ecf1;
+    border-radius: 8px;
+    padding: 12px;
+    overflow-x: auto;
+    margin: 8px 0;
+
+    code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      font-size: 13px;
+    }
+  }
+
+  :deep(a) {
+    color: #409eff;
+    text-decoration: none;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  :deep(blockquote) {
+    border-left: 3px solid #409eff;
+    padding: 4px 12px;
+    margin: 8px 0;
+    background: #f8fafc;
+    color: #64748b;
+  }
+}
+
+.ai-thinking {
+  :deep(.n-collapse-item__header) {
+    font-size: 12px;
+    color: #a68a3c;
+    padding: 8px 16px !important;
+    background: #fefce8;
+    border-bottom: 1px solid #fde68a;
+  }
+
+  :deep(.n-collapse-item__content-inner) {
+    padding: 10px 16px;
+    font-size: 13px;
+    color: #78716c;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    background: #fffdf0;
+  }
+}
+
+.ai-thinking-label {
+  font-size: 12px;
+  color: #a68a3c;
+}
+
+.ai-thinking-content {
+  font-size: 13px;
+  color: #78716c;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.message-ai-fallback {
+  padding: 10px 16px;
+  border-radius: 4px 16px 16px 16px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: break-word;
+
+  :deep(p) {
+    margin: 0 0 6px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  :deep(strong) {
+    font-weight: 600;
+    color: #1e293b;
+  }
+  :deep(ul),
+  :deep(ol) {
+    margin: 6px 0;
+    padding-left: 18px;
+  }
+  :deep(li) {
+    margin-bottom: 2px;
+  }
+  :deep(code) {
+    background: #e8ecf1;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 13px;
+  }
+  :deep(a) {
+    color: #409eff;
+  }
+}
+
+// ============================================================
+// 流式输出
+// ============================================================
+.streaming-thinking {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.streaming-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 16px;
+  background: #409eff;
+  vertical-align: text-bottom;
+  margin-left: 2px;
+  animation: cursor-blink 1s step-end infinite;
+}
+
+@keyframes cursor-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+// ============================================================
+// 底部输入区
+// ============================================================
+.chat-footer {
+  flex-shrink: 0;
+  border-top: 1px solid #e8ecf1;
+  background: linear-gradient(to top, #fafbfc 0%, #ffffff 100%);
+  padding: 12px 20px 0;
+
+  @media (max-width: 768px) {
+    padding: 10px 12px 16px;
+  }
+}
+
+.input-wrapper {
+  position: relative;
+  max-width: 48rem;
+  margin: 0 auto;
+  border-radius: 16px;
+  border: 1px solid #e8ecf1;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+
+  &--focused {
+    border-color: #409eff;
+    box-shadow:
+      0 0 0 3px rgba(64, 158, 255, 0.12),
+      0 4px 12px rgba(0, 0, 0, 0.06);
+  }
+}
+
+.chat-textarea {
+  width: 100%;
+  resize: none;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #1e293b;
+  padding: 14px 18px 8px;
+  min-height: 24px;
+  max-height: 160px;
+
+  &::placeholder {
+    color: #94a3b8;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.input-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px 10px;
+}
+
+.action-left {
+  display: flex;
+  gap: 6px;
+}
+
+.action-btn {
+  border: none;
+  background: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &--stop {
+    color: #ef4444;
+
+    &:hover {
+      background: #fef2f2;
+    }
+  }
+
+  &--clear {
+    color: #64748b;
+
+    &:hover {
+      background: #f1f5f9;
+      color: #475569;
+    }
+  }
+}
+
+.send-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+
+  &--active {
+    background: #409eff;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(64, 158, 255, 0.25);
+
+    &:hover {
+      background: #337ecc;
+      box-shadow: 0 4px 12px rgba(64, 158, 255, 0.35);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  &--disabled {
+    background: #f1f5f9;
+    color: #c0c8d4;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #409eff;
+    outline-offset: 2px;
+  }
+}
+
+// ============================================================
+// 无障碍
+// ============================================================
 @media (prefers-reduced-motion: reduce) {
   .question-card,
   .more-btn,
-  .more-arrow {
+  .more-arrow,
+  .send-btn,
+  .action-btn,
+  .input-wrapper {
     transition: none;
   }
+
+  .streaming-cursor {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+.raw-toggle {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 2px 8px;
+  border: 1px solid #e8ecf1;
+  border-radius: 4px;
+  background: #fafbfc;
+  color: #94a3b8;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    color: #64748b;
+    border-color: #cbd5e1;
+  }
+}
+
+.raw-content {
+  margin-top: 6px;
+  padding: 10px;
+  border-radius: 6px;
+  background: #fefce8;
+  border: 1px solid #fde68a;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #78716c;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 240px;
+  overflow-y: auto;
 }
 </style>

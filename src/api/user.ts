@@ -246,39 +246,39 @@ export const fixedMenu: MenuMixedOptions[] = [
     icon: 'iconify ph--chart-line-up',
     label: '糖尿病疗效及安全评估',
     children: [
-      {
-        path: 'blood-sugar-targets',
-        name: 'bloodSugarTargets',
-        icon: 'iconify ph--drop-half-bottom',
-        label: '控糖目标',
-        component: 'blood-sugar-targets/index',
-        meta: {
-          componentName: 'BloodSugarTargets',
-          showTab: true,
-        },
-      },
-      {
-        path: 'disease-progression',
-        name: 'diseaseProgression',
-        icon: 'iconify ph--activity',
-        label: '病情进展',
-        component: 'disease-progression/index',
-        meta: {
-          componentName: 'DiseaseProgression',
-          showTab: true,
-        },
-      },
-      {
-        path: 'treatment-effects',
-        name: 'treatmentEffects',
-        icon: 'iconify ph--trend-up',
-        label: '治疗效果',
-        component: 'treatment-effects/index',
-        meta: {
-          componentName: 'TreatmentEffects',
-          showTab: true,
-        },
-      },
+      // {
+      //   path: 'blood-sugar-targets',
+      //   name: 'bloodSugarTargets',
+      //   icon: 'iconify ph--drop-half-bottom',
+      //   label: '控糖目标',
+      //   component: 'blood-sugar-targets/index',
+      //   meta: {
+      //     componentName: 'BloodSugarTargets',
+      //     showTab: true,
+      //   },
+      // },
+      // {
+      //   path: 'disease-progression',
+      //   name: 'diseaseProgression',
+      //   icon: 'iconify ph--activity',
+      //   label: '病情进展',
+      //   component: 'disease-progression/index',
+      //   meta: {
+      //     componentName: 'DiseaseProgression',
+      //     showTab: true,
+      //   },
+      // },
+      // {
+      //   path: 'treatment-effects',
+      //   name: 'treatmentEffects',
+      //   icon: 'iconify ph--trend-up',
+      //   label: '治疗效果',
+      //   component: 'treatment-effects/index',
+      //   meta: {
+      //     componentName: 'TreatmentEffects',
+      //     showTab: true,
+      //   },
+      // },
       {
         path: 'efficacy-report',
         name: 'efficacyReport',
@@ -320,6 +320,17 @@ export const fixedMenu: MenuMixedOptions[] = [
         component: 'glucose-visit-reminder/index',
         meta: {
           componentName: 'BloodSugarVisitReminder',
+          showTab: true,
+        },
+      },
+      {
+        path: 'treatment-effectiveness',
+        name: 'medicationEffectiveness',
+        icon: 'iconify ph--chart-line-up',
+        label: '药物治疗方案有效性',
+        component: 'treatment-effectiveness/index',
+        meta: {
+          componentName: 'MedicationEffectiveness',
           showTab: true,
         },
       },
@@ -453,26 +464,26 @@ export const fixedMenu: MenuMixedOptions[] = [
       },
     ],
   },
-  {
-    path: 'eight-business-scenarios',
-    redirect: 'eight-business-scenarios/treatment-effectiveness',
-    name: 'eightBusinessScenarios',
-    icon: 'iconify ph--grid-four',
-    label: '八大业务场景',
-    children: [
-      {
-        path: 'treatment-effectiveness',
-        name: 'medicationEffectiveness',
-        icon: 'iconify ph--chart-line-up',
-        label: '药物治疗方案有效性',
-        component: 'treatment-effectiveness/index',
-        meta: {
-          componentName: 'MedicationEffectiveness',
-          showTab: true,
-        },
-      },
-    ],
-  },
+  // {
+  //   path: 'eight-business-scenarios',
+  //   redirect: 'eight-business-scenarios/treatment-effectiveness',
+  //   name: 'eightBusinessScenarios',
+  //   icon: 'iconify ph--grid-four',
+  //   label: '八大业务场景',
+  //   children: [
+  //     {
+  //       path: 'treatment-effectiveness',
+  //       name: 'medicationEffectiveness',
+  //       icon: 'iconify ph--chart-line-up',
+  //       label: '药物治疗方案有效性',
+  //       component: 'treatment-effectiveness/index',
+  //       meta: {
+  //         componentName: 'MedicationEffectiveness',
+  //         showTab: true,
+  //       },
+  //     },
+  //   ],
+  // },
   // {
   //   path: 'data-cleaning',
   //   redirect: 'data-cleaning/cleaning',
